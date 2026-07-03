@@ -9,7 +9,7 @@ pro-code is a software-building pipeline — **Frame → Plan → Implement**, r
 
 pro-code **leads with the graders**: each phase produces its output, then a grader checks it before the handoff. That gate is what makes an autonomous loop trustworthy.
 
-It maps to Böckeler's harness (guides + graders) and to Anthropic's five agent patterns — each element exercised in at least one example, mapped in [COVERAGE.md](COVERAGE.md).
+It maps to Böckeler's harness (guides + graders) and to Anthropic's five agent patterns — each element exercised in at least one example.
 
 The two bodies of work behind it — Böckeler's harness engineering and Anthropic's agent posts — are mapped in [two-reading-journeys.md](two-reading-journeys.md).
 
@@ -49,18 +49,17 @@ profiles/                          the guide/grader seam — domain overlays
 examples/
   multi-tenant-isolation/          #1 — API slice, hard-done = no cross-tenant leak
   edge-telemetry-alerting/         #2 — UI slice, hard-done = no missed critical alert
-COVERAGE.md                        full Böckeler + Anthropic coverage audit
 ```
 
 > The files under `skills/` and `graders/` are shared **byte-for-byte** by both domains. Everything domain-specific lives in the swapped `profiles/<domain>/`. That's the whole thesis, made literal.
 
 ## Status
 
-**The pipeline runs end-to-end twice, and exercises each element of Böckeler's harness and Anthropic's five patterns in at least one example** ([COVERAGE.md](COVERAGE.md)).
+**The pipeline runs end-to-end twice, and exercises each element of Böckeler's harness and Anthropic's five patterns in at least one example.**
 
 - **[Example #1 — multi-tenant-isolation](examples/multi-tenant-isolation/)** (`generic-saas`, API): hard-done = *no cross-tenant leak*. 27 tests. Isolation is certified by an integration test and **held under a fresh adversarial refuter** (author ≠ grader) that attacked every verb — including a member cross-tenant delete (an existence oracle via RBAC ordering).
 - **[Example #2 — edge-telemetry-alerting](examples/edge-telemetry-alerting/)** (`edge-telemetry`, UI): hard-done = *no missed critical alert*. 28 fixture-replay tests + 2 real Playwright browser tests. Built via a **new profile with zero changes to any skill or grader**. Every safety-critical breach — including a sensor **dead from boot** (`decisions/0001`) — raises CRITICAL; certified by fixture-replay and **held under a fresh adversarial refuter**.
 
 Two structurally-opposite domains — a CRUD API and a stream/rule engine — run through the **same skills and graders, byte-for-byte**. Everything domain-specific lives in the swapped profile. In both, the tiering rubric refused to 🟢 agent-ship the core-promise tickets, and the grader — not author confidence — certified the hard-done.
 
-**Each element, exercised in a runnable example.** Böckeler's guide + grader elements and Anthropic's five patterns, each first-class in the plugin and exercised in an example: codemods (a libcst transform), logs grader, browser grader (Playwright), isolated review-agents (author ≠ grader), orchestrator-workers, and an adversarial refutation that independently re-checked the core promise in each example. See [COVERAGE.md](COVERAGE.md).
+**Each element, exercised in a runnable example.** Böckeler's guide + grader elements and Anthropic's five patterns, each first-class in the plugin and exercised in an example: codemods (a libcst transform), logs grader, browser grader (Playwright), isolated review-agents (author ≠ grader), orchestrator-workers, and an adversarial refutation that independently re-checked the core promise in each example.
