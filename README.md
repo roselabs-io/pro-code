@@ -9,7 +9,7 @@ pro-code is a software-building pipeline — **Frame → Plan → Implement**, r
 
 pro-code **leads with the graders**: each phase produces its output, then a grader checks it before the handoff. That gate is what makes an autonomous loop trustworthy.
 
-It is a full **harness** in Böckeler's sense (all 12 guide + grader sub-elements) and covers all **5 of Anthropic's agent patterns** — audited in [COVERAGE.md](COVERAGE.md).
+It maps to Böckeler's harness (guides + graders) and to Anthropic's five agent patterns — each element exercised in at least one example, mapped in [COVERAGE.md](COVERAGE.md).
 
 The two bodies of work behind it — Böckeler's harness engineering and Anthropic's agent posts — are mapped in [two-reading-journeys.md](two-reading-journeys.md).
 
@@ -56,11 +56,11 @@ COVERAGE.md                        full Böckeler + Anthropic coverage audit
 
 ## Status
 
-**The pipeline is complete, runs end-to-end twice, and covers Böckeler's full harness + Anthropic's 5 patterns** ([COVERAGE.md](COVERAGE.md)).
+**The pipeline runs end-to-end twice, and exercises each element of Böckeler's harness and Anthropic's five patterns in at least one example** ([COVERAGE.md](COVERAGE.md)).
 
-- **[Example #1 — multi-tenant-isolation](examples/multi-tenant-isolation/)** (`generic-saas`, API): hard-done = *no cross-tenant leak*. 25 tests. The loop caught a real cross-tenant write-leak; an isolated drift grader caught worker over-commenting; a 3-vote refutation on isolation held 3/3.
-- **[Example #2 — edge-telemetry-alerting](examples/edge-telemetry-alerting/)** (`edge-telemetry`, UI): hard-done = *no missed critical alert*. 27 tests + a real Playwright browser grader. Built via a **new profile with zero changes to any skill or grader** (audited). A 3-vote refutation **found a genuine missed-critical bug** (a sensor dead from boot) that the tests were green over — the loop closed it (`decisions/0001`).
+- **[Example #1 — multi-tenant-isolation](examples/multi-tenant-isolation/)** (`generic-saas`, API): hard-done = *no cross-tenant leak*. 27 tests. Isolation is certified by an integration test and **held under a fresh adversarial refuter** (author ≠ grader) that attacked every verb — including a member cross-tenant delete (an existence oracle via RBAC ordering).
+- **[Example #2 — edge-telemetry-alerting](examples/edge-telemetry-alerting/)** (`edge-telemetry`, UI): hard-done = *no missed critical alert*. 28 fixture-replay tests + 2 real Playwright browser tests. Built via a **new profile with zero changes to any skill or grader**. Every safety-critical breach — including a sensor **dead from boot** (`decisions/0001`) — raises CRITICAL; certified by fixture-replay and **held under a fresh adversarial refuter**.
 
 Two structurally-opposite domains — a CRUD API and a stream/rule engine — run through the **same skills and graders, byte-for-byte**. Everything domain-specific lives in the swapped profile. In both, the tiering rubric refused to 🟢 agent-ship the core-promise tickets, and the grader — not author confidence — certified the hard-done.
 
-**Full coverage, demonstrated in runnable examples.** Böckeler's 12 sub-elements + Anthropic's 5 patterns, each first-class in the plugin and exercised in an example: codemods (a libcst transform), logs grader, browser grader (Playwright), isolated review-agents (author ≠ grader), orchestrator-workers (real parallel worker sub-agents), and the adversarial N-vote, which caught a real bug in each example. See [COVERAGE.md](COVERAGE.md).
+**Each element, exercised in a runnable example.** Böckeler's guide + grader elements and Anthropic's five patterns, each first-class in the plugin and exercised in an example: codemods (a libcst transform), logs grader, browser grader (Playwright), isolated review-agents (author ≠ grader), orchestrator-workers, and an adversarial refutation that independently re-checked the core promise in each example. See [COVERAGE.md](COVERAGE.md).
