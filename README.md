@@ -1,6 +1,6 @@
 # pro-code
 
-Coding is getting commoditized, and with it a wave of hype: vibe coding, low-code, no-code — the promise that you won't really need to write software anymore. This isn't about that. Real software still needs someone who understands it — pro-code keeps that person in the loop and uses agents to amplify them.
+Coding is getting commoditized, and with it a wave of hype: vibe coding, low-code, no-code — the promise that you won't really need to write software anymore. This isn't about that. Real software still needs someone who understands it — hence the name: pro-code, not no-code. Keep that person in the loop, and let agents amplify them.
 
 A small, self-contained pipeline for building software with coding agents — a concrete, runnable implementation of the ideas discussed in [the article](https://roselabs-io.github.io/pro-code/two-reading-journeys.html).
 
