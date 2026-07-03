@@ -1,13 +1,15 @@
 # pro-code
 
-A small, self-contained pipeline for building software with coding agents — a concrete, runnable implementation of the ideas discussed in [the article](two-reading-journeys.md).
+Coding is getting commoditized, and with it a wave of hype: vibe coding, low-code, no-code — the promise that you won't really need to write software anymore. This isn't about that. Real software still needs someone who understands it — pro-code keeps that person in the loop and uses agents to amplify them.
+
+A small, self-contained pipeline for building software with coding agents — a concrete, runnable implementation of the ideas discussed in [the article](https://roselabs-io.github.io/pro-code/two-reading-journeys.html).
 
 The shape: build in phases — **Frame → Plan → Implement** (run at scale by **Autopilot**) — and make each handoff pass a **grader** before the next phase starts.
 
 > **Each phase separates a _guide_ (feedforward — domain-specific, swappable) from a _grader_ (feedback — agnostic).**
 > The pipeline ships the graders + neutral guide skeletons; a **profile** fills the guides for a domain.
 
-A phase produces its output, then a grader checks it before the handoff — that gate is what makes an autonomous loop worth trusting. It's one concrete take on the feedforward/feedback split the [article](two-reading-journeys.md) describes, not a framework.
+A phase produces its output, then a grader checks it before the handoff — that gate is what makes an autonomous loop worth trusting. It's one concrete take on the feedforward/feedback split the [article](https://roselabs-io.github.io/pro-code/two-reading-journeys.html) describes, not a framework.
 
 ## The pipeline
 
@@ -58,4 +60,4 @@ The pipeline runs end-to-end twice — two example services, each gated green.
 
 Two structurally-opposite domains — a CRUD API and a stream/rule engine — run through the **same skills and graders, byte-for-byte**; everything domain-specific lives in the swapped profile. In both, the tiering rubric refused to 🟢 agent-ship the core-promise tickets, and the grader — not author confidence — certified the hard-done.
 
-Each mechanism the [article](two-reading-journeys.md) describes shows up in at least one of the examples: codemods (a libcst transform), a logs grader, a browser grader (Playwright), isolated review agents (author ≠ grader), orchestrator-workers, and an adversarial refutation that independently re-checked the core promise.
+Each mechanism the [article](https://roselabs-io.github.io/pro-code/two-reading-journeys.html) describes shows up in at least one of the examples: codemods (a libcst transform), a logs grader, a browser grader (Playwright), isolated review agents (author ≠ grader), orchestrator-workers, and an adversarial refutation that independently re-checked the core promise.
