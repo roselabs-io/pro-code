@@ -1,0 +1,39 @@
+# edge-telemetry-alerting — CLI harness.
+# One named target per action, so the loop's graders and the human run the SAME commands.
+# Env: uv (`uv sync`). Recipes call `uv run`.
+
+doctrine := "../../graders/checks/doctrine_lint.py"
+
+# --- guides (feedforward) --------------------------------------------------
+up port="8000":              # serve the dashboard in the background
+	nohup uv run uvicorn dashboard.app:app --port {{port}} > .server.log 2>&1 & echo $! > .server.pid
+
+down:                        # stop the server started by `up`
+	-kill `cat .server.pid 2>/dev/null` 2>/dev/null; rm -f .server.pid
+
+demo port="8000":            # serve with the seeded browser scenario (stale + critical)
+	DASHBOARD_SEED=browser uv run uvicorn dashboard.app:app --port {{port}}
+
+# --- codemods (deterministic auto-fix arm) ---------------------------------
+fix:                         # codemod-lite: format + safe autofixes, before any grader
+	uv run ruff check --fix engine dashboard tests && uv run ruff format engine dashboard tests
+
+# --- graders (feedback, deterministic) -------------------------------------
+lint:                        # static analysis
+	uv run ruff check engine dashboard tests
+
+typecheck:                   # LSP/type facts (advisory author-aid, not a gate step)
+	uv run mypy engine
+
+doctrine-lint:               # comment doctrine + test posture + severity-constant forbid
+	uv run python {{doctrine}} engine dashboard tests
+	uv run python {{doctrine}} engine --forbid '"(critical|warning)"@@use Severity.*'
+
+test:                        # fixture-replay rules (fire + no-fire)
+	uv run pytest -m "not browser" -q
+
+browser:                     # the Playwright e2e — drives the running dashboard
+	uv run pytest -m browser -q
+
+# --- the whole gate --------------------------------------------------------
+gate: fix lint doctrine-lint test browser   # deterministic graders, short-circuit order

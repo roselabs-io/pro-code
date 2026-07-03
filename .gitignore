@@ -1,0 +1,12 @@
+node_modules/
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+.server.pid
+.server.log
+.mypy_cache/
+uv.lock
+poetry.lock
+.claude/

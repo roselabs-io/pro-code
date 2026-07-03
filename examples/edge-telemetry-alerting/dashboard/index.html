@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pump-station telemetry</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; background: #0f1419; color: #e6e6e6; }
+    h1 { font-size: 1.3rem; }
+    table { border-collapse: collapse; width: 100%; max-width: 760px; margin-top: 1rem; }
+    th, td { text-align: left; padding: 0.6rem 0.8rem; border-bottom: 1px solid #2a2f3a; }
+    th { font-weight: 600; color: #9aa4b2; font-size: 0.85rem; text-transform: uppercase; }
+    tr.critical td { background: #c0392b; color: #fff; font-weight: 600; }
+    tr.warning td { background: #d68910; color: #fff; }
+    tr.ok td { background: transparent; }
+    .status-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .stale { font-style: italic; color: #ffd; }
+    #alerts { margin-top: 1.5rem; }
+    #alerts li { margin: 0.2rem 0; }
+    .dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; margin-right: 0.4rem; }
+    .dot.live { background: #2ecc71; } .dot.down { background: #7f8c8d; }
+  </style>
+</head>
+<body>
+  <h1>Pump-station telemetry <span id="live"><span class="dot down"></span><span id="live-label">connecting…</span></span></h1>
+  <table>
+    <thead>
+      <tr><th>Signal</th><th>Reading</th><th>Status</th></tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <div id="alerts"><h2 style="font-size:1rem">Active alerts</h2><ul id="alert-list"></ul></div>
+
+  <script>
+    function render(state) {
+      const rows = document.getElementById("rows");
+      rows.innerHTML = "";
+      for (const s of state.signals) {
+        const tr = document.createElement("tr");
+        tr.className = s.status;
+        tr.setAttribute("data-signal", s.name);
+        const reading = s.stale
+          ? '<span class="stale">— stale</span>'
+          : (s.value === null ? "—" : s.value + " " + s.unit);
+        tr.innerHTML =
+          "<td>" + s.name + "</td>" +
+          "<td class='reading'>" + reading + "</td>" +
+          "<td><span class='status-label'>" + (s.stale ? "stale · " : "") + s.status + "</span></td>";
+        rows.appendChild(tr);
+      }
+      const list = document.getElementById("alert-list");
+      list.innerHTML = "";
+      for (const a of state.alerts) {
+        const li = document.createElement("li");
+        li.textContent = "[" + a.severity + "] " + a.reason + " (×" + a.count + ")";
+        list.appendChild(li);
+      }
+      setLive(true);
+    }
+    function setLive(up) {
+      document.querySelector("#live .dot").className = "dot " + (up ? "live" : "down");
+      document.getElementById("live-label").textContent = up ? "live" : "unreachable";
+    }
+    async function poll() {
+      try {
+        const resp = await fetch("/state");
+        render(await resp.json());
+      } catch (e) {
+        setLive(false);
+      }
+    }
+    poll();
+    setInterval(poll, 2000);
+  </script>
+</body>
+</html>

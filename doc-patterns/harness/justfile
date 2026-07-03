@@ -1,0 +1,37 @@
+# {{project_name}} — CLI harness
+#
+# CLIs / scripts (feedforward, ⚙️): the command tools the agent runs.
+# One entry point for every deterministic action, so the loop's graders and the human
+# invoke the SAME commands. Pulled from `doc-patterns/harness/justfile`; fill per project.
+# (Use `just`, or transcribe to a Makefile / npm scripts — the contract is one named
+# target per action, not the runner.)
+
+# --- guides (feedforward) --------------------------------------------------
+up:             # start the app in the background (write the pid so `down` can stop it)
+	{TODO: e.g., nohup ./.venv/bin/uvicorn app.main:app --port 8000 > .server.log 2>&1 & echo $! > .server.pid}
+
+down:           # stop the server started by `up`
+	-kill `cat .server.pid 2>/dev/null` 2>/dev/null; rm -f .server.pid
+
+# --- graders (feedback, deterministic) -------------------------------------
+lint:           # static analysis — style/bugs
+	{TODO: e.g., ruff check .}
+
+typecheck:      # LSP/type facts as a gate
+	{TODO: e.g., mypy . && tsc --noEmit}
+
+doctrine:       # special-lint grader — comment doctrine + test posture + domain --forbid rules
+	{TODO: e.g., python ../../graders/checks/doctrine_lint.py app tests --forbid 'REGEX@@message'}
+
+test:           # the verify gate
+	{TODO: e.g., pytest -q}
+
+# --- codemods (deterministic auto-fix arm) ---------------------------------
+fix:            # codemod-lite: format + safe autofixes, run BEFORE the LLM fix pass
+	{TODO: e.g., ruff check --fix . && ruff format .}
+
+codemod name:   # run one AST bulk transform (libcst / ast-grep) across N files
+	{TODO: e.g., python codemods/{{name}}.py app/}
+
+# --- the whole gate --------------------------------------------------------
+gate: fix lint typecheck test   # deterministic graders, in short-circuit order

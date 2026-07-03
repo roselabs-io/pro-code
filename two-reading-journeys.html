@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A map of two bodies of work on agent engineering — Böckeler's harness engineering and Anthropic's agent posts — and where they meet.">
+<title>Two reading journeys into agent engineering</title>
+<style>
+  :root {
+    --bg: #ECEFEE;
+    --surface: #F7F9F8;
+    --surface-2: #FFFFFF;
+    --ink: #17222B;
+    --muted: #55616A;
+    --faint: #7C8890;
+    --line: #D8DEDC;
+    --line-strong: #C3CBC9;
+    --ff: #2C6E75;        /* feedforward · guides · Journey A */
+    --ff-soft: #dfeceb;
+    --fb: #B0632F;        /* feedback · sensors · Journey B · the loop */
+    --fb-soft: #f2e5da;
+    --accent: var(--ff);
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", ui-serif, serif;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    --measure: 42rem;
+    --wide: 60rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0F151A;
+      --surface: #161E25;
+      --surface-2: #1B242C;
+      --ink: #E6ECEA;
+      --muted: #9AA6AC;
+      --faint: #74828A;
+      --line: #253039;
+      --line-strong: #33414B;
+      --ff: #63B3B9;
+      --ff-soft: #143036;
+      --fb: #D68F5D;
+      --fb-soft: #34241a;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #ECEFEE; --surface: #F7F9F8; --surface-2: #FFFFFF; --ink: #17222B;
+    --muted: #55616A; --faint: #7C8890; --line: #D8DEDC; --line-strong: #C3CBC9;
+    --ff: #2C6E75; --ff-soft: #dfeceb; --fb: #B0632F; --fb-soft: #f2e5da;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F151A; --surface: #161E25; --surface-2: #1B242C; --ink: #E6ECEA;
+    --muted: #9AA6AC; --faint: #74828A; --line: #253039; --line-strong: #33414B;
+    --ff: #63B3B9; --ff-soft: #143036; --fb: #D68F5D; --fb-soft: #34241a;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 19px;
+    line-height: 1.72;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .wrap { max-width: var(--wide); margin: 0 auto; padding: 0 1.5rem; }
+  .col { max-width: var(--measure); margin-left: auto; margin-right: auto; }
+
+  a { color: var(--ff); text-underline-offset: 2px; text-decoration-thickness: 1px; }
+  a:hover { text-decoration-color: var(--fb); }
+  :focus-visible { outline: 2px solid var(--fb); outline-offset: 3px; border-radius: 2px; }
+
+  h1, h2, h3 { font-family: var(--sans); line-height: 1.15; text-wrap: balance; letter-spacing: -0.015em; }
+  p { margin: 0 0 1.15rem; }
+  strong { font-weight: 700; color: var(--ink); }
+  em { font-style: italic; }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--faint); font-weight: 500;
+  }
+
+  /* ---- header ---- */
+  header.hero { padding: 4.5rem 0 2.2rem; border-bottom: 1px solid var(--line); }
+  .tracks { display: flex; gap: 0.4rem; margin-bottom: 1.4rem; }
+  .tracks span { height: 3px; border-radius: 2px; }
+  .tracks .a { flex: 1; background: var(--ff); }
+  .tracks .b { flex: 1; background: var(--fb); }
+  h1 {
+    font-size: clamp(2.1rem, 5.2vw, 3.3rem); font-weight: 720; margin: 0.8rem 0 1.2rem;
+  }
+  .dek { font-size: 1.18rem; color: var(--muted); max-width: 40rem; }
+  .dek strong { color: var(--ink); }
+  .pick {
+    font-family: var(--mono); font-size: 0.8rem; color: var(--muted);
+    margin-top: 1.6rem; padding: 0.8rem 1rem; border-left: 2px solid var(--fb);
+    background: var(--surface); line-height: 1.6;
+  }
+
+  /* ---- section scaffolding ---- */
+  section { padding: 3.2rem 0; }
+  section + section { border-top: 1px solid var(--line); }
+  .kicker { display: flex; align-items: baseline; gap: 0.8rem; margin-bottom: 0.4rem; }
+  .kicker .tag {
+    font-family: var(--mono); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; padding: 0.2rem 0.5rem; border-radius: 3px; white-space: nowrap;
+  }
+  .tag.a { color: var(--ff); background: var(--ff-soft); }
+  .tag.b { color: var(--fb); background: var(--fb-soft); }
+  .tag.meet { color: var(--ink); background: var(--line); }
+  h2 { font-size: clamp(1.6rem, 3.6vw, 2.15rem); font-weight: 700; margin: 0.2rem 0 1.4rem; }
+  h3 { font-size: 1.15rem; font-family: var(--sans); font-weight: 650; margin: 2.2rem 0 0.7rem; color: var(--ink); }
+
+  /* ---- series / definition list ---- */
+  .series { list-style: none; padding: 0; margin: 1.2rem 0 0; }
+  .series li { padding: 0.9rem 0; border-top: 1px solid var(--line); }
+  .series .name { font-family: var(--sans); font-weight: 640; color: var(--ink); }
+  .series p { margin: 0.25rem 0 0; font-size: 0.98rem; color: var(--muted); }
+
+  /* ---- channel definition lists (guides / sensors) ---- */
+  .listlead { font-family: var(--sans); font-weight: 700; font-size: 1rem; margin: 1.9rem 0 0.5rem; }
+  .listlead .sub { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); font-weight: 500; margin-left: 0.5rem; }
+  .listlead.ff { color: var(--ff); }
+  .listlead.fb { color: var(--fb); }
+  .deflist { list-style: none; margin: 0.4rem 0; padding: 0 0 0 1rem; border-left: 2px solid var(--line); }
+  .deflist.ff { border-color: var(--ff); }
+  .deflist.fb { border-color: var(--fb); }
+  .deflist li { padding: 0.42rem 0; border-top: 1px solid var(--line); font-size: 0.97rem; line-height: 1.5; }
+  .deflist li:first-child { border-top: none; }
+  .deflist li b { font-family: var(--sans); font-weight: 650; color: var(--ink); }
+  .deflist-note { font-size: 0.92rem; color: var(--muted); font-style: italic; margin: 0.55rem 0 0; }
+
+  /* ---- figure panels ---- */
+  figure { margin: 2.4rem 0; }
+  .panel {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 14px; padding: 1.6rem 1.5rem 1.4rem;
+  }
+  figcaption {
+    font-family: var(--mono); font-size: 0.74rem; color: var(--faint);
+    text-align: center; margin-top: 0.9rem; letter-spacing: 0.02em;
+  }
+  .fig-scroll { overflow-x: auto; }
+
+  /* diagram primitives */
+  .layer-label {
+    font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.13em;
+    text-transform: uppercase; color: var(--faint); margin-bottom: 0.55rem; font-weight: 600;
+  }
+  .box {
+    border: 1px solid var(--line-strong); border-radius: 10px;
+    background: var(--surface-2); padding: 1rem 1.1rem;
+  }
+  .box.human {
+    border-style: dashed; text-align: center; max-width: 26rem; margin: 0 auto;
+    font-family: var(--sans); font-size: 0.9rem; color: var(--muted);
+  }
+  .box.human b { color: var(--ink); font-weight: 640; }
+  .flow-down {
+    display: flex; justify-content: center; gap: 3.2rem;
+    font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--faint); padding: 0.5rem 0; align-items: center;
+  }
+  .flow-down span { position: relative; }
+  .flow-down span::after { content: "↓"; display: block; text-align: center; font-size: 1rem; color: var(--line-strong); }
+  .flow-down .ff { color: var(--ff); }
+  .flow-down .fb { color: var(--fb); }
+
+  .band { margin-bottom: 1rem; }
+  .band:last-child { margin-bottom: 0; }
+  .band-head {
+    display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.6rem;
+  }
+  .band-head .h {
+    font-family: var(--sans); font-weight: 680; font-size: 0.92rem; letter-spacing: 0.02em;
+  }
+  .band.ff .h { color: var(--ff); }
+  .band.fb .h { color: var(--fb); }
+  .band-head .sub { font-family: var(--mono); font-size: 0.68rem; color: var(--faint); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+  .chip {
+    font-family: var(--sans); font-size: 0.82rem; padding: 0.34rem 0.66rem; border-radius: 6px;
+    border: 1px solid transparent; white-space: nowrap; line-height: 1.2;
+  }
+  /* computational / deterministic = filled; inferential / soft = dashed outline */
+  .chip.comp.ff { background: var(--ff-soft); color: var(--ff); border-color: transparent; }
+  .chip.infer.ff { background: transparent; color: var(--ff); border: 1px dashed var(--ff); }
+  .chip.comp.fb { background: var(--fb-soft); color: var(--fb); border-color: transparent; }
+  .chip.infer.fb { background: transparent; color: var(--fb); border: 1px dashed var(--fb); }
+
+  .legend {
+    display: flex; gap: 1.2rem; flex-wrap: wrap; margin-top: 1rem; padding-top: 0.9rem;
+    border-top: 1px dashed var(--line); font-family: var(--mono); font-size: 0.68rem; color: var(--muted);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .swatch { width: 0.85rem; height: 0.85rem; border-radius: 3px; }
+  .swatch.filled { background: var(--faint); }
+  .swatch.dashed { border: 1px dashed var(--faint); }
+
+  .agent-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
+  .agent-cell {
+    border: 1px solid var(--line-strong); border-radius: 8px; padding: 0.7rem 0.85rem;
+    background: var(--surface-2); font-family: var(--sans); font-size: 0.86rem;
+  }
+  .agent-cell .lead { display: block; font-weight: 640; color: var(--ink); }
+  .agent-cell .via { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.06em; }
+  .agent-cell.ff .via { color: var(--ff); }
+  .agent-cell.fb .via { color: var(--fb); }
+
+  /* nested scopes diagram */
+  .nest { padding: 1.2rem; border-radius: 12px; border: 1px solid; }
+  .nest-hd { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.55rem; font-weight: 600; }
+  .nest.harness { border-color: var(--fb); background: color-mix(in srgb, var(--fb-soft) 55%, transparent); }
+  .nest.harness > .nest-hd { color: var(--fb); }
+  .nest.context { border-color: var(--line-strong); background: var(--surface-2); margin-top: 0.7rem; }
+  .nest.context > .nest-hd { color: var(--muted); }
+  .nest.prompt { border-color: var(--ff); background: color-mix(in srgb, var(--ff-soft) 60%, transparent); margin-top: 0.7rem; }
+  .nest.prompt > .nest-hd { color: var(--ff); }
+  .nest .rowline { font-family: var(--sans); font-size: 0.85rem; color: var(--muted); }
+  .nest .rowline + .rowline { margin-top: 0.25rem; }
+  .loop-ribbon {
+    display: flex; align-items: center; justify-content: center; gap: 0.6rem; flex-wrap: wrap;
+    margin-top: 1rem; padding: 0.7rem 1rem; border-radius: 8px; border: 1px dashed var(--fb);
+    font-family: var(--mono); font-size: 0.74rem; color: var(--fb); text-align: center;
+  }
+  .loop-ribbon .glyph { font-size: 1rem; }
+
+  /* five patterns */
+  .patterns { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.8rem; margin-top: 1.4rem; }
+  .pattern {
+    border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.1rem; background: var(--surface);
+  }
+  .pattern .num { font-family: var(--mono); font-size: 0.72rem; color: var(--fb); font-weight: 600; }
+  .pattern .pname { font-family: var(--sans); font-weight: 660; color: var(--ink); margin: 0.15rem 0 0.35rem; }
+  .pattern p { margin: 0; font-size: 0.9rem; color: var(--muted); line-height: 1.55; }
+  .triad { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); margin-top: 1.2rem; }
+  .triad b { color: var(--ink); }
+
+  /* meet mapping */
+  .map-table { margin: 1.4rem 0 0; border-top: 1px solid var(--line-strong); }
+  .map-row {
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem;
+    padding: 0.85rem 0; border-bottom: 1px solid var(--line);
+  }
+  .map-row .lft { text-align: right; color: var(--ff); font-family: var(--sans); font-size: 0.92rem; font-weight: 560; }
+  .map-row .rgt { text-align: left; color: var(--fb); font-family: var(--sans); font-size: 0.92rem; font-weight: 560; }
+  .map-row .mid { color: var(--faint); font-family: var(--mono); font-size: 0.85rem; }
+  .map-heads { display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; }
+  .map-heads .lft { text-align: right; }
+  .map-heads .rgt { text-align: left; }
+  .map-heads span { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
+  .map-heads .lft span { color: var(--ff); }
+  .map-heads .rgt span { color: var(--fb); }
+
+  /* worked example callout */
+  .worked { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--ff); border-radius: 10px; padding: 1.4rem 1.5rem; }
+  .worked h2 { margin-top: 0; }
+
+  /* sources */
+  .sources { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1.4rem; }
+  .sources h3 { margin-top: 0; font-size: 0.82rem; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--faint); font-weight: 600; }
+  .sources ul { list-style: none; padding: 0; margin: 0; }
+  .sources li { padding: 0.6rem 0; border-top: 1px solid var(--line); font-family: var(--sans); font-size: 0.86rem; line-height: 1.45; }
+  .sources .src-note { color: var(--muted); font-size: 0.82rem; }
+
+  footer { padding: 2.4rem 0 4rem; color: var(--faint); font-family: var(--mono); font-size: 0.74rem; }
+  hr.rule { border: none; border-top: 1px solid var(--line); margin: 0; }
+
+  @media (max-width: 640px) {
+    body { font-size: 17.5px; }
+    .agent-grid { grid-template-columns: 1fr; }
+    .sources { grid-template-columns: 1fr; gap: 1rem; }
+    .map-row, .map-heads { grid-template-columns: 1fr; gap: 0.15rem; }
+    .map-row .lft, .map-row .rgt, .map-heads .lft, .map-heads .rgt { text-align: left; }
+    .map-row .mid { display: none; }
+    .flow-down { gap: 1.4rem; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal { animation: rise 0.7s ease both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="hero reveal">
+    <div class="col">
+      <div class="tracks" aria-hidden="true"><span class="a"></span><span class="b"></span></div>
+      <p class="eyebrow">Field notes · agent engineering</p>
+      <h1>Two reading journeys into agent engineering</h1>
+      <p class="dek">I spent a while building software with coding agents before I went looking for writing that would organize how I was doing it. Two bodies of work did the most for me. They cover the same question — <strong>how do you get reliable work out of a coding agent over a long horizon?</strong> — from two vantage points: Böckeler's harness-engineering series, grounded in cybernetics (the study of how systems steer themselves by feeding output back as correction), and Anthropic's engineering posts, close to the source.</p>
+      <p class="pick">If you read one thing from each →<br>Böckeler's <em>Harness Engineering</em> &nbsp;·&nbsp; Anthropic's <em>Building Effective Agents</em>.</p>
+    </div>
+  </header>
+
+  <!-- JOURNEY A -->
+  <section>
+    <div class="col">
+      <div class="kicker"><span class="tag a">Journey A · Böckeler</span></div>
+      <h2>A harness is guides + sensors</h2>
+      <p>Böckeler's frame is a single picture. An agent's <strong>harness</strong> is everything around the model that shapes and checks its work, and it splits cleanly in two:</p>
+      <p><strong>Guides — feedforward.</strong> Context you supply <em>before</em> generation to prevent a mistake. Open-loop: it shapes the first attempt.<br>
+      <strong>Sensors — feedback.</strong> Signals you read <em>from the output</em> to drive correction. Closed-loop: it catches what the guides didn't prevent.</p>
+      <p>She calls harness engineering "a specific form of context engineering," and grounds it in Ashby's Law of Requisite Variety: a regulator must carry at least as much variety as the system it governs. So the controls come in two textures — <strong>inferential</strong> (soft, judgment-based: guidance the agent interprets, or an LLM that judges) and <strong>computational</strong> (hard, deterministic: exact facts and transforms from tooling). You reach for deterministic where the rule is mechanical, and inferential where it isn't.</p>
+    </div>
+
+    <figure class="wrap" style="padding:0;">
+      <div class="panel fig-scroll">
+        <div style="min-width:33rem;">
+          <div class="layer-label">Human · steering</div>
+          <div class="box human">tunes guides + sensors <b>when an issue recurs</b></div>
+
+          <div class="flow-down"><span class="ff">steer</span><span class="fb">steer</span></div>
+
+          <div class="box" style="background:var(--surface);">
+            <div class="layer-label" style="margin-bottom:0.9rem;">The harness · everything but the model</div>
+
+            <div class="band ff">
+              <div class="band-head"><span class="h">Guides</span><span class="sub">feedforward — prevent the mistake, up front</span></div>
+              <div class="chips">
+                <span class="chip infer ff">Principles</span>
+                <span class="chip infer ff">CfRs</span>
+                <span class="chip infer ff">Rules</span>
+                <span class="chip infer ff">Ref Docs</span>
+                <span class="chip infer ff">How-tos</span>
+                <span class="chip comp ff">Language servers</span>
+                <span class="chip comp ff">CLIs / scripts</span>
+                <span class="chip comp ff">Code mods</span>
+              </div>
+            </div>
+
+            <div class="band fb">
+              <div class="band-head"><span class="h">Sensors</span><span class="sub">feedback — catch + self-correct, after</span></div>
+              <div class="chips">
+                <span class="chip comp fb">Static analysis</span>
+                <span class="chip infer fb">Review agents</span>
+                <span class="chip comp fb">Logs</span>
+                <span class="chip comp fb">Browser</span>
+              </div>
+            </div>
+
+            <div class="legend">
+              <span><span class="swatch filled"></span> filled = computational / deterministic</span>
+              <span><span class="swatch dashed"></span> dashed = inferential / judgment-based</span>
+            </div>
+          </div>
+
+          <div class="flow-down"><span class="ff">feedforward</span><span class="fb">feedback</span></div>
+
+          <div class="box" style="background:var(--surface);">
+            <div class="layer-label" style="margin-bottom:0.7rem;">Coding agent</div>
+            <div class="agent-grid">
+              <div class="agent-cell ff"><span class="lead">initial generation</span><span class="via">← feedforward</span></div>
+              <div class="agent-cell fb"><span class="lead">self-correcting</span><span class="via">← feedback</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption>The harness — guides shape the first attempt; sensors catch what they missed. The human tunes the controls when an issue recurs.</figcaption>
+    </figure>
+
+    <div class="col">
+      <p class="listlead ff">The guides <span class="sub">feedforward</span></p>
+      <ul class="deflist ff">
+        <li><b>Principles</b> — high-level values that bias decisions.</li>
+        <li><b>CfRs</b> — cross-functional requirements, the "-ilities": performance, security, accessibility, observability.</li>
+        <li><b>Rules</b> — concrete do/don't constraints.</li>
+        <li><b>Ref Docs</b> — reference material the agent reads.</li>
+        <li><b>How-tos</b> — step-by-step procedures.</li>
+        <li><b>Language servers</b> — LSP semantic facts: definitions, references, types.</li>
+        <li><b>CLIs and scripts</b> — the command tools the agent runs.</li>
+        <li><b>Code mods</b> — AST bulk transforms: migrate once, apply to N files.</li>
+      </ul>
+      <p class="deflist-note">The first five are inferential; the last three are computational.</p>
+
+      <p class="listlead fb">The sensors <span class="sub">feedback</span></p>
+      <ul class="deflist fb">
+        <li><b>Static analysis</b> — lint, type-check, security scan, without running the code.</li>
+        <li><b>Review agents</b> — LLM sub-agents that read the output.</li>
+        <li><b>Logs</b> — runtime traces the agent reads back.</li>
+        <li><b>Browser</b> — an automated browser observing real behavior.</li>
+      </ul>
+      <p class="deflist-note">Only the review agents are inferential; the rest are deterministic.</p>
+      <p>The last piece is the human. You sit outside the loop and <strong>tune the controls when an issue recurs</strong> — refine a guide, or add a sensor. Böckeler's guidance on where you belong: "a good harness should not necessarily aim to fully eliminate human input, but to direct it to where our input is most important."</p>
+
+      <h3>The rest of the series</h3>
+      <p>The harness picture is the anchor; Böckeler's surrounding articles fill it in.</p>
+      <ul class="series">
+        <li><span class="name">Context Engineering for Coding Agents</span><p>Catalogs the feedforward mechanisms concretely — for Claude Code, CLAUDE.md, path-scoped rules, slash commands, skills, subagents, MCP, and hooks. It draws a useful line between <em>Instructions</em> (do this specific thing this way) and <em>Guidance</em> (general conventions).</p></li>
+        <li><span class="name">How far can we push AI autonomy?</span><p>Argues full, unsupervised autonomy isn't yet feasible for production business software, and reframes the goal: don't chase autonomy, <em>make the loop go faster by speeding up human verification</em>. Its catalog of failure modes is worth the read on its own — especially <strong>false success claims</strong>, where an agent reports the tests pass when they don't.</p></li>
+        <li><span class="name">Understanding Spec-Driven Development</span><p>Places the "spec before code" tools on a spectrum — spec-first (discarded after), spec-anchored (persists and evolves), and spec-as-source (the spec is primary, code is generated from it) — and is honest about the costs, including <em>false control</em>: a spec you never verify the result against doesn't actually control anything.</p></li>
+      </ul>
+      <p style="margin-top:1.6rem;color:var(--muted);">One more from the same site — <strong style="color:var(--ink);">not Böckeler's</strong>, but squarely adjacent:</p>
+      <ul class="series">
+        <li><span class="name">Humans and Agents in Software Engineering Loops <span style="color:var(--faint);font-weight:400;">· Kief Morris</span></span><p>Names three postures: humans <strong>out</strong> of the loop (vibe coding), <strong>in</strong> the loop (line-by-line inspection — the bottleneck), and <strong>on</strong> the loop (you engineer the harness and steer). It also names the <strong>agentic flywheel</strong>: agents improve their own harness from performance signals while humans keep steering.</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- JOURNEY B -->
+  <section>
+    <div class="col">
+      <div class="kicker"><span class="tag b">Journey B · Anthropic</span></div>
+      <h2>Definitions, patterns, the loop</h2>
+      <p>Where Böckeler gives you the practical catalog, the Anthropic engineering posts give you the definitions, the named patterns, and the <em>why</em>.</p>
+
+      <h3>Definitions</h3>
+      <p><strong>Building Effective Agents</strong> draws the line most of the field now uses. A <strong>workflow</strong> is LLMs and tools orchestrated through <em>predefined code paths</em> — you own the steps, and it's predictable. An <strong>agent</strong> <em>dynamically directs its own process and tool use</em> — "LLMs using tools based on environmental feedback in a loop."</p>
+      <p>Use a workflow when the task decomposes into fixed subtasks; reach for an agent on open-ended problems where you can't predict the path — and only in trusted environments with guardrails. The overarching advice: start with the simplest thing that works and add agentic structure only when simpler approaches fall short.</p>
+      <p>The <strong>Claude Agent SDK</strong> post names the loop underneath all of it: <strong>gather context → take action → verify work → repeat.</strong> Every other article is a facet of one of those legs.</p>
+
+      <h3>Prompt engineering, then context engineering</h3>
+      <p>The <strong>prompt engineering</strong> overview is the foundation: name the task, identify the audience, and define what "done" means <em>before</em> generation; then clarity, examples, structure, and prompt chaining.</p>
+      <p><strong>Effective Context Engineering for AI Agents</strong> marks the shift. Prompt engineering is writing the instructions — a discrete act. Context engineering is "curating and maintaining the optimal set of tokens during inference" — something you do every turn. The reason it matters is <strong>context rot</strong>: as tokens accumulate, the model's ability to recall accurately degrades. Context is a finite resource, so the maxim is "the smallest possible set of high-signal tokens that maximize the likelihood of the desired outcome." For long tasks it names three techniques: <strong>compaction</strong> (distill history at high fidelity), <strong>structured note-taking</strong> (a persistent external memory the agent writes to), and <strong>sub-agent architectures</strong> (a focused agent returns a condensed summary to a coordinator).</p>
+      <p><strong>Writing Tools for Agents</strong> covers the other half of context — the tools. It frames a tool as "a contract between deterministic systems and non-deterministic agents," and argues for designing the agent-computer interface for a forgetful, context-scarce caller: a few high-impact workflow tools rather than many thin API wrappers, clear names, and high-signal returns. <strong>MCP</strong> (Model Context Protocol) is the standard for how those tools and data sources reach the agent, turning an M×N integration problem into M+N.</p>
+
+      <h3>The five patterns</h3>
+      <p>Five composable patterns — worth memorizing because most agent systems are combinations of them.</p>
+      <div class="patterns">
+        <div class="pattern"><div class="num">01</div><div class="pname">Prompt chaining</div><p>Each call processes the previous output, with gates between steps.</p></div>
+        <div class="pattern"><div class="num">02</div><div class="pname">Routing</div><p>Classify the input, then send it to a specialized handler.</p></div>
+        <div class="pattern"><div class="num">03</div><div class="pname">Parallelization</div><p>Run work concurrently — by <em>sectioning</em> (split independent subtasks) or <em>voting</em> (run the same task several times for confidence).</p></div>
+        <div class="pattern"><div class="num">04</div><div class="pname">Orchestrator–workers</div><p>A lead model decomposes a task, delegates to workers, and synthesizes their results.</p></div>
+        <div class="pattern"><div class="num">05</div><div class="pname">Evaluator–optimizer</div><p>One model generates, another critiques, in a loop until the result is good enough.</p></div>
+      </div>
+      <p class="triad">Alongside them, three principles: <b>simplicity</b> · <b>transparency</b> (show the planning steps) · a carefully crafted <b>agent-computer interface</b>.</p>
+
+      <h3>The harness</h3>
+      <p>Two posts go deep on running an agent over a long horizon.</p>
+      <ul class="series">
+        <li><span class="name">Effective Harnesses for Long-Running Agents</span><p>Starts from a hard fact: "each new session begins with no memory of what came before." The fix is environmental scaffolding — a progress file (features written as failing tests), a fresh-context re-orientation ritual (read the progress file, review git, run the end-to-end tests, <em>then</em> pick the next task), git commits for rollback, and end-to-end verification that tests the app like a real user. It also draws a clean boundary: <strong>context is content</strong> (what's in the window now) and <strong>harness is control</strong> (the loop, verification, state across sessions, stopping conditions).</p></li>
+        <li><span class="name">Harness Design for Long-Running Application Development</span><p>Contributes the lever: a GAN-inspired split into <strong>planner → generator → evaluator</strong>. "Separating the agent doing the work from the agent judging it proves to be a strong lever." Subjective quality becomes gradable once you give the evaluator concrete criteria defined before implementation.</p></li>
+      </ul>
+      <p>Two more round it out: <strong>Building a Multi-Agent Research System</strong> is orchestrator–workers in production (with the honest caveat that it costs far more tokens and that most coding work, with its shared context and interdependencies, is a poor fit); and <strong>Scaling Managed Agents</strong> decouples the reasoning "brain" from the execution "hands."</p>
+      <p>The scopes nest — prompt inside context inside harness — with the loop wrapping the whole thing:</p>
+    </div>
+
+    <figure class="wrap" style="padding:0;">
+      <div class="panel">
+        <div class="nest harness">
+          <div class="nest-hd">Harness · control — everything but the model</div>
+          <div class="rowline">guides (feedforward) · sensors (feedback)</div>
+          <div class="rowline">the loop · tools · state across sessions · stopping conditions</div>
+          <div class="nest context">
+            <div class="nest-hd">Context · content in the window</div>
+            <div class="rowline">write · select · compress · isolate</div>
+            <div class="nest prompt">
+              <div class="nest-hd">Prompt · the instruction</div>
+              <div class="rowline">phrasing · canonical examples</div>
+            </div>
+          </div>
+        </div>
+        <div class="loop-ribbon"><span class="glyph">↻</span> the loop wraps: gather context → take action → verify → repeat</div>
+      </div>
+      <figcaption>Prompt ⊂ context ⊂ harness — the loop wraps the whole thing.</figcaption>
+    </figure>
+  </section>
+
+  <!-- WHERE THEY MEET -->
+  <section>
+    <div class="col">
+      <div class="kicker"><span class="tag meet">Where the two journeys meet</span></div>
+      <h2>The same idea, from two directions</h2>
+      <p>Read side by side, the two vocabularies line up.</p>
+
+      <div class="map-heads">
+        <div class="lft"><span>Böckeler</span></div><div></div><div class="rgt"><span>Anthropic</span></div>
+      </div>
+      <div class="map-table">
+        <div class="map-row"><div class="lft">Guides (feedforward)</div><div class="mid">≈</div><div class="rgt">context + tools — the <em>gather</em> leg</div></div>
+        <div class="map-row"><div class="lft">Sensors (feedback)</div><div class="mid">≈</div><div class="rgt">verification + the evaluator — the <em>verify</em> leg</div></div>
+        <div class="map-row"><div class="lft">Human steers, tuning the controls</div><div class="mid">≈</div><div class="rgt">human oversight — guardrails + verification</div></div>
+        <div class="map-row"><div class="lft">Inferential vs computational</div><div class="mid">≈</div><div class="rgt">LLM-judged vs deterministic checks</div></div>
+        <div class="map-row"><div class="lft">"A form of context engineering"</div><div class="mid">≈</div><div class="rgt">prompt ⊂ context ⊂ harness</div></div>
+      </div>
+
+      <p style="margin-top:1.6rem;">The clearest overlap is on the feedback half. Böckeler's <strong>sensors</strong>, Anthropic's <strong>evaluator–optimizer</strong>, and the harness-design <strong>evaluator</strong> are the same idea from three directions: separate the agent that does the work from the agent that judges it, and give the judge concrete criteria. It's the most-emphasized point across the Anthropic set and the load-bearing half of Böckeler's chart.</p>
+      <p>In practice the two journeys are complementary rather than redundant. Böckeler gives the catalog — <em>what mechanisms exist and how they land in your editor</em>. Anthropic gives <em>the definitions, the named patterns, and why each move works</em>. Read together, you get both the parts list and the reasoning.</p>
+    </div>
+  </section>
+
+  <!-- WORKED EXAMPLE -->
+  <section>
+    <div class="col">
+      <div class="worked">
+        <h2>A small worked example</h2>
+        <p>I wanted to see the feedforward/feedback split as running code rather than a diagram, so I built a small pipeline in this repo, <strong>pro-code</strong>. It runs <strong>Frame → Plan → Implement</strong>, and each phase hands off through a <strong>grader</strong> — a sensor, in Böckeler's terms. The one commitment it makes concrete is the split itself: each phase separates a <strong>guide</strong> (feedforward, domain-specific, swapped per profile) from a <strong>grader</strong> (feedback, agnostic). Two example services, both runnable, show it end to end — one where "done" means no cross-tenant data leak, one where it means no missed critical alert.</p>
+        <p>It also takes memory seriously. Anthropic's <em>Effective Context Engineering</em> names the general move for long tasks — <strong>structured note-taking</strong>: a persistent external memory the agent writes to and reads back, so progress survives a fresh context. The pipeline's <strong>living docs</strong> are a concrete proposition for what that memory is — a running <code>current-state</code>, <code>backlog</code>, <code>open-questions</code>, and a decision log the next session reads first. It's one implementation of the general idea, and then one step further — the loop <strong>grades</strong> the docs for currency alongside the code, so stale memory fails the gate instead of quietly misleading the next run.</p>
+        <p style="margin-bottom:0;color:var(--muted);">It's one instance, not a framework — a way to hold the chart in your hands. The reading is the point; this is just where I put it down.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOURCES -->
+  <section>
+    <div class="col">
+      <div class="kicker"><span class="tag meet">Sources</span></div>
+      <h2>The reading</h2>
+      <div class="sources">
+        <div>
+          <h3>Journey A — Böckeler & others · martinfowler.com</h3>
+          <ul>
+            <li><a href="https://martinfowler.com/articles/harness-engineering.html" target="_blank" rel="noopener">Harness Engineering for coding agent users</a> <span class="src-note">— the guides + sensors frame.</span></li>
+            <li><a href="https://www.thoughtworks.com/insights/blog/generative-ai/harness-engineering-agent-feedback-exploring-ai-coding-sensors" target="_blank" rel="noopener">Harness engineering & agent feedback: AI coding sensors</a> <span class="src-note">— the feedback half in depth.</span></li>
+            <li><a href="https://martinfowler.com/articles/exploring-gen-ai/context-engineering-coding-agents.html" target="_blank" rel="noopener">Context Engineering for Coding Agents</a> <span class="src-note">— the feedforward mechanisms cataloged.</span></li>
+            <li><a href="https://martinfowler.com/articles/pushing-ai-autonomy.html" target="_blank" rel="noopener">How far can we push AI autonomy in code generation?</a> <span class="src-note">— the autonomy ceiling and failure modes.</span></li>
+            <li><a href="https://martinfowler.com/articles/exploring-gen-ai/anchoring-to-reference.html" target="_blank" rel="noopener">Anchoring AI to a reference application</a> <span class="src-note">— reference apps and pattern-drift.</span></li>
+            <li><a href="https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html" target="_blank" rel="noopener">Understanding Spec-Driven Development</a> <span class="src-note">— spec-first / anchored / as-source.</span></li>
+            <li><a href="https://martinfowler.com/articles/exploring-gen-ai/humans-and-agents.html" target="_blank" rel="noopener">Humans and Agents in Software Engineering Loops</a> <span class="src-note">— Kief Morris; same site, adjacent read: out / in / on the loop; the agentic flywheel.</span></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Journey B — Anthropic Engineering</h3>
+          <ul>
+            <li><a href="https://www.anthropic.com/research/building-effective-agents" target="_blank" rel="noopener">Building Effective Agents</a> <span class="src-note">— workflow vs agent; the five patterns.</span></li>
+            <li><a href="https://docs.anthropic.com/en/docs/prompt-engineering" target="_blank" rel="noopener">Prompt engineering overview</a> <span class="src-note">— the foundation.</span></li>
+            <li><a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents" target="_blank" rel="noopener">Effective Context Engineering for AI Agents</a> <span class="src-note">— context rot; the smallest high-signal set.</span></li>
+            <li><a href="https://www.anthropic.com/engineering/writing-tools-for-agents" target="_blank" rel="noopener">Writing Tools for Agents</a> <span class="src-note">— the agent-computer interface.</span></li>
+            <li><a href="https://www.anthropic.com/news/model-context-protocol" target="_blank" rel="noopener">Model Context Protocol</a> <span class="src-note">— the M×N → M+N connection standard.</span></li>
+            <li><a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents" target="_blank" rel="noopener">Effective Harnesses for Long-Running Agents</a> <span class="src-note">— progress files; content vs control.</span></li>
+            <li><a href="https://www.anthropic.com/engineering/harness-design-long-running-apps" target="_blank" rel="noopener">Harness Design for Long-Running Application Development</a> <span class="src-note">— planner / generator / evaluator.</span></li>
+            <li><a href="https://www.anthropic.com/engineering/multi-agent-research-system" target="_blank" rel="noopener">Building a Multi-Agent Research System</a> <span class="src-note">— orchestrator–workers in production.</span></li>
+            <li><a href="https://claude.com/blog/building-agents-with-the-claude-agent-sdk" target="_blank" rel="noopener">Building Agents with the Claude Agent SDK</a> <span class="src-note">— the loop: gather → act → verify → repeat.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+  <footer><div class="col">Two reading journeys into agent engineering · a map of guides + sensors, definitions + patterns, and where they meet.</div></footer>
+
+</div>
+</body>
+</html>
