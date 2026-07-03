@@ -84,8 +84,8 @@ The last piece is the human. You sit outside the loop and **tune the controls wh
 The harness picture is the anchor; Böckeler's surrounding articles fill it in.
 
 - **Context Engineering for Coding Agents** catalogs the feedforward mechanisms concretely — for Claude Code, that's CLAUDE.md, path-scoped rules, slash commands, skills, subagents, MCP, and hooks. It draws a useful line between *Instructions* (do this specific thing this way) and *Guidance* (general conventions).
-- **How far can we push AI autonomy?** argues that full, unsupervised autonomy isn't yet feasible for production business software, and reframes the goal: don't chase autonomy, *make the loop go faster by speeding up human verification*. Its catalog of failure modes is worth the read on its own — especially **false success claims**, where an agent reports the tests pass when they don't.
-- **Understanding Spec-Driven Development** places the "spec before code" tools on a spectrum — spec-first (the spec is discarded after), spec-anchored (it persists and evolves), and spec-as-source (the spec is primary and code is generated from it) — and is honest about the costs, including *false control*: a spec you never verify the result against doesn't actually control anything.
+- **How far can we push AI autonomy?** argues that full, unsupervised autonomy isn't yet feasible for production business software, and reframes the goal: don't chase autonomy, *make the loop go faster by speeding up human verification*. Its catalog of failure modes is worth the read on its own — especially agents **declaring success in spite of red tests**, reporting the build and tests passed when they didn't.
+- **Understanding Spec-Driven Development** places the "spec before code" tools on a spectrum — spec-first (the spec is discarded after), spec-anchored (it persists and evolves), and spec-as-source (the spec is primary and code is generated from it) — and is honest about the costs, including a *false sense of control*: a spec you never verify the result against doesn't actually control anything.
 
 One more from the same site — not Böckeler's, but squarely adjacent:
 
@@ -102,9 +102,9 @@ Where Böckeler gives you the practical catalog, the Anthropic engineering posts
 **Building Effective Agents** draws the line most of the field now uses:
 
 - A **workflow** is LLMs and tools orchestrated through *predefined code paths* — you own the steps, and it's predictable.
-- An **agent** *dynamically directs its own process and tool use* — "LLMs using tools based on environmental feedback in a loop."
+- An **agent**, by contrast, is a system where LLMs *dynamically direct their own processes and tool usage* — "LLMs using tools based on environmental feedback in a loop."
 
-Use a workflow when the task decomposes into fixed subtasks; reach for an agent on open-ended problems where you can't predict the path — and, they add, only in trusted environments with guardrails. The overarching advice: start with the simplest thing that works and add agentic structure only when simpler approaches fall short.
+Use a workflow when the task decomposes into fixed subtasks; reach for an agent on open-ended problems where you can't predict the path — and, they add, only in sandboxed environments with guardrails. The overarching advice: start with the simplest thing that works and add agentic structure only when simpler approaches fall short.
 
 The **Claude Agent SDK** post names the loop underneath all of it: **gather context → take action → verify work → repeat.** Every other article is a facet of one of those legs.
 
@@ -112,7 +112,7 @@ The **Claude Agent SDK** post names the loop underneath all of it: **gather cont
 
 The **prompt engineering** overview is the foundation: name the task, identify the audience, and define what "done" means *before* generation; then clarity, examples, structure, and prompt chaining.
 
-**Effective Context Engineering for AI Agents** marks the shift. Prompt engineering is writing the instructions — a discrete act. Context engineering is "curating and maintaining the optimal set of tokens during inference" — something you do every turn. The reason it matters is **context rot**: as tokens accumulate, the model's ability to recall accurately degrades. Context is a finite resource, so the maxim is "the smallest possible set of high-signal tokens that maximize the likelihood of the desired outcome." For long tasks it names three techniques: **compaction** (distill history at high fidelity), **structured note-taking** (a persistent external memory the agent writes to), and **sub-agent architectures** (a focused agent returns a condensed summary to a coordinator).
+**Effective Context Engineering for AI Agents** marks the shift. Prompt engineering is writing the instructions — a discrete act. Context engineering is "curating and maintaining the optimal set of tokens (information) during LLM inference" — something you do every turn. The reason it matters is **context rot**: as tokens accumulate, the model's ability to recall accurately degrades. Context is a finite resource, so the maxim is finding "the smallest possible set of high-signal tokens that maximize the likelihood of some desired outcome." For long tasks it names three techniques: **compaction** (distill history at high fidelity), **structured note-taking** (a persistent external memory the agent writes to), and **sub-agent architectures** (a focused agent returns a condensed summary to a coordinator).
 
 **Writing Tools for Agents** covers the other half of context — the tools. It frames a tool as "a contract between deterministic systems and non-deterministic agents," and argues for designing the agent-computer interface for a forgetful, context-scarce caller: a few high-impact workflow tools rather than many thin API wrappers, clear names, and high-signal returns. **MCP** (Model Context Protocol) is the standard for how those tools and data sources reach the agent, turning an M×N integration problem into M+N.
 
@@ -132,7 +132,7 @@ Alongside them, three principles: **simplicity**, **transparency** (show the pla
 
 Two posts go deep on running an agent over a long horizon.
 
-- **Effective Harnesses for Long-Running Agents** starts from a hard fact: "each new session begins with no memory of what came before." The fix is environmental scaffolding — a progress file (features written as failing tests), a fresh-context re-orientation ritual (read the progress file, review git, run the end-to-end tests, *then* pick the next task), git commits for rollback, and end-to-end verification that tests the app like a real user. It also draws a clean boundary: **context is content** (what's in the window now) and **harness is control** (the loop, the verification, state across sessions, stopping conditions).
+- **Effective Harnesses for Long-Running Agents** starts from a hard fact: "each new session begins with no memory of what came before." The fix is environmental scaffolding — a progress file (a feature list where each item starts marked not-yet-passing), a fresh-context re-orientation ritual (read the progress file, review git, run the end-to-end checks, *then* pick the next task), git commits for rollback, and end-to-end verification that drives the app like a real user. It also draws a clean boundary between **context as content** (what's in the window now) and **harness as control** (the loop, the verification, state across sessions, stopping conditions).
 - **Harness Design for Long-Running Application Development** contributes the lever: a GAN-inspired split into **planner → generator → evaluator**. "Separating the agent doing the work from the agent judging it proves to be a strong lever." Subjective quality becomes gradable once you give the evaluator concrete criteria defined before implementation.
 
 Two more round it out: **Building a Multi-Agent Research System** is orchestrator–workers in production (with the honest caveat that it costs far more tokens and that most coding work, with its shared context and interdependencies, is a poor fit); and **Scaling Managed Agents** decouples the reasoning "brain" from the execution "hands."
@@ -205,8 +205,9 @@ It's one instance, not a framework — a way to hold the chart in your hands. Th
 - [Prompt engineering overview](https://docs.anthropic.com/en/docs/prompt-engineering) — the foundation.
 - [Effective Context Engineering for AI Agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) — context rot; the smallest high-signal set.
 - [Writing Tools for Agents](https://www.anthropic.com/engineering/writing-tools-for-agents) — the agent-computer interface.
-- [Model Context Protocol](https://www.anthropic.com/news/model-context-protocol) — the M×N → M+N connection standard.
+- [Model Context Protocol](https://www.anthropic.com/news/model-context-protocol) — the open standard connecting tools and data to agents.
 - [Effective Harnesses for Long-Running Agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) — progress files; context (content) vs harness (control).
 - [Harness Design for Long-Running Application Development](https://www.anthropic.com/engineering/harness-design-long-running-apps) — planner / generator / evaluator.
 - [Building a Multi-Agent Research System](https://www.anthropic.com/engineering/multi-agent-research-system) — orchestrator–workers in production.
+- [Scaling Managed Agents: Decoupling the brain from the hands](https://www.anthropic.com/engineering/managed-agents) — the reasoning "brain" split from the execution "hands."
 - [Building Agents with the Claude Agent SDK](https://claude.com/blog/building-agents-with-the-claude-agent-sdk) — the loop: gather context → take action → verify work → repeat.
