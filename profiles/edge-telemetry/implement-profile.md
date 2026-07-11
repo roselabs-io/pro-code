@@ -18,16 +18,13 @@ The hard-done requirement — **no missed critical alert** — is proven the way
 
 > These are the profile's **declared choice-points** — fixed here so they're not silent. Any build choice *not* covered here (or by the Conventions below) goes in `docs/assumptions.md` with a disposition, so a default the agent reached for is visible, not buried.
 
-## Deterministic checks (run first, they short-circuit)
+## Deterministic checks
 
-| Check | Command | Rule |
-|---|---|---|
-| lint | `ruff check engine dashboard tests` | no lint errors |
-| tests | `pytest -m "not browser"` (fixture-replay) + `pytest -m browser` (e2e) | zero failures, **this session** |
-| comment-doctrine | `doctrine_lint.py engine dashboard tests` | comment doctrine + test-posture floor |
-| special-lint | `doctrine_lint.py engine --forbid '"(critical\|warning)"@@use Severity.*'` | domain forbid: severities are enum constants, not string literals |
-
-> **Not gate steps here:** a reading is validated at ingest (`parse_line` rejects a malformed line), so there's no separate schema-validation command. **Type-check** (`mypy engine/`) is run as an author-aid, advisory — not in the gate for this slice.
+Commands, thresholds, and allowlists live in this profile's [`check-commands.md`](check-commands.md) — the
+file the graders read directly (the active-profile handshake). This profile **runs**: lint · tests
+(fixture-replay + e2e) · type-check (advisory) · doctrine-lint · special-lint · **security** · **coverage**
+· **deps** · logs · browser. It declares **schema-validation** and **codemod** *n/a* (validated at ingest;
+drift caught by the drift grader). See `check-commands.md` for the commands + the n/a rationale.
 
 ## Fuzzy rubrics (~3 focused graders — what each points at)
 

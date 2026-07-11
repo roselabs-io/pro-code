@@ -19,19 +19,13 @@ This is the domain where **both** guides *and* graders are deterministic — sch
 
 > These are the profile's **declared choice-points** — fixed here so they're not silent. Any build choice *not* covered here (or by the Conventions below) goes in `docs/assumptions.md` with a disposition, so a default the agent reached for is visible, not buried.
 
-## Deterministic checks (run first, they short-circuit)
+## Deterministic checks
 
-The mechanical graders — commands, not LLM judges. As many as there are mechanical rules.
-
-| Check | Command | Rule |
-|---|---|---|
-| lint | `ruff check app tests codemods` | no lint errors |
-| tests | `pytest` | zero failures, **this session** |
-| comment-doctrine | `doctrine_lint.py app tests` | the regex-able subset of the comment doctrine + test-posture floor |
-| special-lint | `doctrine_lint.py app --forbid 'print\(@@use LOG' --forbid 'except\s*:@@no bare except'` | domain forbids: no `print` in app code, no bare `except` |
-| codemod-check | `codemods/require_caller_dep.py --check app/main.py` | every route carries the boundary dependency |
-
-> **Not gate steps here:** request/response shape is enforced at runtime by the **pydantic** models (a bad body → 422; the integration tests assert it), so there's no separate schema-validation command. **Type-check** (`mypy app/`) is run as an author-aid, advisory — not in the gate for this slice.
+Commands, thresholds, and allowlists live in this profile's [`check-commands.md`](check-commands.md) — the
+file the graders read directly (the active-profile handshake). This profile **runs**: lint · tests ·
+type-check (advisory) · doctrine-lint · special-lint · codemod-check · **security** · **coverage** ·
+**deps** · logs. It declares **schema-validation** and **browser/e2e** *n/a* (pydantic validates at
+runtime; API-only). See `check-commands.md` for the commands + the n/a rationale.
 
 ## Fuzzy rubrics (~3 focused graders — what each points at)
 
