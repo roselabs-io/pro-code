@@ -16,7 +16,7 @@ grader reads one file for its command.
 | codemod-check | `codemods/require_caller_dep.py --check app/main.py` | every route carries the boundary dependency |
 | security | `bandit -q -r app` + `detect-secrets scan` | no high-severity SAST finding · **secrets = hard fail** |
 | coverage | `pytest --cov=app --cov-report=term-missing` | changed-line ≥ 80% |
-| deps | `pip-audit` | **critical vuln = hard fail** · lockfile consistent |
+| deps | `poetry export --only main --without-hashes \| pip-audit -r -` | **critical vuln = hard fail** · lockfile consistent · audits the **shipped tree**, not the dev/security tooling's transitives |
 
 ## Other graders wired
 

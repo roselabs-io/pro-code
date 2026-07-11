@@ -78,9 +78,12 @@ not only a lint rule" step). A profile grader is a `.md` def in the profile's `g
 - **declares its rubric source** — inline, or a file the loop reads and injects (sub-agents don't have
   the repo in context — the orchestrator injects; never "go read X").
 
-**Budget:** deterministic profile graders are unlimited (cheap, factual). **Fuzzy** graders — agnostic +
-domain + personal combined — stay at **~3**; a profile adding a fuzzy grader justifies it against the cap
-(too many blur). GATE-0 warns when the composed fuzzy set exceeds it.
+**Budget:** deterministic profile graders are unlimited (cheap, factual). **Fuzzy** graders stay at **~3**
+— but the cap is on the **shared** set (agnostic + domain), where too many blur. A **personal overlay**'s
+fuzzy grader is the person's *opt-in* and rides as a justified **+1** above the shared cap (you're
+tightening on yourself, not the team). GATE-0 **warns** when the composed set exceeds ~3; it does **not**
+block — a warned 4 that's `feature · drift · docs-currency · <a personal-voice grader>` is expected, not a
+defect. *(Confirmed by the cold run: 4 composed graders held, all stayed sharp.)*
 
 ## Well-formed = passes GATE 0
 

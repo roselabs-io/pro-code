@@ -7,7 +7,10 @@ Deterministic, tier-1, short-circuits — a known-vulnerable dep must never reac
 ## What it checks (over the diff)
 
 - **Known vulnerabilities** — every added/bumped dep passes the profile's audit (`pip-audit` / `npm audit`
-  / `osv-scanner`). A known CRITICAL vuln is a **hard fail**.
+  / `osv-scanner`). A known CRITICAL vuln is a **hard fail**. Audit the **shipped** tree (production deps),
+  not the full environment — dev/security tooling's own transitives carry perpetual CVEs that never reach
+  the artifact and would pin the gate permanently red. The profile's command scopes this (e.g.
+  `poetry export --only main | pip-audit -r -`).
 - **Lockfile consistency** — a manifest change carries a matching, coherent lockfile update: no drift, no
   phantom or unpinned adds, no lockfile bump without a manifest reason.
 - **License** — each new dep's license is on the profile's allowlist; an unknown or forbidden license is a

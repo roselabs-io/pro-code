@@ -15,7 +15,7 @@ grader reads one file for its command.
 | special-lint | `doctrine_lint.py engine --forbid '"(critical\|warning)"@@use Severity.*'` | severities are enum constants, not string literals |
 | security | `bandit -q -r engine dashboard` + `detect-secrets scan` | no high-severity SAST finding · **secrets = hard fail** |
 | coverage | `pytest -m "not browser" --cov=engine --cov=dashboard --cov-report=term-missing` | changed-line ≥ 80% |
-| deps | `uv run pip-audit` | **critical vuln = hard fail** · lockfile consistent |
+| deps | `uv export --no-dev --no-hashes \| pip-audit -r -` | **critical vuln = hard fail** · lockfile consistent · audits the **shipped tree**, not dev/security tooling |
 
 ## Other graders wired
 

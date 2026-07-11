@@ -13,7 +13,9 @@ This is the domain where **both** guides *and* graders are deterministic — sch
 - **Env / runner:** **poetry** (`poetry install`); no task-runner — the graders run via `poetry run`.
 - **Python:** ≥ 3.12.
 - **Layout:** `app/` (the service), `tests/`, `codemods/`; docs in `docs/`.
-- **Lint / format:** `ruff` — `line-length = 90`, rules `E, F, I, B`.
+- **Lint / format:** `ruff` — `line-length = 90`, rules `E, F, I, B`; `extend-immutable-calls` for FastAPI
+  DI (`fastapi.Depends`, `Query`, `Header`, `Path`, `Body`, `Security`, …) so `B008` doesn't fire on
+  route-default `Depends()`. *(Promoted from the cold run — B vs FastAPI clashed unresolved.)*
 - **Tests:** `pytest` (`pythonpath = ["."]`, `testpaths = ["tests"]`), driven through FastAPI's `TestClient`.
 - **Auth (when present):** a signed bearer token resolved to a `Caller`. The token library + signing algorithm are a **build choice** — the assumptions ledger surfaces them.
 
@@ -58,6 +60,7 @@ runtime; API-only). See `check-commands.md` for the commands + the n/a rationale
 ## Conventions (the drift grader's rubric)
 
 - **Enforce at the boundary, not the UI** — authz/isolation checks live server-side; the client is convenience only.
+- **Auth fails closed** — a missing or invalid signing key **denies**; never a fallback to an unsigned / dev-open path (no dev-key fallback in the gated path). *(Promoted from the cold-run adversarial refutation.)*
 - **No magic numbers** — limits/TTLs/page-sizes are named config, not literals.
 - **Errors are typed + tiered** — a permission-denied returns the agreed status (404 for cross-tenant, not 403 that leaks existence); no bare 500s for expected failures.
 - **Tests live with the ticket** — not "later."
