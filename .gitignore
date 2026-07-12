@@ -7,6 +7,9 @@ __pycache__/
 .server.pid
 .server.log
 .mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
 uv.lock
 poetry.lock
 .claude/
