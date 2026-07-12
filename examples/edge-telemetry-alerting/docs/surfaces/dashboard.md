@@ -1,36 +1,36 @@
-# Station dashboard — Surface Spec
+# dashboard — Surface Spec
 
-> Surface = a monitoring view (`edge-telemetry`: a surface is a dashboard view).
+> One drill-down per surface — here a "surface" is the **monitoring view** the operator watches.
+> Pulled from `doc-patterns/specs/surface-spec.md`.
 
 ## What it does
 
-- **Purpose:** let an operator see every signal's live status + the active alerts at a glance.
+- **Purpose:** show every signal's live value + status so the operator never misses a critical condition.
 - **Actors:** operator (read-only).
-- **Shows / returns:** one row per signal (name · reading · status) and an active-alert list,
-  driven by `GET /state`, polled every 2s.
+- **Shows / returns:** per signal — name, value + unit (or "— stale"), a severity + text label, a colour dot; a footer active-alert count; a live/updated indicator. Driven by `GET /state`.
 
 ## Controls / inputs
 
-| Control / input | Triggers | Notes |
+| Control / input | Triggers | Notes / validation |
 |---|---|---|
-| (auto-poll) | `GET /state` every 2s | no operator actions in this slice |
+| (auto-poll) | `GET /state` every N seconds | read-only; no operator inputs in this slice |
 
 ## Calls + contracts
 
-- `GET /state` → `{station, signals: [{name, unit, value, stale, status, safety_critical, ts}],
-  alerts: [{signal, severity, kind, reason, count}], generated_at}`.
-- `POST /ingest {signal, value, ts}` → `202` (edge devices push readings).
+- `GET /state` → `200 { station, now, signals: [ { name, unit, value: number|null, stale: bool, severity: "info"|"warning"|"critical", label: string } ], active_alerts: int }`
+  - a **stale** signal serializes `value: null, stale: true, label: "— stale"` (never a last-good number).
+  - severity is the enum's string value; the client maps CRITICAL → red, and always renders the `label` text (not colour-only).
 
 ## States
 
-- **Nominal:** every row `ok`, empty alert list.
-- **Critical breach:** the row renders **red**; the reading cell shows the breaching number;
-  the alert appears in the list.
-- **Stale (incl. dead-from-boot):** the reading cell renders **"— stale"** (never a number);
-  the row is red for a safety-critical signal (`visual_invariant`).
-- **Unreachable:** the live-dot goes grey, label "unreachable" if `/state` fails.
+- **Empty / boot:** a never-reported signal → `value:null, stale:true`; safety-critical → `severity:"critical"`.
+- **Loading:** first paint before the first poll → "…" placeholders, no fabricated values.
+- **Error (monitor unreachable):** live dot greys, "monitor unreachable" banner, last values greyed (not fresh).
+- **Stale:** value cell shows "— stale"; status shows the stale severity + label.
 
 ## Design shapes referenced
 
-- `threshold-with-hysteresis` · `debounce-transient` · `staleness-watchdog` ·
-  `alert-dedup-storm-guard` · `named-severity-constant` · `config-driven-thresholds`.
+- `staleness-watchdog` — absence within TTL → alert; safety-critical → CRITICAL; rendered "— stale".
+- `severity-tiering` + `named-severity-constant` — status maps to a named severity constant.
+- `threshold-with-hysteresis`, `debounce-transient`, `alert-dedup-storm-guard` — drive the severity the row shows.
+- `config-driven-thresholds` — the limits behind the status come from `station.toml`.

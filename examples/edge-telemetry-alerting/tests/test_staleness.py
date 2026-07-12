@@ -1,44 +1,64 @@
-"""staleness-watchdog — missing data is an alert, never nominal (incl. dead-from-boot)."""
+"""Staleness — a dropped sensor renders '— stale' and alerts by criticality."""
 
 from __future__ import annotations
 
-from collections.abc import Callable
-
-from engine.models import AlertKind
+from engine.config import load_station
+from engine.models import Reading
 from engine.monitor import Monitor
 from engine.severity import Severity
 
 
-def test_dropped_sensor_fires_critical(run_fixture: Callable[..., Monitor]) -> None:
-    # discharge_pressure reports, then goes silent past its 5s TTL.
-    monitor = run_fixture("stale_sensor.jsonl")
-    alerts = monitor.active_alerts()
-    assert len(alerts) == 1
-    assert alerts[0].signal == "discharge_pressure"
-    assert alerts[0].kind is AlertKind.STALENESS
-    assert alerts[0].severity is Severity.CRITICAL
+def _status(m: Monitor, name: str, now: float):
+    return next(s for s in m.state_at(now) if s.name == name)
 
 
-def test_dead_from_boot_sensor_fires_critical(
-    run_fixture: Callable[..., Monitor],
-) -> None:
-    # bearing_temperature never reports at all; measured from station_start it is stale.
-    monitor = run_fixture("dead_from_boot.jsonl")
-    stale = [a for a in monitor.active_alerts() if a.kind is AlertKind.STALENESS]
-    assert len(stale) == 1
-    assert stale[0].signal == "bearing_temperature"
-    assert stale[0].severity is Severity.CRITICAL
+def test_fresh_signal_shows_its_value() -> None:
+    m = Monitor(load_station())
+    m.process(Reading(signal="bearing_temp", value=73.0, ts=1000.0))
+    s = _status(m, "bearing_temp", 1005.0)  # within the 10s TTL
+    assert s.stale is False
+    assert s.value == 73.0
+    assert s.label == "NOMINAL"
 
 
-def test_nominal_stream_is_not_stale(run_fixture: Callable[..., Monitor]) -> None:
-    monitor = run_fixture("nominal.jsonl")
-    assert [a for a in monitor.active_alerts() if a.kind is AlertKind.STALENESS] == []
+def test_past_ttl_is_stale_and_value_nulled() -> None:
+    m = Monitor(load_station())
+    m.process(Reading(signal="bearing_temp", value=73.0, ts=1000.0))
+    s = _status(m, "bearing_temp", 1011.0)  # 11s > 10s TTL
+    assert s.stale is True
+    assert s.value is None, "the last-good number must NOT render when stale"
+    assert s.label == "— stale"
 
 
-def test_fresh_reading_clears_staleness(run_fixture: Callable[..., Monitor]) -> None:
-    monitor = run_fixture("stale_sensor.jsonl")
-    assert monitor.active_alerts()  # stale now
-    from engine.models import Reading
+def test_stale_safety_critical_is_critical() -> None:
+    m = Monitor(load_station())
+    m.process(Reading(signal="bearing_temp", value=73.0, ts=1000.0))
+    s = _status(m, "bearing_temp", 1011.0)
+    assert s.severity == Severity.CRITICAL
 
-    monitor.process(Reading("discharge_pressure", 8.0, ts=100.0))
-    assert monitor.active_alerts() == []  # a fresh reading ended the staleness
+
+def test_dead_from_boot_is_stale_critical() -> None:
+    """A never-reported safety-critical signal is stale-critical from boot, not blank."""
+    m = Monitor(load_station())
+    s = _status(m, "bearing_temp", 1.0)
+    assert s.stale is True
+    assert s.severity == Severity.CRITICAL
+    assert s.value is None
+
+
+def test_stale_non_safety_critical_is_warning() -> None:
+    m = Monitor(load_station())
+    m.process(Reading(signal="flow_rate", value=40.0, ts=1000.0))
+    s = _status(m, "flow_rate", 1040.0)  # 40s > 30s TTL
+    assert s.stale is True
+    assert s.severity == Severity.WARNING
+
+
+def test_reading_again_clears_staleness() -> None:
+    m = Monitor(load_station())
+    m.process(Reading(signal="bearing_temp", value=73.0, ts=1000.0))
+    assert _status(m, "bearing_temp", 1011.0).stale is True
+    m.process(Reading(signal="bearing_temp", value=74.0, ts=1012.0))
+    fresh = _status(m, "bearing_temp", 1013.0)
+    assert fresh.stale is False
+    assert fresh.value == 74.0

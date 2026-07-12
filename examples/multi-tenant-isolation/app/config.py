@@ -1,21 +1,25 @@
-"""Named configuration — limits and env keys live here, never as literals in the code."""
+"""Named config — limits and the signing key, never magic literals in the code."""
 
 from __future__ import annotations
 
 import os
 
-# Signing secret for bearer tokens. A dev default keeps local runs and tests turnkey;
-# production overrides it via the environment.
-TOKEN_SECRET_ENV = "APP_TOKEN_SECRET"
-DEV_TOKEN_SECRET = "dev-secret-not-for-production-000000000000"
+# Pagination bounds.
+MIN_PAGE_SIZE = 1
+DEFAULT_PAGE_SIZE = 20
+MAX_PAGE_SIZE = 100
 
-# HS256: symmetric HMAC-SHA256 — one shared secret verifies every workspace's tokens.
-TOKEN_ALGORITHM = "HS256"
+# Project-name validation bounds.
+MIN_NAME_LEN = 1
+MAX_NAME_LEN = 120
 
-# Pagination — a project list can grow unbounded, so it pages with an opaque cursor.
-DEFAULT_PAGE_SIZE = 50
-MAX_PAGE_SIZE = 200
+# The bearer token's signing algorithm.
+JWT_ALGORITHM = "HS256"
+
+_JWT_ENV_VAR = "PROJECTS_JWT_SECRET"
 
 
-def token_secret() -> str:
-    return os.environ.get(TOKEN_SECRET_ENV, DEV_TOKEN_SECRET)
+def jwt_secret() -> str | None:
+    """Return the signing secret, or None when unset — auth fails closed on None."""
+    secret = os.environ.get(_JWT_ENV_VAR)
+    return secret or None

@@ -13,25 +13,21 @@ This is the domain where **both** guides *and* graders are deterministic — sch
 - **Env / runner:** **poetry** (`poetry install`); no task-runner — the graders run via `poetry run`.
 - **Python:** ≥ 3.12.
 - **Layout:** `app/` (the service), `tests/`, `codemods/`; docs in `docs/`.
-- **Lint / format:** `ruff` — `line-length = 90`, rules `E, F, I, B`.
+- **Lint / format:** `ruff` — `line-length = 90`, rules `E, F, I, B`; `extend-immutable-calls` for FastAPI
+  DI (`fastapi.Depends`, `Query`, `Header`, `Path`, `Body`, `Security`, …) so `B008` doesn't fire on
+  route-default `Depends()`. *(Promoted from the cold run — B vs FastAPI clashed unresolved.)*
 - **Tests:** `pytest` (`pythonpath = ["."]`, `testpaths = ["tests"]`), driven through FastAPI's `TestClient`.
 - **Auth (when present):** a signed bearer token resolved to a `Caller`. The token library + signing algorithm are a **build choice** — the assumptions ledger surfaces them.
 
 > These are the profile's **declared choice-points** — fixed here so they're not silent. Any build choice *not* covered here (or by the Conventions below) goes in `docs/assumptions.md` with a disposition, so a default the agent reached for is visible, not buried.
 
-## Deterministic checks (run first, they short-circuit)
+## Deterministic checks
 
-The mechanical graders — commands, not LLM judges. As many as there are mechanical rules.
-
-| Check | Command | Rule |
-|---|---|---|
-| lint | `ruff check app tests codemods` | no lint errors |
-| tests | `pytest` | zero failures, **this session** |
-| comment-doctrine | `doctrine_lint.py app tests` | the regex-able subset of the comment doctrine + test-posture floor |
-| special-lint | `doctrine_lint.py app --forbid 'print\(@@use LOG' --forbid 'except\s*:@@no bare except'` | domain forbids: no `print` in app code, no bare `except` |
-| codemod-check | `codemods/require_caller_dep.py --check app/main.py` | every route carries the boundary dependency |
-
-> **Not gate steps here:** request/response shape is enforced at runtime by the **pydantic** models (a bad body → 422; the integration tests assert it), so there's no separate schema-validation command. **Type-check** (`mypy app/`) is run as an author-aid, advisory — not in the gate for this slice.
+Commands, thresholds, and allowlists live in this profile's [`check-commands.md`](check-commands.md) — the
+file the graders read directly (the active-profile handshake). This profile **runs**: lint · tests ·
+type-check (advisory) · doctrine-lint · special-lint · codemod-check · **security** · **coverage** ·
+**deps** · logs. It declares **schema-validation** and **browser/e2e** *n/a* (pydantic validates at
+runtime; API-only). See `check-commands.md` for the commands + the n/a rationale.
 
 ## Fuzzy rubrics (~3 focused graders — what each points at)
 
@@ -64,6 +60,7 @@ The mechanical graders — commands, not LLM judges. As many as there are mechan
 ## Conventions (the drift grader's rubric)
 
 - **Enforce at the boundary, not the UI** — authz/isolation checks live server-side; the client is convenience only.
+- **Auth fails closed** — a missing or invalid signing key **denies**; never a fallback to an unsigned / dev-open path (no dev-key fallback in the gated path). *(Promoted from the cold-run adversarial refutation.)*
 - **No magic numbers** — limits/TTLs/page-sizes are named config, not literals.
 - **Errors are typed + tiered** — a permission-denied returns the agreed status (404 for cross-tenant, not 403 that leaks existence); no bare 500s for expected failures.
 - **Tests live with the ticket** — not "later."

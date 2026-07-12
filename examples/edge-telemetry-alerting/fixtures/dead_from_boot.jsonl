@@ -1,3 +1,2 @@
-{"signal":"discharge_pressure","value":8.0,"ts":10}
-{"signal":"flow_rate","value":40.0,"ts":10}
-{"tick":11}
+{"signal": "discharge_pressure", "value": 7.0, "ts": 1000.0}
+{"signal": "flow_rate", "value": 40.0, "ts": 1000.0}

@@ -1,161 +1,182 @@
-"""The rule engine — readings in, alerts out, no missed critical.
+"""The rule engine — ingest readings, evaluate rules, open/clear alerts.
 
-Per signal it holds threshold-with-hysteresis + debounce state and a staleness watchdog:
-
-- **threshold-with-hysteresis** — fire when value crosses ``limit``; clears once it drops
-  back past ``limit ∓ hysteresis`` (a value hovering at the line does not flap).
-- **debounce-transient** — a breach holds ``debounce`` consecutive samples before firing
-  (a single-sample spike is ignored).
-- **staleness-watchdog** — no reading within ``staleness_ttl`` is itself an alert; a
-  signal that has *never* reported since boot is stale too (dead-from-boot), measured from
-  ``station_start``.
-- **alert-dedup-storm-guard** — a sustained breach is one active alert with a count,
-  not one per sample.
-- **out-of-order tolerance** — a late sample older than the newest is dropped, so it
-  cannot resurrect a cleared alert.
+Level rules apply a hysteresis band (clear only past threshold∓h) and a debounce count
+(hold N samples before raising). Staleness is evaluated lazily on read against the query
+clock: a signal past its TTL — or never reported (dead from boot) — is stale, and a
+safety-critical stale signal is CRITICAL. An out-of-order (older-ts) reading is ignored,
+so a late sample can't resurrect a cleared alert.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
-from engine.config import SignalRule, StationConfig
-from engine.log import ALERT_CLEARED, ALERT_RAISED, LOG
-from engine.models import Alert, AlertKind, Reading
+from engine import log
+from engine.config import Station, load_station
+from engine.models import Alert, LevelRule, Reading, SignalSpec, SignalStatus
+from engine.severity import Severity, rank
 
-_INFO_LEVEL = "info"  # doctrine: allow — a log level, not a severity
-_STATUS_OK = "ok"  # doctrine: allow — a status label, not a severity
+_STALE_LABEL = "— stale"
 
 
 @dataclass
-class _SignalState:
+class _Runtime:
+    """Mutable per-signal state carried across readings."""
+
     last_value: float | None = None
     last_ts: float | None = None
+    level: Severity = Severity.NOMINAL
     breach_streak: int = 0
-    active: Alert | None = None
+    level_alert: Alert | None = None
+    stale_alert: Alert | None = None
 
 
 class Monitor:
-    def __init__(self, config: StationConfig, station_start: float = 0.0) -> None:
-        self.config = config
-        self.station_start = station_start
-        self.states: dict[str, _SignalState] = {n: _SignalState() for n in config.signals}
+    """Holds per-signal state and turns a stream of readings into alerts."""
 
-    def reset(self) -> None:
-        self.states = {n: _SignalState() for n in self.config.signals}
-
-    # ---- ingest ----------------------------------------------------------
+    def __init__(self, station: Station | None = None) -> None:
+        self.station = station or load_station()
+        self._specs: dict[str, SignalSpec] = {s.name: s for s in self.station.signals}
+        self._rt: dict[str, _Runtime] = {s.name: _Runtime() for s in self.station.signals}
 
     def process(self, reading: Reading) -> None:
-        rule = self.config.signals.get(reading.signal)
-        if rule is None:
+        """Fold a reading into its signal's state; ignore an older out-of-order sample."""
+        spec = self._specs.get(reading.signal)
+        if spec is None:
             return
-        st = self.states[reading.signal]
-        if st.last_ts is not None and reading.ts < st.last_ts:
-            return  # out-of-order: a late earlier sample cannot resurrect anything
-        st.last_value = reading.value
-        st.last_ts = reading.ts
-        if st.active is not None and st.active.kind is AlertKind.STALENESS:
-            self._clear(reading.signal)  # a fresh reading ends staleness
-        self._eval_threshold(rule, st, reading)
+        rt = self._rt[reading.signal]
+        if rt.last_ts is not None and reading.ts <= rt.last_ts:
+            return
+        rt.last_value = reading.value
+        rt.last_ts = reading.ts
+        if spec.level is not None:
+            self._eval_level(spec, spec.level, rt, reading.value, reading.ts)
 
-    def _eval_threshold(
-        self, rule: SignalRule, st: _SignalState, reading: Reading
+    def _eval_level(
+        self, spec: SignalSpec, rule: LevelRule, rt: _Runtime, value: float, ts: float
     ) -> None:
-        if st.active is not None and st.active.kind is AlertKind.THRESHOLD:
-            if rule.is_clear(reading.value):
-                self._clear(reading.signal)
+        """Commit the level severity, then move alerts.
+
+        Debounce guards only the INITIAL raise from nominal — N consecutive breaching
+        samples (any severity) before firing, so a lone spike is ignored but a
+        sustained breach that oscillates still fires. Once alerting, a rise escalates
+        immediately (a missed critical beats a false one); hysteresis governs the drop.
+        """
+        candidate = _candidate_level(rule, rt.level, value)
+        if rt.level == Severity.NOMINAL:
+            if candidate == Severity.NOMINAL:
+                rt.breach_streak = 0
             else:
-                st.active.count += 1  # dedup: one alert, occurrence counted
-            return
-        if rule.is_breaching(reading.value):
-            st.breach_streak += 1
-            if st.breach_streak >= rule.debounce:
-                reason = f"{rule.name} {reading.value}{rule.unit} crossed {rule.limit}"
-                self._raise(rule, AlertKind.THRESHOLD, reason)
-                st.breach_streak = 0
+                rt.breach_streak += 1
+                if rt.breach_streak >= rule.debounce_samples:
+                    rt.level = candidate
+                    rt.breach_streak = 0
         else:
-            st.breach_streak = 0
+            rt.level = candidate
+            if candidate == Severity.NOMINAL:
+                rt.breach_streak = 0
+        self._sync_level_alert(spec, rt, ts)
 
-    # ---- staleness watchdog ---------------------------------------------
-
-    def check_staleness(self, now: float) -> None:
-        for name, rule in self.config.signals.items():
-            st = self.states[name]
-            reference = st.last_ts if st.last_ts is not None else self.station_start
-            if now - reference <= rule.staleness_ttl:
-                continue
-            if st.active is not None and st.active.kind is AlertKind.STALENESS:
-                continue
-            origin = "never reported since boot" if st.last_ts is None else "no reading"
-            if st.active is not None:
-                self._clear(name)  # staleness supersedes a stale threshold alert
-            reason = f"{name} stale — {origin} within {rule.staleness_ttl}s"
-            self._raise(rule, AlertKind.STALENESS, reason)
-
-    # ---- alert bookkeeping ----------------------------------------------
-
-    def _raise(self, rule: SignalRule, kind: AlertKind, reason: str) -> None:
-        opened = self.states[rule.name].last_ts or self.station_start
-        self.states[rule.name].active = Alert(
-            signal=rule.name,
-            severity=rule.severity,
-            kind=kind,
-            reason=reason,
-            opened_at=opened,
-        )
-        LOG.event(
-            ALERT_RAISED,
-            rule.severity.value,
-            signal=rule.name,
-            severity=rule.severity.value,
-            kind=kind.value,
-        )
-
-    def _clear(self, name: str) -> None:
-        if self.states[name].active is None:
+    def _sync_level_alert(self, spec: SignalSpec, rt: _Runtime, ts: float) -> None:
+        """Raise / escalate / dedup / clear the level alert to match the level."""
+        if rt.level == Severity.NOMINAL:
+            if rt.level_alert is not None:
+                rt.level_alert.cleared = True
+                rt.level_alert = None
+                log.emit(log.ALERT_CLEARED, signal=spec.name)
             return
-        self.states[name].active = None
-        LOG.event(ALERT_CLEARED, _INFO_LEVEL, signal=name)
+        if rt.level_alert is None:
+            rt.level_alert = Alert(signal=spec.name, severity=rt.level, opened_at=ts)
+            log.emit(log.ALERT_RAISED, signal=spec.name, severity=rt.level.value)
+            return
+        rt.level_alert.count += 1
+        if rank(rt.level) > rank(rt.level_alert.severity):
+            rt.level_alert.severity = rt.level
+            log.emit(log.ALERT_RAISED, signal=spec.name, severity=rt.level.value)
+        else:
+            rt.level_alert.severity = rt.level
 
-    # ---- read model ------------------------------------------------------
+    def _sync_stale_alert(
+        self, spec: SignalSpec, rt: _Runtime, stale: bool, sev: Severity, now: float
+    ) -> None:
+        """Raise or clear the staleness alert on the read-time staleness verdict."""
+        if stale and rt.stale_alert is None:
+            rt.stale_alert = Alert(signal=spec.name, severity=sev, opened_at=now)
+            log.emit(log.ALERT_RAISED, signal=spec.name, severity=sev.value)
+        elif not stale and rt.stale_alert is not None:
+            rt.stale_alert.cleared = True
+            rt.stale_alert = None
+            log.emit(log.ALERT_CLEARED, signal=spec.name)
+
+    def state_at(self, now: float) -> list[SignalStatus]:
+        """The per-signal view at `now` — staleness lazy, a stale value nulled."""
+        out: list[SignalStatus] = []
+        for spec in self.station.signals:
+            rt = self._rt[spec.name]
+            stale = self._is_stale(spec, rt, now)
+            if stale:
+                sev = Severity.CRITICAL if spec.safety_critical else Severity.WARNING
+                self._sync_stale_alert(spec, rt, True, sev, now)
+                out.append(
+                    SignalStatus(spec.name, spec.unit, None, True, sev, _STALE_LABEL)
+                )
+            else:
+                self._sync_stale_alert(spec, rt, False, Severity.NOMINAL, now)
+                out.append(
+                    SignalStatus(
+                        spec.name,
+                        spec.unit,
+                        rt.last_value,
+                        False,
+                        rt.level,
+                        rt.level.name,
+                    )
+                )
+        return out
+
+    def _is_stale(self, spec: SignalSpec, rt: _Runtime, now: float) -> bool:
+        """Stale if past the TTL, or never reported (dead from boot); else never."""
+        if spec.staleness is None:
+            return False
+        if rt.last_ts is None:
+            return True
+        return (now - rt.last_ts) > spec.staleness.ttl_seconds
 
     def active_alerts(self) -> list[Alert]:
-        return [st.active for st in self.states.values() if st.active is not None]
+        """Every currently-open alert, level or staleness."""
+        alerts: list[Alert] = []
+        for rt in self._rt.values():
+            if rt.level_alert is not None:
+                alerts.append(rt.level_alert)
+            if rt.stale_alert is not None:
+                alerts.append(rt.stale_alert)
+        return alerts
 
-    def snapshot(self, now: float) -> dict[str, Any]:
-        """The /state read model. Evaluates staleness as of ``now`` before rendering."""
-        self.check_staleness(now)
-        signals = []
-        for name, rule in self.config.signals.items():
-            st = self.states[name]
-            stale = st.active is not None and st.active.kind is AlertKind.STALENESS
-            status = st.active.severity.value if st.active is not None else _STATUS_OK
-            signals.append(
-                {
-                    "name": name,
-                    "unit": rule.unit,
-                    "value": None if stale else st.last_value,
-                    "stale": stale,
-                    "status": status,
-                    "safety_critical": rule.safety_critical,
-                    "ts": st.last_ts,
-                }
-            )
-        alerts = [
-            {
-                "signal": a.signal,
-                "severity": a.severity.value,
-                "kind": a.kind.value,
-                "reason": a.reason,
-                "count": a.count,
-            }
-            for a in self.active_alerts()
-        ]
-        return {
-            "station": self.config.name,
-            "signals": signals,
-            "alerts": alerts,
-            "generated_at": now,
-        }
+
+def _candidate_level(rule: LevelRule, current: Severity, value: float) -> Severity:
+    """Raw severity for a value, with the hysteresis band around the current level."""
+    hyst = rule.hysteresis
+    if rule.direction == "high":
+        crit_on = rule.crit_at is not None and value >= rule.crit_at
+        crit_hold = rule.crit_at is not None and value >= rule.crit_at - hyst
+        warn_on = rule.warn_at is not None and value >= rule.warn_at
+        warn_hold = rule.warn_at is not None and value >= rule.warn_at - hyst
+    else:
+        crit_on = rule.crit_at is not None and value <= rule.crit_at
+        crit_hold = rule.crit_at is not None and value <= rule.crit_at + hyst
+        warn_on = rule.warn_at is not None and value <= rule.warn_at
+        warn_hold = rule.warn_at is not None and value <= rule.warn_at + hyst
+
+    if current == Severity.CRITICAL:
+        if crit_hold:
+            return Severity.CRITICAL
+        return Severity.WARNING if warn_hold else Severity.NOMINAL
+    if current == Severity.WARNING:
+        if crit_on:
+            return Severity.CRITICAL
+        return Severity.WARNING if warn_hold else Severity.NOMINAL
+    if crit_on:
+        return Severity.CRITICAL
+    if warn_on:
+        return Severity.WARNING
+    return Severity.NOMINAL

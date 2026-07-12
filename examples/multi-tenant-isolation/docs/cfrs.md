@@ -1,17 +1,18 @@
-# Multi-tenant Projects API — Cross-Functional Requirements
+# multi-tenant-isolation — Cross-Functional Requirements (CfRs)
 
-> The -ilities that cut across every feature, named so they're gradeable. A biting CfR with no
-> verifiable bar is a 🔴 for the plan grader.
+> The "-ilities" — the quality bar cutting across every feature, named so they're gradeable.
+> Pulled from `doc-patterns/guides/cfrs.md`; the `generic-saas` profile declares which bite.
+
+## The -ilities
 
 | CfR | Bites? | The bar (verifiable) | Graded by |
 |---|---|---|---|
-| Security | **bites** | no cross-tenant read/list/write; a foreign id is 404 == pure-miss; asserted by `test_isolation.py` | isolation test + N-vote |
-| Reliability | baseline | endpoints return typed envelopes, no bare 500 for expected failures | integration tests |
-| Performance | n/a | in-memory slice; no latency target set | — |
-| Observability | **bites** | every denied cross-tenant attempt emits `CROSS_TENANT_DENIED`; every write emits a `PROJECT_*` event | logs grader (`test_logs_grader.py`) |
-| Accessibility | n/a | API-only, no UI (`has_ui: false`) | — |
-| Scalability | baseline | list is cursor-paginated (unbounded-safe) | `test_pagination.py` |
-| Maintainability | **bites** | ruff clean (E,F,I,B); comment-doctrine clean; boundary-dep codemod passes | ruff + doctrine_lint + codemod |
+| Security | **bites** | no cross-tenant read/write on any verb; a cross-tenant id → 404 and no other-workspace row ever serializes | isolation integration test + adversarial N-vote |
+| Reliability / Safety | baseline | CRUD returns typed errors, no bare 500 on expected failures | tests |
+| Performance | n/a | — (in-memory slice; no load target) | — |
+| Observability | **bites** | every cross-tenant denial emits `CROSS_TENANT_DENIED{workspace,target}`; every write emits `PROJECT_*` | logs grader |
+| Accessibility | n/a | API-only, no UI | — |
+| Scalability | baseline | list is cursor-paginated (no unbounded offset scan) | pagination test |
+| Maintainability | **bites** | lint + comment-doctrine clean; changed-line coverage ≥ 80% | ruff · doctrine_lint · coverage |
 
-> The three biting CfRs — Security, Observability, Maintainability — each map to a running check,
-> so none is a hand-wave.
+> A **biting** CfR with no verifiable bar is a 🔴 for the plan grader. Security, Observability, and Maintainability all carry a concrete, test-assertable bar above.

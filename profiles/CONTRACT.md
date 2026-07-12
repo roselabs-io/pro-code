@@ -39,13 +39,19 @@ Matches the hook shape the profiles already use (`profiles/README.md`, `generic-
 - `tiering_signals` *(must)* — what makes a ticket ship-able by an agent vs human-only in this domain.
 
 **Implement** *(`implement-profile.md`)*
-- `check_commands` *(must)* — the deterministic-check commands (lint · tests · type-check · schema · …).
 - `rubrics` *(must)* — the fuzzy-grader rubrics (feature · pattern/drift · docs-currency).
 - `verify_means` + `false_green_traps` *(must)* — how "done" is proven + where green lies in this domain.
 - `conventions` / `forbids` *(may)* — the drift rubric + `doctrine_lint --forbid` rules.
 - `codemods` *(may)* — the deterministic auto-fix arm.
 - `doctrines` *(may)* — which `doc-patterns/doctrines/*` this domain mandates.
 - `living_docs` *(must)* — the docs-currency grader's set.
+
+**Check commands** *(`check-commands.md` — a separate file · the active-profile handshake)*
+- `check_commands` *(must)* — every deterministic grader (lint · tests · type-check · doctrine-lint ·
+  **security** · **coverage** · **deps** · schema · logs) reads its command + threshold + allowlist from
+  `profiles/<active-profile>/check-commands.md`, resolved at run time (never hardcoded). Split out of
+  `implement-profile.md` so a grader reads one file for its command and profile-switching is explicit. An
+  agnostic grader the domain doesn't run is **declared n/a** in that file, never silently dropped.
 
 **Any profile (domain or personal)** *(optional)*
 - `graders/` — **profile-authored grader units** (the extension interface below).
@@ -72,9 +78,12 @@ not only a lint rule" step). A profile grader is a `.md` def in the profile's `g
 - **declares its rubric source** — inline, or a file the loop reads and injects (sub-agents don't have
   the repo in context — the orchestrator injects; never "go read X").
 
-**Budget:** deterministic profile graders are unlimited (cheap, factual). **Fuzzy** graders — agnostic +
-domain + personal combined — stay at **~3**; a profile adding a fuzzy grader justifies it against the cap
-(too many blur). GATE-0 warns when the composed fuzzy set exceeds it.
+**Budget:** deterministic profile graders are unlimited (cheap, factual). **Fuzzy** graders stay at **~3**
+— but the cap is on the **shared** set (agnostic + domain), where too many blur. A **personal overlay**'s
+fuzzy grader is the person's *opt-in* and rides as a justified **+1** above the shared cap (you're
+tightening on yourself, not the team). GATE-0 **warns** when the composed set exceeds ~3; it does **not**
+block — a warned 4 that's `feature · drift · docs-currency · <a personal-voice grader>` is expected, not a
+defect. *(Confirmed by the cold run: 4 composed graders held, all stayed sharp.)*
 
 ## Well-formed = passes GATE 0
 
@@ -91,5 +100,5 @@ malformed grader unit is a **finding** — not a silent default.
 ## Shipped profiles / skeletons
 - **`generic-saas/`**, **`edge-telemetry/`** — the two domain profiles (`README.md`).
 - **`personal/`** — home for personal overlays (see its `README.md`).
-- **`_skeleton/`** — `frame|plan|implement-profile.md` (domain), `personal-profile.md` (overlay), and
-  `grader.md` (a profile-authored grader unit). Copy to start a new profile or grader.
+- **`_skeleton/`** — `frame|plan|implement-profile.md` + `check-commands.md` (domain), `personal-profile.md`
+  (overlay), and `grader.md` (a profile-authored grader unit). Copy to start a new profile or grader.

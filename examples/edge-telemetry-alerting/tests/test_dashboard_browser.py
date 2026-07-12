@@ -1,97 +1,74 @@
-"""Browser grader (Playwright) — the only grader that sees what the operator sees.
+"""Browser grader — the visual invariant on the RUNNING dashboard.
 
-Drives the *running* dashboard in Chromium and asserts the rendered DOM, not the /state
-response. The visual invariant: **a stale signal renders "— stale", never a number, and a
-CRITICAL row renders red.** A template printing the last-good number over a stale flag
-would pass every API test and fail only here.
+Playwright drives the live view and asserts the DOM: a stale signal shows '— stale'
+(never a number), a CRITICAL row renders red AND carries a text label (not colour-only).
+Marked `browser` so the deterministic gate skips it; run with `-m browser`
+after `playwright install chromium`.
 """
 
 from __future__ import annotations
 
-import os
 import socket
 import subprocess
 import sys
 import time
-import urllib.request
 from collections.abc import Iterator
-from pathlib import Path
 
+import httpx
 import pytest
 
-pytest.importorskip("playwright.sync_api", reason="playwright not installed")
+pytest.importorskip(
+    "playwright", reason="playwright not installed — run -m browser after install"
+)
 from playwright.sync_api import sync_playwright  # noqa: E402
 
-EXAMPLE_ROOT = Path(__file__).resolve().parents[1]
+pytestmark = pytest.mark.browser
 
 
 def _free_port() -> int:
-    with socket.socket() as sock:
-        sock.bind(("127.0.0.1", 0))
-        return sock.getsockname()[1]
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
 
 
-@pytest.fixture(scope="module")
-def dashboard_url() -> Iterator[str]:
+@pytest.fixture
+def server() -> Iterator[str]:
+    """Launch the real dashboard with uvicorn and yield its base URL."""
     port = _free_port()
     proc = subprocess.Popen(
         [sys.executable, "-m", "uvicorn", "dashboard.app:app", "--port", str(port)],
-        cwd=EXAMPLE_ROOT,
-        env={**os.environ, "DASHBOARD_SEED": "browser"},
     )
-    url = f"http://127.0.0.1:{port}"
+    base = f"http://127.0.0.1:{port}"
     try:
-        _wait_for(url + "/state")
-        yield url
+        for _ in range(50):
+            try:
+                if httpx.get(f"{base}/state", timeout=0.5).status_code == 200:
+                    break
+            except httpx.HTTPError:
+                time.sleep(0.1)
+        yield base
     finally:
         proc.terminate()
-        proc.wait(timeout=10)
+        proc.wait(timeout=5)
 
 
-def _wait_for(url: str) -> None:
-    for _ in range(60):
-        try:
-            urllib.request.urlopen(url, timeout=0.5)
-            return
-        except OSError:
-            time.sleep(0.25)
-    raise RuntimeError(f"server at {url} did not come up")
-
-
-@pytest.mark.browser
-def test_stale_row_renders_the_label_not_a_number(dashboard_url: str) -> None:
-    with sync_playwright() as pw:
-        browser = pw.chromium.launch()
+def test_stale_row_renders_stale_and_critical_renders_red(server: str) -> None:
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
         page = browser.new_page()
-        page.goto(dashboard_url)
-        row = page.locator("tr[data-signal='bearing_temperature']")
-        # Wait for the JS poll to populate the stale row.
-        page.wait_for_function(
-            "() => document.querySelector(\"tr[data-signal='bearing_temperature'] "
-            ".reading\")?.textContent.toLowerCase().includes('stale')"
-        )
-        reading = row.locator(".reading").inner_text()
-        assert "stale" in reading.lower()  # the invariant: a label, ...
-        assert not any(ch.isdigit() for ch in reading)  # ... never a number
-        assert "critical" in (
-            row.get_attribute("class") or ""
-        )  # dead safety sensor is red
-        browser.close()
+        page.goto(server)
+        page.wait_for_selector("#rows tr td")
 
+        # The stale signal renders '— stale', never its last-good number.
+        flow_value = page.locator("#rows tr", has_text="flow_rate").locator("td").nth(1)
+        assert flow_value.inner_text().strip() == "— stale"
 
-@pytest.mark.browser
-def test_critical_breach_row_renders_red_with_a_value(dashboard_url: str) -> None:
-    with sync_playwright() as pw:
-        browser = pw.chromium.launch()
-        page = browser.new_page()
-        page.goto(dashboard_url)
-        row = page.locator("tr[data-signal='discharge_pressure']")
-        page.wait_for_function(
-            "() => (document.querySelector(\"tr[data-signal='discharge_pressure']\")"
-            "?.className || '').includes('critical')"
+        # The critical row renders red AND carries a text label (not colour-only).
+        pressure_status = page.locator("#rows tr", has_text="discharge_pressure").locator(
+            'td[data-severity="critical"]'
         )
-        assert "critical" in (row.get_attribute("class") or "")
-        reading = row.locator(".reading").inner_text()
-        assert "stale" not in reading.lower()
-        assert any(ch.isdigit() for ch in reading)  # a live breach shows its number
+        assert pressure_status.count() == 1
+        colour = pressure_status.evaluate("el => getComputedStyle(el).color")
+        assert colour == "rgb(248, 81, 73)", "critical status must render red"
+        assert pressure_status.inner_text().strip() != "", "status carries a text label"
         browser.close()

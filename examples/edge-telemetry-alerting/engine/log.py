@@ -1,34 +1,33 @@
-"""Structured event log — the trace the logs grader reads to prove an alert fired.
+"""Structured event log — stable codes a grader replays and asserts on.
 
-A raised alert is proven from the ``ALERT_RAISED{severity:critical}`` event, not from the
-return value or active-alert list — no-missed-critical, proven from the trace.
+Every alert open/clear emits one JSON-line event so the no-missed-critical promise is
+provable from the trace, not just from the active-alert list.
 """
 
 from __future__ import annotations
 
 import json
 import sys
-from dataclasses import dataclass, field
 from typing import Any
 
 ALERT_RAISED = "ALERT_RAISED"
 ALERT_CLEARED = "ALERT_CLEARED"
 
-
-@dataclass
-class _EventLog:
-    records: list[dict[str, Any]] = field(default_factory=list)
-
-    def event(self, code: str, level: str, **fields: Any) -> None:
-        record = {"code": code, "level": level, **fields}
-        self.records.append(record)
-        print(json.dumps(record), file=sys.stderr)  # doctrine: allow — the LOG sink
-
-    def clear(self) -> None:
-        self.records.clear()
-
-    def with_code(self, code: str) -> list[dict[str, Any]]:
-        return [r for r in self.records if r["code"] == code]
+_sink: list[dict[str, Any]] = []
 
 
-LOG = _EventLog()
+def emit(code: str, **fields: Any) -> None:
+    """Record one structured event and write it as a JSON line."""
+    event = {"code": code, **fields}
+    _sink.append(event)
+    print(json.dumps(event), file=sys.stderr)
+
+
+def events() -> list[dict[str, Any]]:
+    """Return the events emitted so far — the logs grader reads this in-process."""
+    return list(_sink)
+
+
+def reset() -> None:
+    """Clear the captured events so a replay isolates its own trace."""
+    _sink.clear()

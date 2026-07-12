@@ -1,32 +1,24 @@
-# Multi-tenant Projects API — Assumptions Ledger
+# multi-tenant-isolation — Assumptions Ledger
 
-> The choices this build made that its inputs never specified — defaults reached for from habit or
-> priors, not from the profile, spec, or ticket. Surfaced so a human can veto them.
-> Dispositions: **promote** (belongs in the profile) · **decision** (this-build, recorded) ·
-> **flag** (needs a human's second look) · **accept** (trivial, recorded so it's not invisible).
+> The choices this build made that its inputs never specified — surfaced so a human can see and
+> veto them. Pulled from `doc-patterns/living-docs/assumptions.md`. Graded by docs-currency + the
+> drift grader's undeclared-choice lens.
 
 ## Ledger
 
-| # | Choice the build made | Where it came from | Declared? | Disposition |
-|---|---|---|---|---|
-| 1 | **PyJWT** as the JWT library | agent default | no (profile says "library is a build choice") | **decision** → `decisions/0002` |
-| 2 | **HS256** (symmetric) signing algorithm | agent default | no (profile says "algorithm is a build choice") | **flag** — becomes RS256 if a *separate* service issues tokens; issuer is out of repo |
-| 3 | Signing secret from `APP_TOKEN_SECRET`, with a **dev default** | agent default | no | **flag** — prod MUST override; the dev default must never ship |
-| 4 | **In-memory** store, no database | agent default (brief said "backend slice") | no | **decision** → `decisions/0001` (scoped-guard shape is DB-agnostic) |
-| 5 | Isolation enforced at the **app layer** (scoped store) vs DB RLS | forced by #4 | partly (isolation *is* declared; the mechanism isn't) | **decision** → `decisions/0001` |
-| 6 | **Cursor pagination added to the list** (F3) | catalog hook `cursor-pagination` + "unbounded list" principle | no — the brief never asked for pagination | **flag** — is paging in scope for this slice, or scope creep? |
-| 7 | List **ordered by project id** (uuid hex), cursor = last id | agent default | no | **accept** — stable + isolation-safe; a real product likely wants `created_at` ordering |
-| 8 | Project **fields** = name, description (default `""`), created_by | agent default | no (brief said only "Projects") | **accept** — minimal reasonable shape |
-| 9 | **Members** may create/read/update; only admins delete | inferred from brief ("admins can delete") | partly | **accept** — the only reading consistent with "admins *can* delete" |
-| 10 | Isolation is checked **before** the role check (foreign id → 404 even for an admin) | agent default | no | **accept** — follows directly from "indistinguishable from not-found" (a 403 would leak existence) |
-| 11 | Workspaces + actor-assignment are **out of repo** (owned by the token issuer) | agent default | no | **flag** — the slice can't onboard a tenant alone; confirm the issuer owns this |
-| 12 | REST status codes: 201 create / 204 delete / 422 validation / 401 auth | agent default | no | **accept** — conventional REST |
-| 13 | `PATCH` (partial) as the update verb; no `PUT` | agent default | no | **accept** |
-| 14 | LOG sink = **JSON to stderr** + an in-process buffer for tests | agent default | partly (taxonomy declares "structured events") | **accept** — the format is the taxonomy's; the sink is a default |
-| 15 | Ruff config lives **inline in `pyproject.toml`** (not a separate `ruff.toml`) | agent default | no | **accept** — one config file; matches the poetry-centric layout |
+| Choice the build made | Where it came from | Declared? | Disposition |
+|---|---|---|---|
+| FastAPI + uvicorn, Python ≥3.12 | profile Stack (`implement-profile.md`) | yes | — (declared choice-point) |
+| poetry env, no task-runner | profile Stack | yes | — (declared) |
+| In-memory store, not a DB | Plan seed + system-overview | yes | — (declared; see `decisions/0001`) |
+| **HS256 (PyJWT) for the bearer token** | profile says "token library + algorithm are a build choice" | partial | **decision** — algorithm pinned in `decisions`-adjacent note; recorded here as the concrete pick. HS256 chosen (symmetric, one shared secret, matches the single-verifier slice). A multi-issuer deployment would prefer RS256/asymmetric. |
+| **Signing secret from `PROJECTS_JWT_SECRET` env var** | agent default | no | **accept** — standard 12-factor config; the fail-closed-on-unset behaviour is tested. |
+| **Cursor = the last item's id** (opaque) | agent default (impl of `cursor-pagination`) | no | **accept** — stable within the in-memory list; a DB build would encode a keyset cursor instead. |
+| Delete is the only role-gated verb | Plan / open-questions | yes | — (declared; create/update member-allowed by product call, `open-questions.md`) |
+| **libcst** as the codemod's parse/transform library | profile Implement ("one genuine libcst codemod per build") | yes | — (declared choice-point; the profile mandates a libcst codemod) |
+| bandit · detect-secrets · pip-audit as the security/deps tools | profile `check-commands.md` | yes | — (declared; added to dev-deps so `poetry run` resolves them) |
+| `owner_of` used for the audit trace only | agent default | no | **flag** — it reads across the tenant boundary *for logging only* (response is identical 404). Flagged for a human: confirm the trace-only use is acceptable; it must never feed a response. |
 
-> The load-bearing **`no` rows are #2, #3, #6, #11** — the ones worth a human's veto. #2/#3 are the
-> auth trust root (symmetric signing + a dev secret assume a shared-secret, same-deployment issuer).
-> #6 is a scope question (pagination was never asked for). #11 is a boundary assumption (tenant
-> onboarding lives somewhere this slice can't see). Everything else is either recorded as a decision
-> or a conventional default. **Nobody's priors leaked in unseen — they're all on this page.**
+> The **`no` / `partial` rows** are the point. Two carry a real disposition: the JWT algorithm (a
+> profile-declared build choice, pinned to HS256 here) and `owner_of`'s cross-boundary read (flagged —
+> trace-only, never serialized). Nothing else was chosen outside the profile's declared choice-points.

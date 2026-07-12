@@ -1,5 +1,5 @@
-{"signal":"bearing_temperature","value":70.0,"ts":0}
-{"signal":"bearing_temperature","value":86.0,"ts":1}
-{"signal":"bearing_temperature","value":88.0,"ts":2}
-{"signal":"bearing_temperature","value":90.0,"ts":3}
-{"signal":"bearing_temperature","value":89.0,"ts":4}
+{"signal": "bearing_temp", "value": 70.0, "ts": 1000.0}
+{"signal": "bearing_temp", "value": 85.0, "ts": 1001.0}
+{"signal": "bearing_temp", "value": 90.0, "ts": 1002.0}
+{"signal": "bearing_temp", "value": 96.0, "ts": 1003.0}
+{"signal": "bearing_temp", "value": 97.0, "ts": 1004.0}

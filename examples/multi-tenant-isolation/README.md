@@ -1,54 +1,55 @@
 # multi-tenant-isolation
 
-A multi-tenant SaaS **Projects API** (backend only) built through the pro-code pipeline on the
-**`generic-saas`** profile. Many workspaces share one deployment; each workspace's data is invisible
-to every other. **Hard-done: no cross-tenant leak** — a cross-tenant id is indistinguishable from
-not-found, certified by `tests/test_isolation.py`.
+A multi-tenant SaaS **projects API** built with the `generic-saas` profile. The hard-done promise:
+**no cross-tenant leak on any verb** — a caller of workspace A can never read, list, patch, or delete
+workspace B's projects, and a cross-tenant id is indistinguishable from a nonexistent one (404).
 
-- **Stack:** Python 3.12 · FastAPI · PyJWT (HS256) · in-memory store. Env: **poetry** (no task-runner).
-- **Isolation:** enforced at the request boundary — `get_caller` resolves the tenant, a
-  workspace-scoped store denies by default, a foreign id returns 404 (never 403).
+Built through the pro-code pipeline: Frame → Plan → Implement, each handoff gated. See `docs/` for the
+living spec (`functional-analysis`, `system-overview`, `surfaces/projects`) and the build's memory
+(`current-state`, `backlog`, `decisions/`, `assumptions`).
+
+## The isolation guarantee
+
+- **Deny by default at the store** — every query is scoped by `workspace_id`; a foreign id returns nothing.
+- **Scope before role** — a cross-tenant delete 404s before the admin gate runs, so 403 never leaks existence (`decisions/0002`).
+- **Proven from the trace** — every denial emits `CROSS_TENANT_DENIED{workspace,target}`; the logs grader asserts it fired.
+- **Guarded against drift** — `codemods/require_caller_dep.py` enforces `Depends(get_caller)` on every route.
+
+## Run it
+
+1. **Set up the environment**
+   ```sh
+   poetry install
+   export PROJECTS_JWT_SECRET="$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
+   ```
+2. **Run the gate** (this profile ships no task-runner — the graders run via `poetry run`)
+   ```sh
+   poetry run ruff check app tests codemods
+   poetry run pytest --cov=app --cov-report=term-missing
+   python3 ../../graders/checks/doctrine_lint.py app tests
+   python3 ../../graders/checks/doctrine_lint.py app --forbid 'print\(@@use LOG' --forbid 'except\s*:@@no bare except'
+   python3 codemods/require_caller_dep.py --check app/main.py
+   poetry run bandit -q -r app && poetry run detect-secrets scan app tests
+   poetry export --only main --without-hashes | poetry run pip-audit -r /dev/stdin
+   ```
+3. **Launch**
+   ```sh
+   poetry run uvicorn app.main:app --port 8000
+   ```
+
+Mint a token to exercise it (same secret as the server):
+```sh
+python3 -c "import jwt,os; print(jwt.encode({'workspace_id':'A','role':'admin','sub':'u1'}, os.environ['PROJECTS_JWT_SECRET'], algorithm='HS256'))"
+```
+```sh
+curl -H "Authorization: Bearer $TOKEN" localhost:8000/projects
+```
 
 ## Layout
 
 ```
-app/         the service — auth · errors · store · models · routes · log · config
-codemods/    require_caller_dep.py — libcst: every route must take the boundary dep
-tests/       integration test per endpoint + the isolation certification + logs grader
-docs/        the pipeline's output — spec, plan, living docs, assumptions ledger
+app/        the service — auth · store (scoped) · main (routes) · errors · log · config
+codemods/   require_caller_dep.py — boundary-dependency enforcement across handlers
+tests/      integration tests per endpoint + the isolation + logs graders
+docs/       the living spec + build memory
 ```
-
-## Run it
-
-```bash
-poetry install
-```
-
-Gate (deterministic graders, in short-circuit order — this profile ships no task-runner, so the
-grader commands are listed explicitly):
-
-```bash
-# 0. auto-fix arm (codemod-lite)
-poetry run ruff check --fix app tests codemods && poetry run ruff format app tests codemods
-# 1. lint
-poetry run ruff check app tests codemods
-# 2. comment-doctrine + test-posture floor
-poetry run python ../../graders/checks/doctrine_lint.py app tests
-# 3. special-lint (domain forbids: no print, no bare except)
-poetry run python ../../graders/checks/doctrine_lint.py app \
-  --forbid 'print\(@@use LOG' --forbid 'except\s*:@@no bare except'
-# 4. boundary-dependency codemod check
-poetry run python codemods/require_caller_dep.py --check app/main.py
-# 5. the verify gate
-poetry run pytest -q
-# (advisory, author-aid, not a gate step)
-poetry run mypy app/
-```
-
-Launch:
-
-```bash
-poetry run uvicorn app.main:app --port 8000
-```
-
-The gate is green: **27 tests**, ruff/doctrine/special-lint/codemod all clean.

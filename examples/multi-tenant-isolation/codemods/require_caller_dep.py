@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Codemod — every FastAPI route must depend on ``get_caller`` at the boundary.
+"""Boundary-dependency codemod — enforce that EVERY route carries `Depends(get_caller)`.
 
-The boundary-dependency convention spans every handler, so a script enforces it rather
-than a per-file review: a route that forgets ``caller: CallerDep`` would skip the
-isolation boundary. libcst-based, deterministic, idempotent. A route is compliant when a
-param resolves the caller through the boundary (``CallerDep`` / ``Depends(get_caller)``).
+Isolation rests on every handler resolving a Caller at the boundary; a route that
+forgets the dependency is an unguarded hole. This deterministic check (and its auto-fix)
+keeps the convention across all handlers so drift can't slip an unscoped route in.
 
 Usage:
-  require_caller_dep.py <path...>            # add the missing dependency in place
-  require_caller_dep.py --check <path...>    # report violations, exit 1 if any (the gate)
+  require_caller_dep.py <path...>            # add the dependency to any route missing it
+  require_caller_dep.py --check <path...>    # dry-run: report violations, exit 1 if any
+
+Idempotent: a second run rewrites nothing. Deterministic: no clock/random.
 """
 
 from __future__ import annotations
@@ -19,92 +20,106 @@ from pathlib import Path
 import libcst as cst
 import libcst.matchers as m
 
-HTTP_METHODS = {"get", "post", "put", "patch", "delete"}
+ROUTE_METHODS = {"get", "post", "put", "patch", "delete"}
 
-# A parameter resolves the caller if it references either the boundary dependency
-# (``get_caller``) or the annotated alias that wraps it (``CallerDep``).
-BOUNDARY_MARKERS = ("get_caller", "CallerDep")
-
-_ROUTE_DECORATOR = m.Call(
-    func=m.Attribute(value=m.Name(), attr=m.Name()),
+_route_decorator = m.Decorator(
+    decorator=m.Call(func=m.Attribute(value=m.Name("app"), attr=m.Name()))
 )
 
 
-def _is_route(node: cst.FunctionDef) -> bool:
-    for dec in node.decorators:
-        deco = dec.decorator
-        if m.matches(deco, _ROUTE_DECORATOR):
-            assert isinstance(deco, cst.Call)
-            attr = deco.func
-            assert isinstance(attr, cst.Attribute)
-            if attr.attr.value in HTTP_METHODS:
+def _is_route(func: cst.FunctionDef) -> bool:
+    for dec in func.decorators:
+        if m.matches(dec, _route_decorator):
+            attr = dec.decorator.func  # type: ignore[attr-defined]
+            if attr.attr.value in ROUTE_METHODS:
                 return True
     return False
 
 
-def _has_caller_dep(node: cst.FunctionDef) -> bool:
-    params = node.params
-    everything = list(params.params) + list(params.kwonly_params)
-    for param in everything:
-        rendered = cst.Module([]).code_for_node(param)
-        if any(marker in rendered for marker in BOUNDARY_MARKERS):
+def _has_caller_dep(func: cst.FunctionDef) -> bool:
+    for param in func.params.params:
+        default = param.default
+        if (
+            isinstance(default, cst.Call)
+            and isinstance(default.func, cst.Name)
+            and default.func.value == "Depends"
+            and default.args
+            and isinstance(default.args[0].value, cst.Name)
+            and default.args[0].value.value == "get_caller"
+        ):
             return True
     return False
 
 
-class _AddCallerDep(cst.CSTTransformer):
+class _Checker(cst.CSTVisitor):
     def __init__(self) -> None:
         self.violations: list[str] = []
+
+    def visit_FunctionDef(self, node: cst.FunctionDef) -> None:
+        if _is_route(node) and not _has_caller_dep(node):
+            self.violations.append(node.name.value)
+
+
+class _Fixer(cst.CSTTransformer):
+    def __init__(self) -> None:
+        self.rewritten = 0
 
     def leave_FunctionDef(
         self, original: cst.FunctionDef, updated: cst.FunctionDef
     ) -> cst.FunctionDef:
-        if not _is_route(original) or _has_caller_dep(original):
+        if not (_is_route(original) and not _has_caller_dep(original)):
             return updated
-        self.violations.append(original.name.value)
+        self.rewritten += 1
         caller_param = cst.Param(
             name=cst.Name("caller"),
-            annotation=cst.Annotation(cst.Name("CallerDep")),
+            annotation=cst.Annotation(cst.Name("Caller")),
+            default=cst.parse_expression("Depends(get_caller)"),
         )
-        params = updated.params
-        return updated.with_changes(
-            params=params.with_changes(params=[*params.params, caller_param])
-        )
+        new_params = (*updated.params.params, caller_param)
+        return updated.with_changes(params=updated.params.with_changes(params=new_params))
 
 
-def _process(path: Path, check: bool) -> list[str]:
-    module = cst.parse_module(path.read_text())
-    transformer = _AddCallerDep()
-    new_module = module.visit(transformer)
-    if not check and transformer.violations:
-        path.write_text(new_module.code)
-    return [f"{path}:{name}" for name in transformer.violations]
+def _paths(args: list[str]) -> list[Path]:
+    out: list[Path] = []
+    for a in args:
+        p = Path(a)
+        out.extend(p.rglob("*.py") if p.is_dir() else [p])
+    return out
 
 
 def main(argv: list[str]) -> int:
     check = "--check" in argv
-    paths = [Path(a) for a in argv if not a.startswith("--")]
-    files: list[Path] = []
-    for p in paths:
-        files.extend(p.rglob("*.py") if p.is_dir() else [p])
+    files = _paths([a for a in argv if not a.startswith("--")])
 
-    violations: list[str] = []
-    for f in sorted(set(files)):
-        violations += _process(f, check)
+    total_violations = 0
+    total_rewritten = 0
+    for f in files:
+        module = cst.parse_module(f.read_text())
+        if check:
+            checker = _Checker()
+            module.visit(checker)
+            for name in checker.violations:
+                print(f"{f}:{name}: route is missing Depends(get_caller)")
+            total_violations += len(checker.violations)
+        else:
+            fixer = _Fixer()
+            new_module = module.visit(fixer)
+            if fixer.rewritten:
+                f.write_text(new_module.code)
+            total_rewritten += fixer.rewritten
 
-    if check and violations:
-        for v in violations:
+    scanned = len(files)
+    if check:
+        if total_violations:
             print(
-                f"{v}: route missing Depends(get_caller)"
-            )  # doctrine: allow — codemod CLI
+                f"require_caller_dep: {total_violations} unguarded route(s)"
+            )
+            return 1
         print(
-            f"require_caller_dep: {len(violations)} route(s) missing the boundary dep"
-        )  # doctrine: allow
-        return 1
-    label = "would fix" if check else "fixed"
-    print(
-        f"require_caller_dep: {len(violations)} {label}, {len(files)} scanned"
-    )  # doctrine: allow
+            f"require_caller_dep: {scanned} file(s) — every route carries the caller dep"
+        )
+        return 0
+    print(f"require_caller_dep: {scanned} scanned, {total_rewritten} rewritten")
     return 0
 
 

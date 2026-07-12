@@ -1,37 +1,30 @@
-# Pump-station telemetry — Current State
+# edge-telemetry-alerting — Current State
 
-> Where things actually are now. The first doc a fresh agent reads. Kept current every ticket.
+> Where things actually are **now**. The first doc a fresh agent reads to orient.
+> Memory, not documentation. Pulled from `doc-patterns/living-docs/current-state.md`.
 
 ## What's built
 
-- **Rule engine** (`engine/monitor.py`) — per signal: threshold-with-hysteresis, debounce,
-  staleness watchdog (incl. **dead-from-boot**), alert dedup, out-of-order tolerance.
-- **Station config** (`config/station.toml`) — 3 signals: discharge_pressure (CRITICAL),
-  bearing_temperature (CRITICAL), flow_rate (WARNING). Thresholds/hysteresis/debounce/TTLs in TOML.
-- **Severity** is an enum constant everywhere (`severity-constant` lint clean).
-- **Dashboard** (`dashboard/app.py` + `index.html`) — `/state` JSON + a served view that polls and
-  renders (stale → "— stale", critical → red). `POST /ingest` accepts live readings.
-- **Fixtures** (`fixtures/*.jsonl`) — fire + no-fire per rule, incl. `dead_from_boot`, `flap`,
-  `out_of_order`, `pressure_spike`.
-- **Observability** — `ALERT_RAISED{signal,severity}` / `ALERT_CLEARED`.
+- **Config + Severity + models (T1)** — `station.toml` → `Station` (config-driven thresholds); `Severity` is the one named-constant home for the level strings; a malformed ingest line is rejected by `parse_line`; a safety-critical signal with no alert condition fails the load loudly.
+- **Level rule (T2)** — threshold with **hysteresis** (clear only past threshold∓h) + **debounce** (hold N samples before raising), high or low direction; severity-tiered (WARNING/CRITICAL).
+- **Staleness watchdog (T3)** — evaluated **lazily on read** against the query clock; past-TTL → stale, value nulled, "— stale"; safety-critical stale → CRITICAL; a never-reported signal is stale-critical **from boot**.
+- **Dedup + ordering (T4)** — a burst collapses to one active alert with an occurrence count; a late earlier-ts reading is ignored, so it can't resurrect a cleared alert.
+- **No missed critical (T5)** — every fire fixture (bearing overheat, overpressure, dead-from-boot) raises `ALERT_RAISED{severity:critical}`; the nominal fixture is silent. Proven from the trace + the active-alert list.
+- **Dashboard (T6)** — `GET /state` serializes each signal (stale → `value:null, "— stale"`); the served view renders stale as "— stale", critical as red, always with a text label; verified by the Playwright browser grader on the running app.
 
 ## What's in flight
 
-- Nothing — the slice is complete; `just gate` is green (28 fixture-replay tests + 2 browser).
+- Nothing — all six tickets landed and green this session (31 fixture/API tests + 1 browser test).
 
 ## Known gaps / not-yet-built
 
-- **Invented thresholds** — the signal catalog + all numeric limits/TTLs are placeholders pending a
-  real device spec sheet + runbook (see `assumptions.md`).
-- **No notification delivery** — the slice raises alerts, it does not send them (out of scope).
-- **No persistence** — monitor state is in-memory; a restart re-arms dead-from-boot from the new boot.
-- **Direct/`POST /ingest` transport** — no MQTT/HTTP front, no backpressure.
+- **The signal catalog + thresholds are a build assumption** (a pump-house station), not a profile input — a domain expert must confirm them before production (see `assumptions.md`, `open-questions.md`).
+- **Notification delivery is out of scope** — alerts are raised + displayed, never routed to a channel.
+- **Single station** — one `station.toml`; no multi-station switcher (declined in the UI sketch).
 
 ## How to run it
 
-```bash
-uv sync
-uv run playwright install chromium   # one-time, for the browser grader
-just gate                            # fix · lint · doctrine · fixture-replay · browser
-just demo                            # serve the seeded dashboard (stale + critical) on :8000
-```
+- Set up: `uv sync` (then `uv run playwright install chromium` for the browser test).
+- Gate: `just gate` (fix · lint · typecheck · doctrine · security · test · coverage).
+- Browser grader: `just browsertest`.
+- Launch: `just demo` (or `uv run uvicorn dashboard.app:app --port 8000`) → dashboard on :8000.

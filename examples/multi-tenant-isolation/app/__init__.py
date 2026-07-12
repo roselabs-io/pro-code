@@ -1,1 +1,1 @@
-"""Multi-tenant SaaS Projects API — tenant isolation is the core promise."""
+"""Multi-tenant projects API — a caller only ever sees its own workspace's projects."""

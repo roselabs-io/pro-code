@@ -1,8 +1,7 @@
-"""Replay a recorded telemetry fixture through a monitor — the deterministic verify path.
+"""Replay — feed a recorded fixture (JSONL) through the monitor, deterministically.
 
-A fixture is JSON lines: a reading ``{signal, value, ts}``, or a clock advance
-``{tick: <ts>}`` that runs the staleness watchdog at that time. No hardware in the loop —
-a recorded stream proves a rule both fires and stays quiet.
+The verify harness: no live device, just a recorded stream. `parse_line` validates each
+line at ingest; a malformed line is rejected, not fed to the rules.
 """
 
 from __future__ import annotations
@@ -10,28 +9,30 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from engine.config import load_station
+from pydantic import ValidationError
+
+from engine.config import Station
 from engine.models import Reading
 from engine.monitor import Monitor
 
-FIXTURES = Path(__file__).resolve().parent.parent / "fixtures"
+
+def parse_line(line: str) -> Reading:
+    """Validate one telemetry line into a Reading; raise ValueError if malformed."""
+    try:
+        return Reading.model_validate(json.loads(line))
+    except (json.JSONDecodeError, ValidationError) as exc:
+        raise ValueError(f"malformed telemetry line: {line!r}") from exc
 
 
-def new_monitor(station_start: float = 0.0) -> Monitor:
-    return Monitor(load_station(), station_start=station_start)
-
-
-def replay(monitor: Monitor, fixture: str) -> Monitor:
-    path = FIXTURES / fixture if not fixture.endswith("/") else Path(fixture)
-    for line in path.read_text().splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
+def replay(path: Path, station: Station | None = None) -> Monitor:
+    """Replay a fixture through a fresh monitor; a malformed line is skipped, not fed."""
+    monitor = Monitor(station)
+    for raw in path.read_text().splitlines():
+        if not raw.strip():
             continue
-        record = json.loads(line)
-        if "tick" in record:
-            monitor.check_staleness(float(record["tick"]))
-        else:
-            monitor.process(
-                Reading(record["signal"], float(record["value"]), float(record["ts"]))
-            )
+        try:
+            reading = parse_line(raw)
+        except ValueError:
+            continue
+        monitor.process(reading)
     return monitor

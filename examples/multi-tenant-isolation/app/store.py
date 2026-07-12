@@ -1,61 +1,43 @@
-"""In-memory project store — every read and write is workspace-scoped (deny by default).
+"""Tenant-scoped project store — every query takes a workspace_id and denies by default.
 
-The tenant-scoped-query-guard shape, made literal: no method reaches a row without a
-``workspace_id`` argument, and a lookup for a row in another workspace returns ``None`` —
-indistinguishable from a row that never existed. There is no unscoped accessor to misuse.
+Isolation lives HERE, at the data boundary: a foreign id resolves to None, never a row.
+The handlers can't leak what the store won't hand them.
 """
 
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass
+from datetime import datetime, timezone
 
-
-@dataclass
-class Project:
-    id: str
-    workspace_id: str
-    name: str
-    description: str
-    created_by: str
+from app.config import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, MIN_PAGE_SIZE
+from app.models import Project
 
 
 class ProjectStore:
-    def __init__(self) -> None:
-        self._rows: dict[str, Project] = {}
+    """In-memory projects, keyed by id, always accessed through a workspace scope."""
 
-    def create(
-        self, workspace_id: str, name: str, description: str, created_by: str
-    ) -> Project:
+    def __init__(self) -> None:
+        self._items: dict[str, Project] = {}
+
+    def create(self, workspace_id: str, name: str, description: str) -> Project:
+        """Write a project owned by this workspace."""
+        pid = uuid.uuid4().hex
         project = Project(
-            id=uuid.uuid4().hex,
+            id=pid,
             workspace_id=workspace_id,
             name=name,
             description=description,
-            created_by=created_by,
+            created_at=datetime.now(timezone.utc).isoformat(),
         )
-        self._rows[project.id] = project
+        self._items[pid] = project
         return project
 
     def get(self, workspace_id: str, project_id: str) -> Project | None:
-        row = self._rows.get(project_id)
-        if row is None or row.workspace_id != workspace_id:
+        """Return the project if it's in this workspace, else None (deny-by-default)."""
+        project = self._items.get(project_id)
+        if project is None or project.workspace_id != workspace_id:
             return None
-        return row
-
-    def list(
-        self, workspace_id: str, after: str | None, limit: int
-    ) -> tuple[list[Project], str | None]:
-        scoped = sorted(
-            (r for r in self._rows.values() if r.workspace_id == workspace_id),
-            key=lambda r: r.id,
-        )
-        start = 0
-        if after is not None:
-            start = next((i + 1 for i, r in enumerate(scoped) if r.id == after), 0)
-        window = scoped[start : start + limit]
-        next_cursor = window[-1].id if len(scoped) > start + limit else None
-        return window, next_cursor
+        return project
 
     def update(
         self,
@@ -64,21 +46,48 @@ class ProjectStore:
         name: str | None,
         description: str | None,
     ) -> Project | None:
-        row = self.get(workspace_id, project_id)
-        if row is None:
+        """Patch a scoped project's mutable fields; None if it isn't in this workspace."""
+        project = self.get(workspace_id, project_id)
+        if project is None:
             return None
-        if name is not None:
-            row.name = name
-        if description is not None:
-            row.description = description
-        return row
+        updated = project.model_copy(
+            update={
+                "name": project.name if name is None else name,
+                "description": project.description
+                if description is None
+                else description,
+            }
+        )
+        self._items[project_id] = updated
+        return updated
 
     def delete(self, workspace_id: str, project_id: str) -> bool:
-        row = self.get(workspace_id, project_id)
-        if row is None:
+        """Remove a scoped project; False if it isn't in this workspace."""
+        if self.get(workspace_id, project_id) is None:
             return False
-        del self._rows[project_id]
+        del self._items[project_id]
         return True
 
+    def owner_of(self, project_id: str) -> str | None:
+        """The owning workspace of an id, for the audit trace only — never serialized."""
+        project = self._items.get(project_id)
+        return project.workspace_id if project else None
 
-STORE = ProjectStore()
+    def list(
+        self, workspace_id: str, cursor: str | None, limit: int
+    ) -> tuple[list[Project], str | None]:
+        """Return this workspace's projects as a stable cursor page."""
+        limit = max(MIN_PAGE_SIZE, min(limit, MAX_PAGE_SIZE))
+        rows = [p for p in self._items.values() if p.workspace_id == workspace_id]
+        start = 0
+        if cursor is not None:
+            ids = [p.id for p in rows]
+            start = ids.index(cursor) + 1 if cursor in ids else len(rows)
+        page = rows[start : start + limit]
+        next_cursor = page[-1].id if start + limit < len(rows) and page else None
+        return page, next_cursor
+
+
+store = ProjectStore()
+
+__all__ = ["ProjectStore", "store", "DEFAULT_PAGE_SIZE"]

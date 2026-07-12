@@ -1,36 +1,29 @@
-# Multi-tenant Projects API — System Overview
+# multi-tenant-isolation — System Overview
 
-> The 30,000-foot picture. Plan's output, from the functional analysis.
+> The 30,000-foot picture: the system's shape, its dataflows, its boundaries.
+> Pulled from `doc-patterns/specs/system-overview.md`; filled from the functional analysis.
 
 ## Components
 
 | Component | What it does |
 |---|---|
-| `get_caller` boundary dep (`app/auth.py`) | resolves the signed bearer token to a `Caller` (workspace, actor, role); every route depends on it (codemod-enforced) |
-| Error envelope (`app/errors.py`) | typed `{status, code, detail}`; a cross-tenant miss returns 404, never a bare 500/403 |
-| Workspace-scoped store (`app/store.py`) | the `tenant-scoped-query-guard`: no accessor reaches a row without a `workspace_id`; a foreign id resolves to `None` |
-| Projects routes (`app/main.py`) | the endpoint group; isolation + RBAC enforced at the boundary |
-| Structured event log (`app/log.py`) | emits `PROJECT_*` / `CROSS_TENANT_DENIED` / `RBAC_DENIED` for the logs grader |
-| Named config (`app/config.py`) | page sizes, token secret/algorithm — no magic numbers in code |
+| Auth resolver (`app/auth.py`) | verifies the signed bearer token, resolves it to a `Caller{workspace_id, role, subject}`; **fails closed** on a missing/invalid key or bad token |
+| Tenant-scoped store (`app/store.py`) | in-memory project store; **every** query takes a `workspace_id` and returns only matching rows — deny-by-default is enforced here, not in the handlers |
+| Request boundary (`app/main.py`) | FastAPI routes; every route depends on `get_caller`; scopes at the store, then applies the role gate |
+| Error envelope (`app/errors.py`) | typed `{status, code, detail}` responses; chooses 404 vs 403 deliberately; no bare 500 for expected failures |
+| Structured log (`app/log.py`) | emits stable-code events (`PROJECT_CREATED`, `CROSS_TENANT_DENIED`, …) the logs grader reads |
+| Boundary codemod (`codemods/require_caller_dep.py`) | deterministic check that **every** route carries the `get_caller` dependency (drift can't sneak an unguarded route in) |
 
 ## Key dataflows
 
-- **Create/read/update/list:** request + bearer token → `get_caller` resolves the workspace →
-  the route calls the store with `caller.workspace_id` → a scoped row (or an empty page) →
-  a `PROJECT_*` event fires as the write lands → serialized `ProjectOut`.
-- **Cross-tenant / role denial:** request references a foreign id (or a member tries delete) →
-  the scoped store returns `None` (or the role check fails) → `CROSS_TENANT_DENIED` /
-  `RBAC_DENIED` fires → 404 / 403 envelope. Isolation is checked **before** role, so a foreign
-  id is 404 even to an admin.
+- **CRUD:** caller → `get_caller` resolves the token → handler calls the store **scoped by `caller.workspace_id`** → store returns only in-workspace rows → handler applies any role gate → typed response; a write emits a `PROJECT_*` log event.
+- **Cross-tenant denial:** caller of A requests B's id → the scoped store lookup misses (deny-by-default) → handler emits `CROSS_TENANT_DENIED{workspace,target}` and returns **404** → no B row is ever serialized, on every verb.
 
 ## Integration boundaries
 
-- **Token issuer (inbound).** Protocol: HTTP `Authorization: Bearer <JWT>`. Trigger: every request.
-  Payload: a JWT signed HS256 with claims `{ws, sub, role}`. An absent/invalid/tampered token → 401.
-  The issuer is out of repo; this service only *verifies* tokens (shared secret). See `decisions/0002`
-  and the open question on asymmetric signing.
+- **Token issuer** — inbound. This slice only **verifies**: it reads a bearer token, validates the signature against a shared secret, and trusts the claims (`workspace_id`, `role`, `sub`). It does not mint tokens or call the issuer. Contract: a signed JWT (HS256 — build choice, see assumptions). A missing secret or bad signature → **deny** (fail closed), never a dev-open fallback.
 
 ## Tech-stack call-outs
 
-- **In-memory store instead of a datastore** — the isolation slice is proven at the app layer; the
-  scoped-query-guard shape is datastore-agnostic and carries over to a DB. See `decisions/0001`.
+- **In-memory store instead of a database** — the slice proves the *isolation guard*, which is a query-scoping property; an in-memory dict scoped by `workspace_id` exercises the same guard shape a DB would, with no infra. A real deployment re-proves the guard at the DB layer (RLS or a scoped ORM). *(See `decisions/0001`.)*
+- **HS256 signed bearer token** — the profile declares the token library + algorithm are a build choice; HS256 via PyJWT is recorded in the assumptions ledger. *(See `decisions/0002`.)*

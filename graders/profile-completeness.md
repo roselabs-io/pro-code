@@ -21,7 +21,8 @@ any profile-authored graders. It's the "is the profile ready?" ceremony, the mir
 **Any profile-shipped grader** (`profiles/<x>/graders/*.md`):
 - **conforms to the contract** — declares `kind` (deterministic|fuzzy) + `rubric_source`, and states a
   checkable assertion (not "handle X well");
-- the **composed fuzzy set** (agnostic + domain + personal) stays **within ~3** — warn if it exceeds.
+- the **shared fuzzy set** (agnostic + domain) stays **within ~3**; a personal overlay's fuzzy grader is an
+  opt-in **+1** — warn on the composed total, don't block (the person is tightening on themselves).
 
 ## Output — gate the pipeline entry
 

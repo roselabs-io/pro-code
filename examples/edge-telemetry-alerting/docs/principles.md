@@ -1,21 +1,18 @@
-# Pump-station telemetry — Principles
+# edge-telemetry-alerting — Principles
 
-> The values that bias every fork, before any rule. `edge-telemetry` profile.
+> Feedforward values that bias every decision. Pulled from `doc-patterns/guides/principles.md`;
+> domain values from the `edge-telemetry` profile.
 
-## Universal
+## Universal (hold in every domain)
 
-- **Grade the context, not just the code.** Every handoff passed a grader.
-- **Author ≠ grader.** Nothing graded its own work.
-- **No done without fresh evidence.** "Passes" = the fixture-replay + browser gate showed zero
-  failures this session.
+- **Grade the context, not just the code.** Every handoff passes a grader before the next phase eats it.
+- **Author ≠ grader.** Nothing grades its own work; a fresh critic has fresh priors.
+- **No done without fresh evidence.** "Should pass" is not "passed this session."
 - **Fail loudly.** A silent wrong answer is worse than a loud stop.
-- **Every correction given twice is a missing grader.**
+- **Every correction given twice is a missing grader.** Encode the rubric; don't re-nag.
 
-## Domain values (`edge-telemetry`)
+## Domain values (from `edge-telemetry`)
 
-- **Missing data is a fact, not a gap — absence alerts.** A dropped or never-booted safety sensor
-  raises CRITICAL; it is never read as "fine". This is the core promise.
-- **A per-signal fault must not halt the whole station.** Severity is scoped per signal; one stale
-  sensor doesn't blank the dashboard.
-- **No bare thresholds.** Every level rule carries hysteresis; a raw `>` that can flap is wrong.
-- **Severities are named constants**, never string literals — one source of truth, lint-enforced.
+- **Missing data is a fact, not a gap — absence alerts.** A dropped sensor is stale-critical, never read as "fine" or a last-good number.
+- **A per-signal fault must not halt the whole station.** Severity is scoped per signal; one bad channel doesn't blind the others.
+- **Never miss a critical.** When in doubt at a fork, bias toward raising — a false CRITICAL is cheap next to a missed one.

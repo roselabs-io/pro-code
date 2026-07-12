@@ -1,73 +1,60 @@
-"""The hard-done certification — no cross-tenant read, list, or write, ever.
+"""The core promise — no cross-tenant leak on ANY verb; no existence oracle.
 
-A cross-tenant id must be indistinguishable from not-found (404, never 403). These tests
-hit the real query path (no mocks) — the only way the isolation invariant is proven.
+Every assertion drives the real request and checks the effect, not just status.
 """
 
 from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
-from app.auth import Role
-from tests.conftest import auth, make_project
+from tests.conftest import auth
 
 
-def test_cross_tenant_get_is_404(client: TestClient) -> None:
-    b_project = make_project(client, "ws-b", name="Secret")
-    resp = client.get(f"/projects/{b_project['id']}", headers=auth("ws-a"))
-    assert resp.status_code == 404
-    # The body must not leak that the row exists elsewhere.
-    assert "Secret" not in resp.text
-    assert b_project["id"] not in resp.text
+def _b_project(client: TestClient) -> str:
+    """Create a project owned by workspace B and return its id."""
+    r = client.post("/projects", json={"name": "b-secret"}, headers=auth("B", "admin"))
+    assert r.status_code == 201
+    return r.json()["id"]
 
 
-def test_cross_tenant_id_matches_a_pure_miss(client: TestClient) -> None:
-    b_project = make_project(client, "ws-b", name="Secret")
-    cross = client.get(f"/projects/{b_project['id']}", headers=auth("ws-a"))
-    missing = client.get("/projects/does-not-exist", headers=auth("ws-a"))
-    assert cross.status_code == missing.status_code == 404
-    assert cross.json() == missing.json()
+def test_cross_tenant_get_is_404_and_no_row_serializes(client: TestClient) -> None:
+    bid = _b_project(client)
+    r = client.get(f"/projects/{bid}", headers=auth("A"))
+    assert r.status_code == 404
+    assert "b-secret" not in r.text
+    assert bid not in r.json().get("error", {}).get("detail", "")
 
 
-def test_cross_tenant_patch_cannot_mutate(client: TestClient) -> None:
-    b_project = make_project(client, "ws-b", name="Original")
-    resp = client.patch(
-        f"/projects/{b_project['id']}", json={"name": "Hacked"}, headers=auth("ws-a")
+def test_cross_tenant_patch_is_404(client: TestClient) -> None:
+    bid = _b_project(client)
+    r = client.patch(
+        f"/projects/{bid}", json={"name": "hijacked"}, headers=auth("A", "admin")
     )
-    assert resp.status_code == 404
-    still = client.get(f"/projects/{b_project['id']}", headers=auth("ws-b"))
-    assert still.json()["name"] == "Original"
+    assert r.status_code == 404
+    # B's project is untouched.
+    r2 = client.get(f"/projects/{bid}", headers=auth("B"))
+    assert r2.json()["name"] == "b-secret"
 
 
-def test_cross_tenant_delete_cannot_remove(client: TestClient) -> None:
-    b_project = make_project(client, "ws-b", name="Original")
-    resp = client.delete(
-        f"/projects/{b_project['id']}", headers=auth("ws-a", "admin", Role.ADMIN)
-    )
-    assert resp.status_code == 404
-    still = client.get(f"/projects/{b_project['id']}", headers=auth("ws-b"))
-    assert still.status_code == 200
+def test_cross_tenant_delete_is_404(client: TestClient) -> None:
+    bid = _b_project(client)
+    r = client.delete(f"/projects/{bid}", headers=auth("A", "admin"))
+    assert r.status_code == 404
+    # B's project still exists.
+    assert client.get(f"/projects/{bid}", headers=auth("B")).status_code == 200
 
 
-def test_list_never_includes_another_tenant(client: TestClient) -> None:
-    for i in range(5):
-        make_project(client, "ws-b", name=f"B{i}")
-    resp = client.get("/projects", headers=auth("ws-a"))
-    assert resp.json()["items"] == []
+def test_member_cross_tenant_delete_is_404_not_403(client: TestClient) -> None:
+    """Existence-oracle trap: scope checked BEFORE role, so a member gets 404."""
+    bid = _b_project(client)
+    r = client.delete(f"/projects/{bid}", headers=auth("A", "member"))
+    assert r.status_code == 404, "a 403 here would confirm B's id exists — the oracle"
 
 
-def test_isolation_holds_across_every_verb(client: TestClient) -> None:
-    """Certification: one foreign id, every verb, all 404 — the invariant, end to end."""
-    b_project = make_project(client, "ws-b", name="Fort Knox")
-    fid = b_project["id"]
-    a_admin = auth("ws-a", "admin", Role.ADMIN)
-    assert client.get(f"/projects/{fid}", headers=a_admin).status_code == 404
-    assert (
-        client.patch(f"/projects/{fid}", json={"name": "x"}, headers=a_admin).status_code
-        == 404
-    )
-    assert client.delete(f"/projects/{fid}", headers=a_admin).status_code == 404
-    # And ws-b still sees an untouched row.
-    intact = client.get(f"/projects/{fid}", headers=auth("ws-b"))
-    assert intact.status_code == 200
-    assert intact.json()["name"] == "Fort Knox"
+def test_list_never_includes_another_workspace(client: TestClient) -> None:
+    _b_project(client)
+    client.post("/projects", json={"name": "a-own"}, headers=auth("A"))
+    r = client.get("/projects", headers=auth("A"))
+    names = [p["name"] for p in r.json()["items"]]
+    assert names == ["a-own"]
+    assert "b-secret" not in r.text
