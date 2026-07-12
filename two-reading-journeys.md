@@ -18,6 +18,8 @@ Böckeler's frame is a single picture. An agent's **harness** is everything arou
 
 She calls harness engineering "a specific form of context engineering," and grounds it in Ashby's Law of Requisite Variety: a regulator must carry at least as much variety as the system it governs. So the controls come in two textures — **inferential** (soft, judgment-based: natural-language guidance the agent interprets, or an LLM that judges) and **computational** (hard, deterministic: exact facts and transforms from tooling). You reach for deterministic where the rule is mechanical, and inferential where it isn't.
 
+> **One word, two layers — "harness."** It names two different things, and separating them clears up everything after. The **equipment**-harness is the system around the model that *orchestrates execution* — the loop, tools, sub-agents, memory. That's Anthropic's sense, and it's what a tool like **Claude Code is**. The **control**-harness — Böckeler's, the one above — is the layer that *steers and checks* that agent's work: guides and sensors, the verify-gate. So the control-harness rides *on top of* the equipment-harness — and because they're different layers, it could ride on Claude Code or on a hand-rolled agent just the same. Same word; not the same harness. This piece means the control one throughout.
+
 ```mermaid
 flowchart LR
     subgraph HUMAN["Human — steering"]
