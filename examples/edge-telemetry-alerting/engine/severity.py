@@ -1,8 +1,7 @@
-"""The one place severity strings live — everywhere else uses ``Severity.CRITICAL``.
+"""Severity — the one source of truth for the alert levels.
 
-The ``named-severity-constant`` shape: a severity is an enum constant, never a bare string
-literal in rule code (enforced by the ``severity-constant`` special-lint). This
-module's string values are the single source of truth, so they carry ``doctrine: allow``.
+The only place the severity strings live; everything else uses the enum constant
+(named-severity-constant), so a level is never a bare string or magic number.
 """
 
 from __future__ import annotations
@@ -11,10 +10,20 @@ from enum import Enum
 
 
 class Severity(str, Enum):
-    INFO = "info"  # doctrine: allow — the enum is the one home for the string
-    WARNING = "warning"  # doctrine: allow
-    CRITICAL = "critical"  # doctrine: allow
+    """A named alert level, ranked so transitions can compare severity."""
 
-    @classmethod
-    def from_name(cls, name: str) -> "Severity":
-        return cls[name.upper()]
+    NOMINAL = "nominal"
+    WARNING = "warning"  # doctrine: allow — the enum is the one home for the strings
+    CRITICAL = "critical"  # doctrine: allow — the enum is the one home for the strings
+
+
+_RANK = {
+    Severity.NOMINAL: 0,
+    Severity.WARNING: 1,
+    Severity.CRITICAL: 2,
+}
+
+
+def rank(severity: Severity) -> int:
+    """Return the ordinal so a raise (higher) is distinguishable from a clear (lower)."""
+    return _RANK[severity]

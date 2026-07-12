@@ -1,55 +1,40 @@
-"""Bearer-token auth resolved to a Caller at the request boundary.
+"""Auth resolver — verify the signed bearer token, resolve it to a Caller, fail closed.
 
-A signed JWT carries the workspace, actor and role. ``get_caller`` is the boundary dep
-every route takes (enforced by ``codemods/require_caller_dep.py``): no handler sees a
-request without first resolving who is asking and which workspace they belong to.
+A missing key or a bad token DENIES; there is no unsigned or dev-open fallback in the
+gated path — the boundary trusts a valid signature only.
 """
 
 from __future__ import annotations
 
-from enum import Enum
-from typing import Annotated
-
 import jwt
-from fastapi import Depends, Header
-from pydantic import BaseModel
+from fastapi import Header
 
-from app.config import TOKEN_ALGORITHM, token_secret
-from app.errors import Unauthorized
+from app.config import JWT_ALGORITHM, jwt_secret
+from app.errors import unauthorized
+from app.models import Caller
 
-
-class Role(str, Enum):
-    MEMBER = "member"
-    ADMIN = "admin"
-
-
-class Caller(BaseModel):
-    workspace_id: str
-    actor_id: str
-    role: Role
+ADMIN = "admin"
+MEMBER = "member"
+_ROLES = frozenset({ADMIN, MEMBER})
 
 
-def issue_token(workspace_id: str, actor_id: str, role: Role) -> str:
-    payload = {"ws": workspace_id, "sub": actor_id, "role": role.value}
-    return jwt.encode(payload, token_secret(), algorithm=TOKEN_ALGORITHM)
-
-
-def get_caller(authorization: Annotated[str | None, Header()] = None) -> Caller:
+def get_caller(authorization: str | None = Header(default=None)) -> Caller:
+    """Resolve the bearer token to a Caller — deny on a missing key or bad token."""
+    secret = jwt_secret()
+    if secret is None:
+        raise unauthorized("auth is not configured")
     if not authorization or not authorization.startswith("Bearer "):
-        raise Unauthorized("Missing bearer token")
-    token = authorization.removeprefix("Bearer ")
-    try:
-        payload = jwt.decode(token, token_secret(), algorithms=[TOKEN_ALGORITHM])
-    except jwt.PyJWTError as exc:
-        raise Unauthorized("Invalid bearer token") from exc
-    try:
-        return Caller(
-            workspace_id=payload["ws"],
-            actor_id=payload["sub"],
-            role=Role(payload["role"]),
-        )
-    except (KeyError, ValueError) as exc:
-        raise Unauthorized("Malformed token claims") from exc
+        raise unauthorized("missing bearer token")
 
+    token = authorization.removeprefix("Bearer ").strip()
+    try:
+        claims = jwt.decode(token, secret, algorithms=[JWT_ALGORITHM])
+    except jwt.PyJWTError:
+        raise unauthorized("invalid token") from None
 
-CallerDep = Annotated[Caller, Depends(get_caller)]
+    workspace_id = claims.get("workspace_id")
+    role = claims.get("role")
+    subject = claims.get("sub")
+    if not workspace_id or role not in _ROLES or not subject:
+        raise unauthorized("token missing required claims")
+    return Caller(workspace_id=workspace_id, role=role, subject=subject)

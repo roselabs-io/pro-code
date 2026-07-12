@@ -1,28 +1,34 @@
-"""alert-dedup-storm-guard + out-of-order tolerance."""
+"""Dedup + ordering — a burst is one alert; a late earlier sample can't resurrect."""
 
 from __future__ import annotations
 
-from collections.abc import Callable
-
-from engine.log import ALERT_RAISED, LOG
+from engine import log
+from engine.config import load_station
+from engine.models import Reading
 from engine.monitor import Monitor
 
 
-def test_sustained_breach_is_one_alert_with_count(
-    run_fixture: Callable[..., Monitor],
-) -> None:
-    monitor = run_fixture("overpressure.jsonl")
-    alerts = monitor.active_alerts()
-    assert len(alerts) == 1
-    assert alerts[0].count > 1  # the burst is counted, not one alert per breaching sample
+def test_burst_collapses_to_one_alert_with_a_count() -> None:
+    m = Monitor(load_station())
+    for i in range(4):
+        m.process(Reading(signal="discharge_pressure", value=11.0, ts=1000.0 + i))
+    alerts = m.active_alerts()
+    assert len(alerts) == 1, "a storm of one condition is ONE active alert, not N"
+    assert alerts[0].count == 4, "the occurrences are counted, not dropped"
 
 
-def test_late_earlier_sample_does_not_resurrect(
-    run_fixture: Callable[..., Monitor],
-) -> None:
-    # Breach → clear → a late earlier breaching sample arrives out of order.
-    monitor = run_fixture("out_of_order.jsonl")
-    assert monitor.active_alerts() == []  # the cleared alert stays cleared
-    # It fired once (before clearing), and did not re-fire on the stale sample.
-    raised = LOG.with_code(ALERT_RAISED)
-    assert len(raised) == 1
+def test_out_of_order_earlier_sample_does_not_resurrect_a_cleared_alert() -> None:
+    m = Monitor(load_station())
+    m.process(
+        Reading(signal="discharge_pressure", value=11.0, ts=1000.0)
+    )  # raise critical
+    m.process(Reading(signal="discharge_pressure", value=7.0, ts=1001.0))  # clear
+    assert m.active_alerts() == []
+    log.reset()
+    m.process(
+        Reading(signal="discharge_pressure", value=12.0, ts=1000.5)
+    )  # LATE earlier sample
+    assert (
+        m.active_alerts() == []
+    ), "a late earlier reading must not reopen a cleared alert"
+    assert [e for e in log.events() if e["code"] == log.ALERT_RAISED] == []

@@ -1,43 +1,30 @@
-# Multi-tenant Projects API — Current State
+# multi-tenant-isolation — Current State
 
-> Where things actually are now. The first doc a fresh agent reads. Kept current every ticket.
+> Where things actually are **now**. The first doc a fresh agent reads to orient.
+> Memory, not documentation — kept current every ticket. Pulled from `doc-patterns/living-docs/current-state.md`.
 
 ## What's built
 
-- **Auth boundary** — `get_caller` resolves a signed JWT (HS256) to a `Caller{workspace, actor,
-  role}`; missing/invalid/tampered → 401. Every route depends on it (codemod-enforced).
-- **Workspace-scoped store** — in-memory; every accessor takes a `workspace_id`; a foreign id
-  resolves to `None`. No unscoped accessor exists.
-- **Projects endpoints** — create (201), read, list (cursor-paginated), update (PATCH), delete
-  (admin-only, 204). Typed error envelope on every failure.
-- **Tenant isolation** — cross-tenant read/list/write all 404; a foreign id is byte-identical to a
-  pure miss; certified by `tests/test_isolation.py`.
-- **Observability** — `PROJECT_CREATED/UPDATED/DELETED`, `CROSS_TENANT_DENIED`, `RBAC_DENIED`
-  structured events; asserted by `tests/test_logs_grader.py`.
+- **Auth (T1)** — `get_caller` verifies a signed HS256 bearer token → `Caller{workspace_id, role, subject}`; **fails closed** on a missing key, missing token, bad signature, or missing claims (401). No unsigned/dev fallback.
+- **Tenant-scoped store (T2)** — `ProjectStore` keyed by id; every `get/update/delete/list` takes a `workspace_id` and denies-by-default (a foreign id → None). `owner_of` exposes the owner for the audit trace only, never serialized.
+- **CRUD endpoints (T3, T4)** — `GET/POST/PATCH/DELETE /projects[/{id}]`, all scoped; `GET /projects` cursor-paginated; delete is admin-only (403 in-tenant member); bad body → 422 (typed envelope).
+- **Tenant isolation (T5)** — cross-tenant id → **404** on every verb; no other-workspace row serializes; **member cross-tenant delete → 404, not 403** (no existence oracle). Asserted by `test_isolation.py`.
+- **Audit + boundary codemod (T6)** — `CROSS_TENANT_DENIED{workspace,target}` + `PROJECT_*` events; `require_caller_dep.py --check` enforces `Depends(get_caller)` on every route.
 
 ## What's in flight
 
-- Nothing — the slice is complete and the gate is green (27 tests).
+- Nothing — all six tickets landed and green this session.
 
 ## Known gaps / not-yet-built
 
-- **No persistence** — in-memory; state resets on restart.
-- **No workspace lifecycle** — workspaces + actor assignment live upstream (token issuer).
-- **Symmetric token signing (HS256)** — assumes the issuer shares the secret; see `assumptions.md`.
-- **No PUT / bulk / soft-delete** — only the verbs above.
+- **In-memory store only** — no DB/persistence; the isolation guard must be re-proven at a real query layer (see `decisions/0001`).
+- **Tokens are verified, not minted** — no issuer, rotation, or user-management surface (out of scope; `open-questions.md`).
+- **No rate limiting, no audit persistence** — events go to the in-process log + stderr only.
 
 ## How to run it
 
-```bash
-poetry install
-# gate (deterministic graders, in short-circuit order):
-poetry run ruff check --fix app tests codemods && poetry run ruff format app tests codemods
-poetry run ruff check app tests codemods
-poetry run python ../../graders/checks/doctrine_lint.py app tests
-poetry run python ../../graders/checks/doctrine_lint.py app \
-  --forbid 'print\(@@use LOG' --forbid 'except\s*:@@no bare except'
-poetry run python codemods/require_caller_dep.py --check app/main.py
-poetry run pytest -q
-# launch:
-poetry run uvicorn app.main:app --port 8000
-```
+- Set up: `poetry install`.
+- Configure the signing key: `export PROJECTS_JWT_SECRET=<a 32+ byte secret>`.
+- Gate (no task-runner in this profile — the explicit `poetry run` block; see README "Run it").
+- Launch: `poetry run uvicorn app.main:app --port 8000`.
+- Tests: `poetry run pytest`.

@@ -1,39 +1,41 @@
-# edge-telemetry-alerting — CLI harness.
-# One named target per action, so the loop's graders and the human run the SAME commands.
-# Env: uv (`uv sync`). Recipes call `uv run`.
+# edge-telemetry-alerting — CLI harness. One named target per action, so the graders and a
+# human run the SAME commands. Pulled from doc-patterns/harness/justfile, filled for uv.
 
-doctrine := "../../graders/checks/doctrine_lint.py"
-
-# --- guides (feedforward) --------------------------------------------------
-up port="8000":              # serve the dashboard in the background
-	nohup uv run uvicorn dashboard.app:app --port {{port}} > .server.log 2>&1 & echo $! > .server.pid
-
-down:                        # stop the server started by `up`
-	-kill `cat .server.pid 2>/dev/null` 2>/dev/null; rm -f .server.pid
-
-demo port="8000":            # serve with the seeded browser scenario (stale + critical)
-	DASHBOARD_SEED=browser uv run uvicorn dashboard.app:app --port {{port}}
-
-# --- codemods (deterministic auto-fix arm) ---------------------------------
-fix:                         # codemod-lite: format + safe autofixes, before any grader
-	uv run ruff check --fix engine dashboard tests && uv run ruff format engine dashboard tests
-
-# --- graders (feedback, deterministic) -------------------------------------
-lint:                        # static analysis
+lint:            # static analysis
 	uv run ruff check engine dashboard tests
 
-typecheck:                   # LSP/type facts (advisory author-aid, not a gate step)
+fix:             # codemod-lite: format + safe autofixes, run BEFORE the LLM fix pass
+	uv run ruff check --fix engine dashboard tests && uv run ruff format engine dashboard tests
+
+typecheck:       # LSP/type facts (advisory in this slice)
 	uv run mypy engine
 
-doctrine-lint:               # comment doctrine + test posture + severity-constant forbid
-	uv run python {{doctrine}} engine dashboard tests
-	uv run python {{doctrine}} engine --forbid '"(critical|warning)"@@use Severity.*'
+doctrine:        # special-lint grader — comment doctrine + test posture + severity-constant forbid
+	uv run python ../../graders/checks/doctrine_lint.py engine dashboard tests
+	uv run python ../../graders/checks/doctrine_lint.py engine --forbid '"(critical|warning)"@@use Severity.*'
 
-test:                        # fixture-replay rules (fire + no-fire)
-	uv run pytest -m "not browser" -q
+test:            # the verify gate — fixture-replay (browser suite skipped)
+	uv run pytest -m "not browser"
 
-browser:                     # the Playwright e2e — drives the running dashboard
-	uv run pytest -m browser -q
+browsertest:     # the e2e browser grader (needs: uv run playwright install chromium)
+	uv run pytest -m browser
 
-# --- the whole gate --------------------------------------------------------
-gate: fix lint doctrine-lint test browser   # deterministic graders, short-circuit order
+security:        # SAST + secret scan
+	uv run bandit -q -r engine dashboard && uv run detect-secrets scan engine dashboard
+
+coverage:        # changed-line coverage
+	uv run pytest -m "not browser" --cov=engine --cov=dashboard --cov-report=term-missing
+
+deps:            # supply-chain audit of the shipped tree
+	uv export --no-dev --no-hashes | uv run pip-audit -r /dev/stdin
+
+up:              # start the dashboard in the background
+	nohup uv run uvicorn dashboard.app:app --port 8000 > .server.log 2>&1 & echo $! > .server.pid
+
+down:            # stop the server started by `up`
+	-kill `cat .server.pid 2>/dev/null` 2>/dev/null; rm -f .server.pid
+
+demo: up         # launch and open the dashboard
+
+# the whole deterministic gate, in short-circuit order
+gate: fix lint typecheck doctrine security test coverage

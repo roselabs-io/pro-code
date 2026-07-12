@@ -1,31 +1,25 @@
-# 0001 — Dead-from-boot staleness measured from station_start
+# 0001 — A never-reported safety-critical signal is stale-critical from boot
+
+> A durable decision + the load-bearing why. Pulled from `doc-patterns/living-docs/decision-record.md`.
 
 - **Status:** accepted
-- **Date:** 2026-07-03
-- **Ticket:** T5 (staleness watchdog), T11 (no-missed-critical)
+- **Date:** 2026-07-11
+- **Ticket:** T3 / T5
 
 ## Context
 
-The core promise is "no missed critical alert." The obvious staleness rule — "a signal is stale if
-`now − last_seen > ttl`" — has a hole: a sensor that has **never** reported has no `last_seen`, so
-a naive watchdog never evaluates it. A safety sensor that is dead from boot would stay silent — the
-exact failure the profile calls out (and the analogue of the bug the reference build's N-vote caught).
+Staleness is easy to reason about once a signal has reported at least once (age = now − last_ts). But a signal that has **never** reported since boot has no `last_ts`. Treating that as "unknown / blank" would let a sensor that was dead from the start read as benign — the exact miss the no-missed-critical promise forbids.
 
 ## Decision
 
-Every signal is watched from the station's boot. When a signal has never reported, staleness is
-measured from `station_start` instead of `last_seen`: it is stale once `now − station_start > ttl`,
-and (being safety-critical) raises CRITICAL — a dead-from-boot alert.
+- A safety-critical signal with **no reading yet** is **stale** — and therefore CRITICAL — from boot, surfaced on the first `/state` read. `last_ts is None` → stale, regardless of `now`.
 
 ## Why (and what we rejected)
 
-- **Rejected — watch only signals that have reported at least once:** simpler, but it is precisely
-  the missed-critical hole. A configured safety signal that never boots would never alert.
-- Measuring from `station_start` closes it with no special-casing at call sites: the watchdog loops
-  over the *config's* signals (not the *seen* signals), so an absent signal is a first-class case.
+- The rejected reading ("no data yet = nominal / empty") is precisely how a dead-from-boot sensor slips through: the operator sees a blank cell, not an alarm. "Missing data is a fact, not a gap" (the domain principle) means absence must alert, and absence-from-boot is still absence.
+- Asserted by `test_dead_from_boot_is_stale_critical` and the `dead_from_boot.jsonl` replay.
 
 ## Consequences
 
-- `dead_from_boot.jsonl` is a first-class fire fixture in the no-missed-critical certification.
-- On restart, `station_start` resets, so dead-from-boot re-arms from the new boot (acceptable for an
-  in-memory slice; a persistent deployment would carry `station_start` forward).
+- The dashboard never shows a blank/zero for a configured-but-silent safety-critical signal — it shows "— stale" + CRITICAL.
+- A signal legitimately expected to be quiet at boot would need a non-safety-critical classification or a grace window (not in this slice).

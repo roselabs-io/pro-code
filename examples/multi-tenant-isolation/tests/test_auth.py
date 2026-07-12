@@ -1,34 +1,45 @@
-"""Auth at the boundary — no token, no access; a tampered token is rejected."""
+"""Auth fails closed — a missing key, a missing token, or a bad token all deny."""
 
 from __future__ import annotations
 
 import jwt
+import pytest
 from fastapi.testclient import TestClient
 
-from tests.conftest import auth
+from tests.conftest import SECRET, auth
+
+
+def test_valid_token_resolves_caller(client: TestClient) -> None:
+    r = client.get("/projects", headers=auth("A"))
+    assert r.status_code == 200
 
 
 def test_missing_token_is_401(client: TestClient) -> None:
-    resp = client.get("/projects")
-    assert resp.status_code == 401
-    assert resp.json()["code"] == "unauthorized"
+    r = client.get("/projects")
+    assert r.status_code == 401
+    assert r.json()["error"]["code"] == "unauthorized"
 
 
-def test_non_bearer_scheme_is_401(client: TestClient) -> None:
-    resp = client.get("/projects", headers={"Authorization": "Basic abc"})
-    assert resp.status_code == 401
-
-
-def test_token_signed_with_wrong_secret_is_401(client: TestClient) -> None:
+def test_bad_signature_is_401(client: TestClient) -> None:
     forged = jwt.encode(
-        {"ws": "ws-a", "sub": "u", "role": "admin"},
-        "a-different-secret-of-adequate-length-000000",
+        {"workspace_id": "A", "role": "member", "sub": "u1"},
+        "a-different-wrong-key-also-padded-to-32-plus-bytes",
         algorithm="HS256",
     )
-    resp = client.get("/projects", headers={"Authorization": f"Bearer {forged}"})
-    assert resp.status_code == 401
+    r = client.get("/projects", headers={"Authorization": f"Bearer {forged}"})
+    assert r.status_code == 401
 
 
-def test_valid_token_is_accepted(client: TestClient) -> None:
-    resp = client.get("/projects", headers=auth("ws-a"))
-    assert resp.status_code == 200
+def test_token_missing_claims_is_401(client: TestClient) -> None:
+    thin = jwt.encode({"sub": "u1"}, SECRET, algorithm="HS256")
+    r = client.get("/projects", headers={"Authorization": f"Bearer {thin}"})
+    assert r.status_code == 401
+
+
+def test_unconfigured_key_denies_no_dev_fallback(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """With no signing key configured, every request denies — no dev-open path."""
+    monkeypatch.delenv("PROJECTS_JWT_SECRET", raising=False)
+    r = client.get("/projects", headers=auth("A"))
+    assert r.status_code == 401

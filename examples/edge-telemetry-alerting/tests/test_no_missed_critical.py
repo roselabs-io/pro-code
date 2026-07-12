@@ -1,47 +1,54 @@
-"""The hard-done certification — no missed critical alert.
+"""The core promise — no missed critical alert.
 
-Every real safety-critical breach (a bad value held, or a stale/dead-from-boot sensor)
-raises a CRITICAL alert; a nominal stream stays silent. The analogue of the isolation
-test in generic-saas: the grader, not confidence, certifies the core promise.
+Each fire fixture proves the critical path from the TRACE (ALERT_RAISED critical),
+not just the active-alert list; the nominal fixture proves the rule stays quiet.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
-
-import pytest
-
-from engine.log import ALERT_RAISED, LOG
-from engine.monitor import Monitor
+from engine import log
 from engine.severity import Severity
-
-# Each safety-critical failure mode → its fixture. Held bad value, dropped sensor,
-# and dead-from-boot are all real breaches that MUST alert critical.
-CRITICAL_FIXTURES = [
-    "overpressure.jsonl",  # a bad pressure value, held past debounce
-    "bearing_overheat.jsonl",  # a bad temperature value, held
-    "stale_sensor.jsonl",  # a safety sensor that dropped out
-    "dead_from_boot.jsonl",  # a safety sensor dead from boot (never reported)
-]
+from tests.conftest import raised, replay_fixture
 
 
-@pytest.mark.parametrize("fixture", CRITICAL_FIXTURES)
-def test_real_breach_raises_critical(
-    fixture: str, run_fixture: Callable[..., Monitor]
-) -> None:
-    monitor = run_fixture(fixture)
-    # Proven two independent ways: the active-alert list AND the emitted trace.
-    critical_active = [
-        a for a in monitor.active_alerts() if a.severity is Severity.CRITICAL
-    ]
-    critical_logged = [
-        r for r in LOG.with_code(ALERT_RAISED) if r["severity"] == Severity.CRITICAL.value
-    ]
-    assert critical_active, f"{fixture}: no CRITICAL alert active — a missed critical"
-    assert critical_logged, f"{fixture}: no ALERT_RAISED critical in the trace"
+def test_bearing_overheat_raises_critical() -> None:
+    m = replay_fixture("bearing_overheat")
+    assert raised("critical"), "a bearing overheat must raise a CRITICAL alert"
+    assert any(a.severity == Severity.CRITICAL for a in m.active_alerts())
 
 
-def test_nominal_stream_raises_nothing(run_fixture: Callable[..., Monitor]) -> None:
-    monitor = run_fixture("nominal.jsonl")
-    assert monitor.active_alerts() == []
-    assert LOG.with_code(ALERT_RAISED) == []
+def test_overpressure_raises_critical() -> None:
+    m = replay_fixture("overpressure")
+    crit = raised("critical")
+    assert [e["signal"] for e in crit] == ["discharge_pressure"]
+    assert any(a.severity == Severity.CRITICAL for a in m.active_alerts())
+
+
+def test_dead_from_boot_raises_critical_on_read() -> None:
+    """A never-reported safety-critical signal is CRITICAL from boot, seen on read."""
+    m = replay_fixture("dead_from_boot")
+    assert not raised("critical"), "nothing critical before the state is read"
+    m.state_at(1001.0)
+    crit = raised("critical")
+    assert [e["signal"] for e in crit] == ["bearing_temp"]
+
+
+def test_oscillating_breach_still_raises_critical() -> None:
+    """A value oscillating in breach must not be debounced away into silence."""
+    from engine.config import load_station
+    from engine.models import Reading
+    from engine.monitor import Monitor
+
+    m = Monitor(load_station())
+    # bearing_temp flips crit(96)/warn(90) — never nominal, repeatedly over crit 95.
+    for i, v in enumerate([96.0, 90.0, 96.0, 90.0, 96.0]):
+        m.process(Reading(signal="bearing_temp", value=v, ts=1000.0 + i))
+    assert raised("critical"), "a sustained oscillating breach must still raise CRITICAL"
+
+
+def test_nominal_fixture_raises_nothing() -> None:
+    """The no-fire case — in-range data, read within TTL, is silent."""
+    m = replay_fixture("nominal")
+    m.state_at(1003.0)
+    assert log.events() == []
+    assert m.active_alerts() == []

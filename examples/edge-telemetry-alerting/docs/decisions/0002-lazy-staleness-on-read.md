@@ -1,30 +1,26 @@
-# 0002 — Staleness evaluated lazily on read, not by a background ticker
+# 0002 — Staleness is evaluated lazily on read, against an explicit clock
+
+> A durable decision + the load-bearing why. Pulled from `doc-patterns/living-docs/decision-record.md`.
 
 - **Status:** accepted
-- **Date:** 2026-07-03
-- **Ticket:** T5 (staleness watchdog), T8 (/state)
+- **Date:** 2026-07-11
+- **Ticket:** T3
 
 ## Context
 
-The staleness watchdog needs a notion of "now" to decide a signal has gone silent. That "now" can
-come from a background loop that ticks on a timer, or be supplied at read time.
+Staleness is time-relative: a signal is stale once its age exceeds its TTL. That can be driven by a **background timer** (a scheduler ticks and marks signals stale) or **lazily on read** (age is computed when `/state` is queried). The choice affects testability and how the promise is proven.
 
 ## Decision
 
-`check_staleness(now)` is called explicitly — on each `GET /state` (`snapshot` runs it) and from
-fixtures via a `{tick: <ts>}` line. There is no background thread.
+- Compute staleness **lazily on read**: `Monitor.state_at(now)` and `/state?now=` take an explicit `now` and derive each signal's staleness from `now − last_ts`. No background thread. The staleness alert is raised/cleared as a side effect of that read.
 
 ## Why (and what we rejected)
 
-- **Rejected — a background ticker thread:** raises alerts on a wall-clock timer, which is
-  non-deterministic to test and adds concurrency to an otherwise pure engine. The fixture-replay
-  posture (fire + no-fire, exact timing) needs a clock the test controls.
-- Lazy-on-read keeps the engine pure and deterministic: the same fixture always yields the same
-  alerts. The live dashboard gets fresh staleness because it reads `/state` every 2s anyway.
+- A background timer introduces wall-clock nondeterminism — the exact thing that makes a rule un-replayable. With an explicit clock, a fixture replay is fully deterministic: feed readings, then query `state_at(t)` and assert. That's what lets the fixture-replay grader certify the promise.
+- The cost: staleness only surfaces when something reads `/state`. In this slice the dashboard polls, so a dropped sensor surfaces on the next poll — acceptable. A push/paging deployment would add a periodic reader (a tick that calls `state_at(now())`), reusing the same lazy logic.
+- Asserted by every `test_staleness` case + the `/state` endpoint tests.
 
 ## Consequences
 
-- `GET /state` has a side effect (it may raise a staleness alert). Acceptable and idempotent — a
-  second read while already stale does not re-raise or re-log.
-- A signal only goes stale when something reads `/state` or ticks; with a 2s dashboard poll that is
-  effectively continuous. A headless deployment with no reader would need a periodic tick.
+- The engine is pure and clock-injected — trivially testable, no time mocking.
+- Alerting latency is bounded by the poll interval, not by a timer; a real deployment must add a periodic read to bound it independently of a viewer.

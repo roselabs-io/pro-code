@@ -1,48 +1,46 @@
-"""FastAPI dashboard — a /state JSON endpoint and a served operator view.
+"""Dashboard API — GET /state serializes the monitor's per-signal view; / serves the view.
 
-The monitor is a module singleton fed by ingest; ``/state`` is its read model (staleness
-evaluated as of now). ``DASHBOARD_SEED=browser`` seeds a deterministic mixed state so the
-browser grader can drive the running app.
+Staleness is computed against a query clock (`?now=`), defaulting to the demo clock so the
+served page is stable; the stale value serializes as null with the '— stale' label.
 """
 
 from __future__ import annotations
 
-import os
-import time
 from pathlib import Path
-from typing import Any
 
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Query
+from fastapi.responses import FileResponse
 
-from engine.config import load_station
-from engine.models import Reading
-from engine.monitor import Monitor
+from dashboard.seed import DEMO_NOW, seeded_monitor
 
+app = FastAPI(title="edge-telemetry-dashboard")
+_monitor = seeded_monitor()
 _INDEX = Path(__file__).resolve().parent / "index.html"
-
-monitor = Monitor(load_station())
-if os.environ.get("DASHBOARD_SEED") == "browser":
-    from dashboard.seed import seed_browser
-
-    seed_browser(monitor)
-
-app = FastAPI(title="Pump-station telemetry dashboard")
 
 
 @app.get("/state")
-def state() -> dict[str, Any]:
-    return monitor.snapshot(now=time.time())
+def state(now: float = Query(default=DEMO_NOW)) -> dict:
+    """The current per-signal state at `now` — stale signals nulled to '— stale'."""
+    statuses = _monitor.state_at(now)
+    return {
+        "station": _monitor.station.name,
+        "now": now,
+        "signals": [
+            {
+                "name": s.name,
+                "unit": s.unit,
+                "value": s.value,
+                "stale": s.stale,
+                "severity": s.severity.value,
+                "label": s.label,
+            }
+            for s in statuses
+        ],
+        "active_alerts": len(_monitor.active_alerts()),
+    }
 
 
-@app.post("/ingest", status_code=202)
-def ingest(reading: dict[str, Any]) -> dict[str, str]:
-    monitor.process(
-        Reading(reading["signal"], float(reading["value"]), float(reading["ts"]))
-    )
-    return {"status": "accepted"}
-
-
-@app.get("/", response_class=HTMLResponse)
-def index() -> str:
-    return _INDEX.read_text()
+@app.get("/")
+def index() -> FileResponse:
+    """Serve the static monitoring view."""
+    return FileResponse(_INDEX)

@@ -1,31 +1,20 @@
-# Multi-tenant Projects API — Open Questions
+# multi-tenant-isolation — Open Questions
 
 > Every assumption that could bite the build — state + owner + stakes. Also holds the
-> **Design seeds → Plan** bucket. `[open]` / `[decided]`.
+> **Design seeds → Plan** bucket. Resolved items flip to `[decided]` as Implement lands them.
 
 ## Open / decided
 
-- **[decided] Cross-tenant denied response = 404, not 403.** The brief requires a cross-tenant id
-  be "indistinguishable from not-found"; 403 would confirm existence. Pinned before Plan (the
-  profile's isolation hard gate). Owner: pipeline. Stakes: the core promise.
-- **[decided] Isolation is enforced at the app layer** (a workspace-scoped store), not a DB.
-  See `decisions/0001`. Stakes: how the invariant is verified.
-- **[decided] Bearer tokens are signed JWTs (HS256).** See `decisions/0002`. Stakes: auth trust root.
-- **[open] Token issuer is out of repo.** This slice assumes an upstream identity provider mints
-  tokens with `{ws, sub, role}` claims and shares the signing secret. Owner: platform. Stakes: if
-  the issuer is a separate service, HS256 (symmetric) should become RS256 (asymmetric) — flagged in
-  `assumptions.md`.
-- **[open] No workspace lifecycle here.** Create/rename/delete of a workspace, and how an actor is
-  assigned to one, live upstream. Owner: platform. Stakes: this slice can't onboard a tenant alone.
-- **[open] Persistence is in-memory.** State resets on restart; no durability. Owner: pipeline.
-  Stakes: fine for the isolation slice; a real deployment needs a datastore (the scoped-query guard
-  shape carries over — see `decisions/0001`).
+- **[decided]** **Cross-tenant denied response = 404, not 403.** A 403 confirms the id exists in *some* tenant (an existence oracle); 404 reveals nothing. Owner: build. Stakes: the core promise. *(Frame hard gate — isolation rules pinned before Plan.)*
+- **[decided]** **Scoping rule: deny-by-default at the store.** Every query is scoped by `workspace_id`; an unscoped/foreign id resolves to "not found," never a leak. Owner: build. Stakes: the core promise.
+- **[decided]** **RBAC ordering: scope BEFORE role.** Tenant scope (→404) is checked before the role gate (→403), so a 403 is only ever returned for an in-tenant resource — a member probing cross-tenant ids always gets 404 whether or not the id exists. *(Closes the existence-oracle-via-RBAC-ordering trap.)* Owner: build. Stakes: the core promise.
+- **[open]** **Token minting is out of scope.** Tokens are issued out-of-band by an external issuer; this slice only verifies them. Owner: platform. Stakes: a real deployment needs an issuer + rotation; absent here. Logged, not built.
+- **[open]** **Delete is the only admin-gated verb in this slice.** Create/update are member-allowed. Whether update should also be admin-gated is a product call, not pinned by the brief. Owner: product. Stakes: low — RBAC shape is proven by delete regardless.
+- **[open]** **No persistence layer.** In-memory store for the slice (see assumptions ledger). A real deployment needs a DB + the isolation guard re-proven at the query layer (RLS or scoped ORM). Owner: platform. Stakes: the isolation proof must be re-run against the real store.
 
-## Design seeds → Plan
+## Design seeds → Plan (hypotheses, not decisions)
 
-- **Scope every query by workspace, deny-by-default** → confirmed as `tenant-scoped-query-guard`.
-- **Enforce role at the request boundary** → confirmed as `rbac-check-at-boundary`.
-- **Type the error envelope, choose 404-over-403 deliberately** → confirmed `structured-error-envelope`.
-- **Emit a structured event as each write/denial lands** → confirmed `write-through-audit-log`.
-- **Page the list with an opaque cursor** → confirmed `cursor-pagination` (see the F3 scope note in
-  `assumptions.md` — pagination was added, not in the brief).
+- Seed: *scope every query in the store layer, not the handler* → route against `tenant-scoped-query-guard`. Plan confirms.
+- Seed: *return a typed error envelope, choosing 404 vs 403 deliberately* → route against `structured-error-envelope`. Plan confirms.
+- Seed: *cursor-paginate the list* → route against `cursor-pagination`. Plan confirms.
+- Seed: *emit a structured audit event on denial* → route against `write-through-audit-log`. Plan confirms.

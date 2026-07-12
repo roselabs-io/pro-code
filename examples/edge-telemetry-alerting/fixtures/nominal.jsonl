@@ -1,13 +1,6 @@
-{"signal":"discharge_pressure","value":8.0,"ts":0}
-{"signal":"bearing_temperature","value":70.0,"ts":0}
-{"signal":"flow_rate","value":40.0,"ts":0}
-{"signal":"discharge_pressure","value":8.2,"ts":2}
-{"signal":"bearing_temperature","value":71.0,"ts":2}
-{"signal":"flow_rate","value":39.0,"ts":2}
-{"signal":"discharge_pressure","value":7.9,"ts":4}
-{"signal":"bearing_temperature","value":70.5,"ts":4}
-{"signal":"flow_rate","value":41.0,"ts":4}
-{"signal":"discharge_pressure","value":8.1,"ts":6}
-{"signal":"bearing_temperature","value":70.0,"ts":6}
-{"signal":"flow_rate","value":40.0,"ts":6}
-{"tick":7}
+{"signal": "bearing_temp", "value": 70.0, "ts": 1000.0}
+{"signal": "discharge_pressure", "value": 7.0, "ts": 1000.0}
+{"signal": "flow_rate", "value": 40.0, "ts": 1000.0}
+{"signal": "bearing_temp", "value": 72.0, "ts": 1002.0}
+{"signal": "discharge_pressure", "value": 7.2, "ts": 1002.0}
+{"signal": "flow_rate", "value": 41.0, "ts": 1002.0}

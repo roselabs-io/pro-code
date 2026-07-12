@@ -1,41 +1,22 @@
-# Pump-station telemetry — Open Questions
+# edge-telemetry-alerting — Open Questions
 
-> Every assumption that could bite the build + the **Design seeds → Plan** bucket. `[open]`/`[decided]`.
+> Every assumption that could bite the build — state + owner + stakes. Also holds the
+> **Design seeds → Plan** bucket. Resolved items flip to `[decided]`.
 
 ## Open / decided
 
-- **[decided] Two safety-critical signals** (discharge_pressure, bearing_temperature) each carry a
-  threshold **and** a staleness rule at CRITICAL; flow_rate is operational WARNING. Pinned before
-  Plan (the alert-coverage hard gate). Owner: pipeline. Stakes: the core promise.
-- **[decided] Dead-from-boot is measured from `station_start`.** A signal that never reported is
-  stale once `now − station_start > ttl`. See `decisions/0001`. Stakes: this is the exact miss the
-  profile warns about.
-- **[decided] Staleness is evaluated lazily on read** (`snapshot`/`check_staleness`), not by a
-  background ticker. See `decisions/0002`. Stakes: when the watchdog fires.
-- **[open] The signal catalog + all thresholds are invented.** The specific signals, limits
-  (10.0 bar, 85 °C, 20 m³/h), hysteresis bands, debounce (3), and TTLs (5/10/15 s) are placeholder
-  values — a real build gets them from a device spec sheet + ops runbook. Owner: SRE. Stakes: wrong
-  numbers = wrong alerts. **Flagged in `assumptions.md`.**
-- **[open] Is low flow safety-critical?** Modelled here as operational WARNING; a station where a
-  dry-run damages the pump would make it CRITICAL. Owner: SRE. Stakes: severity of a real hazard.
-- **[open] Device transport is a direct call / `POST /ingest`.** A real deployment fronts ingest
-  with MQTT/HTTP + backpressure. Owner: platform. Stakes: out of this slice.
-- **[open] Monitor state is in-memory.** No persistence across restart. Owner: pipeline. Stakes:
-  fine for the slice; a restart loses alert history (dead-from-boot re-arms from the new boot).
-- **[decided] A delayed-but-in-order frame momentarily clears a staleness alert.** `process` ends
-  a STALENESS alert on any accepted reading (`ts ≥ last_ts`); a badly-backlogged frame with an old
-  `ts` clears it in the raw `active_alerts()` list for one evaluation. It **self-heals**: the frame
-  sets `last_ts` to its own old value, so the next `check_staleness(now)` re-fires CRITICAL, and
-  `snapshot` always runs `check_staleness` before rendering — so the operator read model never
-  exposes the gap. Surfaced by the adversarial no-missed-critical refuter (author ≠ grader); not a
-  durable miss (ties to `decisions/0002`). Owner: pipeline. Stakes: none today; revisit if a
-  headless deployment reads `active_alerts()` directly without a `snapshot`/tick.
+- **[decided]** **Every safety-critical signal carries an alert condition + severity.** bearing_temp and discharge_pressure each have a level rule (warn/critical) AND a staleness watchdog (→ CRITICAL). *(Frame hard gate — alert-coverage of safety-critical signals.)*
+- **[decided]** **Staleness is evaluated lazily on read**, against the query clock — not by a background timer. A signal's age is computed when `/state` is queried, so a dropped sensor surfaces on the next poll. *(See `decisions/0002`.)*
+- **[decided]** **A never-reported signal is stale from boot** ("dead from boot") — for a safety-critical signal that's CRITICAL, not an empty/unknown cell. *(See `decisions/0001`.)*
+- **[decided]** **A stale signal renders "— stale", never the last-good number or "nominal".** The visual invariant the browser grader asserts.
+- **[decided]** **An out-of-order (older-ts) reading does not change alert state** — it can't resurrect a cleared alert. The monitor tracks the max ts seen per signal.
+- **[open]** **The concrete signal catalog + thresholds are a build assumption, not a profile input.** The profile supplies the rule *shapes*, not the station's actual signals/limits. Chosen defaults (a pump-house station: bearing_temp, discharge_pressure, flow_rate) are in `docs/assumptions.md`, flagged for a domain expert to confirm. Owner: plant SRE. Stakes: the thresholds must match the real device spec before production. **This is a profile gap to promote.**
+- **[open]** **Notification delivery is out of scope.** Alerts are raised + displayed, not routed. Owner: platform. Stakes: a real deployment needs a channel; absent here (profile-declared).
 
-## Design seeds → Plan
+## Design seeds → Plan (hypotheses, not decisions)
 
-- **Fire past a limit, clear past limit ∓ h** → confirmed `threshold-with-hysteresis`.
-- **Hold N samples before firing** → confirmed `debounce-transient`.
-- **Absence is an alert, incl. never-reported** → confirmed `staleness-watchdog`.
-- **A burst is one alert + a count** → confirmed `alert-dedup-storm-guard`.
-- **Severity is an enum constant** → confirmed `named-severity-constant`.
-- **Thresholds live in config** → confirmed `config-driven-thresholds`.
+- Seed: *thresholds/TTLs/hysteresis live in `station.toml`, not code literals* → `config-driven-thresholds`. Plan confirms.
+- Seed: *severities are a named enum, never string literals* → `named-severity-constant`. Plan confirms.
+- Seed: *level rules carry a hysteresis band + a debounce count* → `threshold-with-hysteresis` + `debounce-transient`. Plan confirms.
+- Seed: *absence within a TTL is itself an alert* → `staleness-watchdog`. Plan confirms.
+- Seed: *a burst dedups into one active alert + a count* → `alert-dedup-storm-guard`. Plan confirms.

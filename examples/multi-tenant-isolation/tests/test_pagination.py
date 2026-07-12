@@ -1,35 +1,41 @@
-"""Cursor pagination — an unbounded list pages with a stable opaque cursor."""
+"""Cursor pagination — stable workspace-scoped pages ending in a null cursor."""
 
 from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
-from tests.conftest import auth, make_project
+from tests.conftest import auth
 
 
-def test_cursor_walks_every_row_once(client: TestClient) -> None:
-    for i in range(5):
-        make_project(client, "ws-a", name=f"P{i}")
+def _seed(client: TestClient, workspace: str, n: int) -> None:
+    for i in range(n):
+        client.post("/projects", json={"name": f"p{i}"}, headers=auth(workspace))
 
+
+def test_pages_walk_the_whole_list_without_overlap(client: TestClient) -> None:
+    _seed(client, "A", 5)
     seen: list[str] = []
     cursor = None
-    for _ in range(10):  # generous bound; loop exits on exhausted cursor
+    for _ in range(10):  # bounded loop — must terminate well before this
         params = {"limit": 2}
         if cursor:
             params["cursor"] = cursor
-        page = client.get("/projects", params=params, headers=auth("ws-a")).json()
-        seen.extend(i["id"] for i in page["items"])
+        page = client.get("/projects", params=params, headers=auth("A")).json()
+        seen.extend(p["name"] for p in page["items"])
         cursor = page["next_cursor"]
         if cursor is None:
             break
+    assert seen == ["p0", "p1", "p2", "p3", "p4"]
+    assert len(seen) == len(set(seen)), "no row appears on two pages"
 
-    assert len(seen) == 5
-    assert len(set(seen)) == 5
 
-
-def test_page_respects_limit(client: TestClient) -> None:
-    for i in range(3):
-        make_project(client, "ws-a", name=f"P{i}")
-    page = client.get("/projects", params={"limit": 2}, headers=auth("ws-a")).json()
+def test_last_page_has_null_cursor(client: TestClient) -> None:
+    _seed(client, "A", 2)
+    page = client.get("/projects", params={"limit": 5}, headers=auth("A")).json()
+    assert page["next_cursor"] is None
     assert len(page["items"]) == 2
-    assert page["next_cursor"] is not None
+
+
+def test_empty_workspace_lists_empty(client: TestClient) -> None:
+    page = client.get("/projects", headers=auth("A")).json()
+    assert page == {"items": [], "next_cursor": None}

@@ -1,38 +1,40 @@
-"""Role gate at the boundary — only an admin deletes; isolation trumps the role check."""
+"""RBAC at the boundary — delete is admin-only within a tenant, gated after scope."""
 
 from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
-from app.auth import Role
-from tests.conftest import auth, make_project
+from tests.conftest import auth
 
 
-def test_member_cannot_delete(client: TestClient) -> None:
-    created = make_project(client, "ws-a", name="P")
-    resp = client.delete(
-        f"/projects/{created['id']}", headers=auth("ws-a", "m", Role.MEMBER)
-    )
-    assert resp.status_code == 403
-    assert resp.json()["code"] == "forbidden"
-    # The row survives a denied delete.
+def test_admin_can_delete_own(client: TestClient) -> None:
+    pid = client.post("/projects", json={"name": "a"}, headers=auth("A", "admin")).json()[
+        "id"
+    ]
     assert (
-        client.get(f"/projects/{created['id']}", headers=auth("ws-a")).status_code == 200
+        client.delete(f"/projects/{pid}", headers=auth("A", "admin")).status_code == 204
     )
 
 
-def test_admin_can_delete(client: TestClient) -> None:
-    created = make_project(client, "ws-a", name="P")
-    resp = client.delete(
-        f"/projects/{created['id']}", headers=auth("ws-a", "a", Role.ADMIN)
-    )
-    assert resp.status_code == 204
+def test_member_cannot_delete_own_is_403(client: TestClient) -> None:
+    """A member deleting an in-tenant project gets 403 — the role gate after scope."""
+    pid = client.post(
+        "/projects", json={"name": "a"}, headers=auth("A", "member")
+    ).json()["id"]
+    r = client.delete(f"/projects/{pid}", headers=auth("A", "member"))
+    assert r.status_code == 403
+    assert r.json()["error"]["code"] == "forbidden"
+    # The project survives the denied delete.
+    assert client.get(f"/projects/{pid}", headers=auth("A")).status_code == 200
 
 
-def test_cross_tenant_hides_existence_even_from_admin(client: TestClient) -> None:
-    """A foreign row is 404 (not 403) even to an admin — 403 would confirm it exists."""
-    b_project = make_project(client, "ws-b", name="P")
-    resp = client.delete(
-        f"/projects/{b_project['id']}", headers=auth("ws-a", "a", Role.ADMIN)
+def test_member_can_create_and_update(client: TestClient) -> None:
+    pid = client.post(
+        "/projects", json={"name": "a"}, headers=auth("A", "member")
+    ).json()["id"]
+    assert (
+        client.patch(
+            f"/projects/{pid}", json={"name": "b"}, headers=auth("A")
+        ).status_code
+        == 200
     )
-    assert resp.status_code == 404

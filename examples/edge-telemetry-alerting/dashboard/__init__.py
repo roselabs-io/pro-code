@@ -1,1 +1,1 @@
-"""Served monitoring dashboard — a /state endpoint + a rendered operator view."""
+"""Dashboard — a /state JSON endpoint + a served view over the monitor."""

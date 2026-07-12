@@ -1,42 +1,43 @@
-# Pump-station telemetry configuration.
-# Thresholds / hysteresis / debounce / TTLs are tuned here — never as literals in the engine.
-# `severity` is data here (a string); the engine maps it to the Severity enum at load.
+# Station config — the signal catalog + alert rules. Thresholds live HERE, never in rule code
+# (config-driven-thresholds), so re-tuning is a config edit. Values are a build assumption
+# (a pump-house station); see docs/assumptions.md — a domain expert confirms them before production.
 
-[station]
-name = "Pump Station 7"
+station = "pump-house-1"
 
-# Discharge pressure — safety-critical. Overpressure can rupture the line.
+[[signal]]
+name = "bearing_temp"
+unit = "C"
+safety_critical = true
+[signal.level]
+direction = "high"
+warn_at = 80.0
+crit_at = 95.0
+hysteresis = 3.0
+debounce_samples = 2
+[signal.staleness]
+ttl_seconds = 10.0
+
 [[signal]]
 name = "discharge_pressure"
 unit = "bar"
 safety_critical = true
-severity = "critical"
+[signal.level]
 direction = "high"
-limit = 10.0
-hysteresis = 0.5
-debounce = 3
-staleness_ttl = 5.0
+warn_at = 8.5
+crit_at = 10.0
+hysteresis = 0.3
+debounce_samples = 1
+[signal.staleness]
+ttl_seconds = 10.0
 
-# Bearing temperature — safety-critical. Overheating precedes bearing failure.
-[[signal]]
-name = "bearing_temperature"
-unit = "degC"
-safety_critical = true
-severity = "critical"
-direction = "high"
-limit = 85.0
-hysteresis = 3.0
-debounce = 3
-staleness_ttl = 10.0
-
-# Flow rate — operational, not safety-critical. Low flow signals a dry-run risk.
 [[signal]]
 name = "flow_rate"
-unit = "m3ph"
+unit = "Lpm"
 safety_critical = false
-severity = "warning"
+[signal.level]
 direction = "low"
-limit = 20.0
+warn_at = 20.0
 hysteresis = 2.0
-debounce = 3
-staleness_ttl = 15.0
+debounce_samples = 2
+[signal.staleness]
+ttl_seconds = 30.0

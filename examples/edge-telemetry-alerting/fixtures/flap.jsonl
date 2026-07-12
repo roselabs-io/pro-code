@@ -1,8 +1,5 @@
-{"signal":"discharge_pressure","value":9.0,"ts":0}
-{"signal":"discharge_pressure","value":10.5,"ts":1}
-{"signal":"discharge_pressure","value":11.0,"ts":2}
-{"signal":"discharge_pressure","value":11.2,"ts":3}
-{"signal":"discharge_pressure","value":9.8,"ts":4}
-{"signal":"discharge_pressure","value":10.3,"ts":5}
-{"signal":"discharge_pressure","value":9.7,"ts":6}
-{"signal":"discharge_pressure","value":10.1,"ts":7}
+{"signal": "discharge_pressure", "value": 7.0, "ts": 1000.0}
+{"signal": "discharge_pressure", "value": 8.6, "ts": 1001.0}
+{"signal": "discharge_pressure", "value": 8.4, "ts": 1002.0}
+{"signal": "discharge_pressure", "value": 8.6, "ts": 1003.0}
+{"signal": "discharge_pressure", "value": 8.4, "ts": 1004.0}

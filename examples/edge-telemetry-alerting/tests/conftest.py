@@ -1,26 +1,39 @@
+"""Test harness — fixture paths, a fresh log per test, and a station loader."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 
-from engine.log import LOG
-from engine.monitor import Monitor
-from engine.replay import new_monitor, replay
+from engine import log
+from engine.config import load_station
+from engine.replay import replay
+
+FIXTURES = Path(__file__).resolve().parent.parent / "fixtures"
 
 
 @pytest.fixture(autouse=True)
-def _reset_log() -> None:
-    LOG.clear()
+def _clean_log() -> None:
+    """Isolate each test's captured trace."""
+    log.reset()
 
 
 @pytest.fixture
-def run_fixture() -> Callable[..., Monitor]:
-    def _run(fixture: str, station_start: float = 0.0) -> Monitor:
-        return replay(new_monitor(station_start=station_start), fixture)
-
-    return _run
+def station():
+    """The default station, loaded fresh."""
+    return load_station()
 
 
-def critical_alerts(monitor: Monitor) -> list:
-    return [a for a in monitor.active_alerts() if a.severity.name == "CRITICAL"]
+def replay_fixture(name: str):
+    """Replay a named fixture through a fresh monitor and return it."""
+    return replay(FIXTURES / f"{name}.jsonl")
+
+
+def raised(severity: str) -> list[dict]:
+    """The ALERT_RAISED events of a given severity in the current trace."""
+    return [
+        e
+        for e in log.events()
+        if e["code"] == log.ALERT_RAISED and e["severity"] == severity
+    ]

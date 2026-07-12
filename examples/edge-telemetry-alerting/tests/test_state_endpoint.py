@@ -1,53 +1,44 @@
-"""/state read model — the server serializes stale as null+flag (the browser honours it).
-
-Proves the *server* side of the visual invariant: a stale signal serializes ``value: null,
-stale: true``. (That the *client* renders it as "— stale" is the browser grader's job.)
-"""
+"""The /state contract — stale → null + '— stale', critical → critical."""
 
 from __future__ import annotations
 
-import time
-
 from fastapi.testclient import TestClient
 
-from dashboard.app import app, monitor
-from dashboard.seed import seed_browser
+from dashboard.app import app
+from dashboard.seed import DEMO_NOW
 
 
-def _seeded_client() -> TestClient:
-    monitor.reset()
-    seed_browser(monitor)
+def _client() -> TestClient:
     return TestClient(app)
 
 
-def test_stale_signal_serializes_null_and_flag() -> None:
-    client = _seeded_client()
-    state = client.get("/state").json()
-    bearing = next(s for s in state["signals"] if s["name"] == "bearing_temperature")
-    assert bearing["stale"] is True
-    assert bearing["value"] is None  # a falsy field that MUST be present, not dropped
-    assert bearing["status"] == "critical"
+def test_state_serializes_the_seed() -> None:
+    body = _client().get("/state").json()
+    assert body["station"] == "pump-house-1"
+    by_name = {s["name"]: s for s in body["signals"]}
+    assert set(by_name) == {"bearing_temp", "discharge_pressure", "flow_rate"}
 
 
-def test_critical_breach_serializes_value_and_status() -> None:
-    client = _seeded_client()
-    state = client.get("/state").json()
-    pressure = next(s for s in state["signals"] if s["name"] == "discharge_pressure")
+def test_stale_signal_serializes_null_and_stale_label() -> None:
+    """flow_rate reported at ts=900, read at DEMO_NOW=1012 → past its 30s TTL → stale."""
+    body = _client().get("/state", params={"now": DEMO_NOW}).json()
+    flow = next(s for s in body["signals"] if s["name"] == "flow_rate")
+    assert flow["stale"] is True
+    assert (
+        flow["value"] is None
+    ), "a stale value must serialize null, not the last-good number"
+    assert flow["label"] == "— stale"
+
+
+def test_critical_signal_serializes_critical() -> None:
+    body = _client().get("/state", params={"now": DEMO_NOW}).json()
+    pressure = next(s for s in body["signals"] if s["name"] == "discharge_pressure")
+    assert pressure["severity"] == "critical"
     assert pressure["stale"] is False
-    assert pressure["value"] is not None
-    assert pressure["status"] == "critical"
 
 
-def test_ingest_updates_state() -> None:
-    monitor.reset()
-    client = TestClient(app)
-    now = time.time()
-    for i in range(3):
-        resp = client.post(
-            "/ingest",
-            json={"signal": "discharge_pressure", "value": 11.0, "ts": now + i},
-        )
-        assert resp.status_code == 202
-    state = client.get("/state").json()
-    pressure = next(s for s in state["signals"] if s["name"] == "discharge_pressure")
-    assert pressure["status"] == "critical"
+def test_nominal_signal_serializes_its_value() -> None:
+    body = _client().get("/state", params={"now": DEMO_NOW}).json()
+    bearing = next(s for s in body["signals"] if s["name"] == "bearing_temp")
+    assert bearing["severity"] == "nominal"
+    assert bearing["value"] == 73.0

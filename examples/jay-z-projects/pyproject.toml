@@ -1,0 +1,54 @@
+[tool.poetry]
+name = "jay-z-projects"
+version = "0.1.0"
+description = "The multi-tenant projects API under the jay-z voice overlay (generic-saas + personal/jay-z)."
+authors = ["platform team"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.139"
+uvicorn = "^0.34"
+pyjwt = "^2.9"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3"
+httpx = "^0.28"
+pytest-cov = "^6.0"
+ruff = "^0.8"
+mypy = "^1.13"
+libcst = "^1.5"
+bandit = "^1.8"
+detect-secrets = "^1.5"
+pip-audit = "^2.7"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 90
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI DI calls (Depends/Query/Header/…) are the framework's route-default idiom, not a B008 bug.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Header",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Security",
+    "Depends",
+    "Query",
+    "Header",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["app"]

@@ -1,8 +1,7 @@
-"""Station config — thresholds, hysteresis, debounce and TTLs live in TOML, not code.
+"""Station config loader — reads the signal catalog + rules from station.toml.
 
-The ``config-driven-thresholds`` shape: re-tuning is a config edit, not a code change.
-The TOML carries severity as a *string* — data, not code (the ``severity-constant`` lint
-polices only ``.py``); it maps to the ``Severity`` enum here at load.
+Thresholds are config-driven: the rule code never carries a literal limit, so re-tuning
+the station is a config edit, not a code change.
 """
 
 from __future__ import annotations
@@ -11,59 +10,55 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
-from engine.severity import Severity
+from engine.models import LevelRule, SignalSpec, StalenessRule
 
-DEFAULT_CONFIG = Path(__file__).resolve().parent.parent / "config" / "station.toml"
-
-
-@dataclass(frozen=True)
-class SignalRule:
-    name: str
-    unit: str
-    safety_critical: bool
-    severity: Severity
-    # "high": breach when value rises past `limit`; "low": when it falls below.
-    direction: str
-    limit: float
-    hysteresis: float
-    debounce: int
-    staleness_ttl: float
-
-    def is_breaching(self, value: float) -> bool:
-        if self.direction == "high":
-            return value > self.limit
-        return value < self.limit
-
-    def is_clear(self, value: float) -> bool:
-        """Hysteresis: clear only once the value falls back past ``limit ∓ h``."""
-        if self.direction == "high":
-            return value < self.limit - self.hysteresis
-        return value > self.limit + self.hysteresis
+_DEFAULT_CONFIG = Path(__file__).resolve().parent.parent / "config" / "station.toml"
 
 
 @dataclass(frozen=True)
-class StationConfig:
+class Station:
+    """A loaded station — its name and its ordered signal catalog."""
+
     name: str
-    signals: dict[str, SignalRule]
-
-    def safety_critical_signals(self) -> list[str]:
-        return [n for n, s in self.signals.items() if s.safety_critical]
+    signals: list[SignalSpec]
 
 
-def load_station(path: Path | None = None) -> StationConfig:
-    raw = tomllib.loads((path or DEFAULT_CONFIG).read_text())
-    signals: dict[str, SignalRule] = {}
-    for entry in raw["signal"]:
-        rule = SignalRule(
-            name=entry["name"],
-            unit=entry["unit"],
-            safety_critical=entry["safety_critical"],
-            severity=Severity.from_name(entry["severity"]),
-            direction=entry["direction"],
-            limit=float(entry["limit"]),
-            hysteresis=float(entry["hysteresis"]),
-            debounce=int(entry["debounce"]),
-            staleness_ttl=float(entry["staleness_ttl"]),
-        )
-        signals[rule.name] = rule
-    return StationConfig(name=raw["station"]["name"], signals=signals)
+def _level(raw: dict) -> LevelRule:
+    """Build a level rule from its config block."""
+    return LevelRule(
+        direction=raw["direction"],
+        hysteresis=float(raw["hysteresis"]),
+        debounce_samples=int(raw.get("debounce_samples", 1)),
+        warn_at=None if raw.get("warn_at") is None else float(raw["warn_at"]),
+        crit_at=None if raw.get("crit_at") is None else float(raw["crit_at"]),
+    )
+
+
+def _signal(raw: dict) -> SignalSpec:
+    """Build a signal spec from its config block."""
+    level = _level(raw["level"]) if "level" in raw else None
+    staleness = (
+        StalenessRule(ttl_seconds=float(raw["staleness"]["ttl_seconds"]))
+        if "staleness" in raw
+        else None
+    )
+    return SignalSpec(
+        name=raw["name"],
+        unit=raw["unit"],
+        safety_critical=bool(raw["safety_critical"]),
+        level=level,
+        staleness=staleness,
+    )
+
+
+def load_station(path: Path | None = None) -> Station:
+    """Load the station; a safety-critical signal with no alert condition fails loudly."""
+    path = path or _DEFAULT_CONFIG
+    raw = tomllib.loads(path.read_text())
+    signals = [_signal(s) for s in raw["signal"]]
+    for spec in signals:
+        if spec.safety_critical and spec.level is None and spec.staleness is None:
+            raise ValueError(
+                f"safety-critical signal {spec.name!r} has no alert condition"
+            )
+    return Station(name=raw["station"], signals=signals)

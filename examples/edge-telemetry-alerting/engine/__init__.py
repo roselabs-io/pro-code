@@ -1,1 +1,1 @@
-"""Rule engine for industrial edge telemetry — no missed critical alert."""
+"""Edge telemetry monitor — ingest readings, evaluate rules, raise alerts."""

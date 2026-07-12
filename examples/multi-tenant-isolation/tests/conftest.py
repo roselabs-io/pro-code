@@ -1,35 +1,52 @@
+"""Test harness — a configured signing key, token minting, and a fresh store per test."""
+
 from __future__ import annotations
 
+import jwt
 import pytest
 from fastapi.testclient import TestClient
 
-from app.auth import Role, issue_token
-from app.log import LOG
-from app.main import app
-from app.store import STORE
+from app import log
+from app.config import JWT_ALGORITHM
+from app.store import store
+
+SECRET = "test-secret-not-a-real-key-padded-to-32-plus-bytes"
 
 
 @pytest.fixture(autouse=True)
-def _reset_state() -> None:
-    STORE._rows.clear()
-    LOG.clear()
+def _configured_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Every test runs with the signing key set; the fail-closed test unsets it."""
+    monkeypatch.setenv("PROJECTS_JWT_SECRET", SECRET)
+
+
+@pytest.fixture(autouse=True)
+def _clean_state() -> None:
+    """Isolate each test's store rows and captured log events."""
+    store._items.clear()
+    log.reset()
 
 
 @pytest.fixture
 def client() -> TestClient:
-    return TestClient(app)
+    """A TestClient that raises app exceptions as responses, not tracebacks."""
+    return TestClient(app_())
 
 
-def auth(
-    workspace: str, actor: str = "user-1", role: Role = Role.MEMBER
-) -> dict[str, str]:
-    return {"Authorization": f"Bearer {issue_token(workspace, actor, role)}"}
+def app_():
+    from app.main import app
+
+    return app
 
 
-def make_project(
-    client: TestClient, workspace: str, name: str = "P", **kw: object
-) -> dict:
-    headers = kw.pop("headers", None) or auth(workspace)
-    resp = client.post("/projects", json={"name": name}, headers=headers)
-    assert resp.status_code == 201, resp.text
-    return resp.json()
+def token(workspace_id: str, role: str = "member", sub: str = "u1") -> str:
+    """Mint a signed bearer token for a caller."""
+    return jwt.encode(
+        {"workspace_id": workspace_id, "role": role, "sub": sub},
+        SECRET,
+        algorithm=JWT_ALGORITHM,
+    )
+
+
+def auth(workspace_id: str, role: str = "member", sub: str = "u1") -> dict[str, str]:
+    """Authorization header for a caller."""
+    return {"Authorization": f"Bearer {token(workspace_id, role, sub)}"}

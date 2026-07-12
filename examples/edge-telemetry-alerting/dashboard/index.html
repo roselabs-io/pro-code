@@ -2,73 +2,70 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pump-station telemetry</title>
+  <title>Station monitor</title>
   <style>
-    body { font-family: system-ui, sans-serif; margin: 2rem; background: #0f1419; color: #e6e6e6; }
-    h1 { font-size: 1.3rem; }
-    table { border-collapse: collapse; width: 100%; max-width: 760px; margin-top: 1rem; }
-    th, td { text-align: left; padding: 0.6rem 0.8rem; border-bottom: 1px solid #2a2f3a; }
-    th { font-weight: 600; color: #9aa4b2; font-size: 0.85rem; text-transform: uppercase; }
-    tr.critical td { background: #c0392b; color: #fff; font-weight: 600; }
-    tr.warning td { background: #d68910; color: #fff; }
-    tr.ok td { background: transparent; }
-    .status-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
-    .stale { font-style: italic; color: #ffd; }
-    #alerts { margin-top: 1.5rem; }
-    #alerts li { margin: 0.2rem 0; }
-    .dot { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; margin-right: 0.4rem; }
-    .dot.live { background: #2ecc71; } .dot.down { background: #7f8c8d; }
+    body { font-family: ui-monospace, monospace; margin: 2rem; background: #111; color: #eee; }
+    h1 { font-size: 1.1rem; }
+    table { border-collapse: collapse; width: 100%; max-width: 640px; }
+    th, td { text-align: left; padding: 0.4rem 0.8rem; border-bottom: 1px solid #333; }
+    .dot { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; margin-right: 0.5rem; vertical-align: middle; }
+    .nominal .dot { background: #3fb950; } .nominal { color: #3fb950; }
+    .warning .dot { background: #d29922; } .warning { color: #d29922; }
+    .critical .dot { background: #f85149; } .critical { color: #f85149; }
+    .stale-value { color: #8b949e; font-style: italic; }
+    #live { color: #3fb950; } #live.down { color: #8b949e; }
+    #banner { color: #f85149; margin: 0.5rem 0; min-height: 1.2rem; }
   </style>
 </head>
 <body>
-  <h1>Pump-station telemetry <span id="live"><span class="dot down"></span><span id="live-label">connecting…</span></span></h1>
+  <h1>Station: <span id="station">…</span> &nbsp; <span id="live">● live</span> <span id="updated"></span></h1>
+  <div id="banner"></div>
   <table>
-    <thead>
-      <tr><th>Signal</th><th>Reading</th><th>Status</th></tr>
-    </thead>
-    <tbody id="rows"></tbody>
+    <thead><tr><th>SIGNAL</th><th>VALUE</th><th>STATUS</th></tr></thead>
+    <tbody id="rows"><tr><td>…</td><td>…</td><td>…</td></tr></tbody>
   </table>
-  <div id="alerts"><h2 style="font-size:1rem">Active alerts</h2><ul id="alert-list"></ul></div>
+  <p>Active alerts: <span id="alerts">…</span></p>
 
   <script>
-    function render(state) {
-      const rows = document.getElementById("rows");
-      rows.innerHTML = "";
-      for (const s of state.signals) {
-        const tr = document.createElement("tr");
-        tr.className = s.status;
-        tr.setAttribute("data-signal", s.name);
-        const reading = s.stale
-          ? '<span class="stale">— stale</span>'
-          : (s.value === null ? "—" : s.value + " " + s.unit);
-        tr.innerHTML =
-          "<td>" + s.name + "</td>" +
-          "<td class='reading'>" + reading + "</td>" +
-          "<td><span class='status-label'>" + (s.stale ? "stale · " : "") + s.status + "</span></td>";
+    async function poll() {
+      const banner = document.getElementById('banner');
+      const live = document.getElementById('live');
+      try {
+        const res = await fetch('/state');
+        if (!res.ok) throw new Error('bad status');
+        const data = await res.json();
+        render(data);
+        banner.textContent = '';
+        live.classList.remove('down');
+        live.textContent = '● live';
+        document.getElementById('updated').textContent = '(updated now)';
+      } catch (e) {
+        // Monitor unreachable — grey the live dot, never present stale values as fresh.
+        live.classList.add('down');
+        live.textContent = '● offline';
+        banner.textContent = 'monitor unreachable — values may be stale';
+      }
+    }
+
+    function render(data) {
+      document.getElementById('station').textContent = data.station;
+      document.getElementById('alerts').textContent = data.active_alerts;
+      const rows = document.getElementById('rows');
+      rows.innerHTML = '';
+      for (const s of data.signals) {
+        const tr = document.createElement('tr');
+        // Stale renders the '— stale' label, never the last-good number.
+        const valueCell = s.stale
+          ? `<td class="stale-value" data-stale="true">${s.label}</td>`
+          : `<td data-stale="false">${s.value} ${s.unit}</td>`;
+        // Status carries both a colour class AND the text label — not colour-only.
+        const status = `<td class="${s.severity}" data-severity="${s.severity}">`
+          + `<span class="dot"></span>${s.label}</td>`;
+        tr.innerHTML = `<td>${s.name}</td>${valueCell}${status}`;
         rows.appendChild(tr);
       }
-      const list = document.getElementById("alert-list");
-      list.innerHTML = "";
-      for (const a of state.alerts) {
-        const li = document.createElement("li");
-        li.textContent = "[" + a.severity + "] " + a.reason + " (×" + a.count + ")";
-        list.appendChild(li);
-      }
-      setLive(true);
     }
-    function setLive(up) {
-      document.querySelector("#live .dot").className = "dot " + (up ? "live" : "down");
-      document.getElementById("live-label").textContent = up ? "live" : "unreachable";
-    }
-    async function poll() {
-      try {
-        const resp = await fetch("/state");
-        render(await resp.json());
-      } catch (e) {
-        setLive(false);
-      }
-    }
+
     poll();
     setInterval(poll, 2000);
   </script>
