@@ -4,6 +4,8 @@ Coding is getting commoditized, and with it a wave of hype: vibe coding, low-cod
 
 A small, self-contained pipeline for building software with coding agents — a concrete, runnable implementation of the ideas discussed in [the article](https://roselabs-io.github.io/pro-code/two-reading-journeys.html).
 
+**Articles:** [Two reading journeys into agent engineering](https://roselabs-io.github.io/pro-code/two-reading-journeys.html) · [The Map Around Claude Code](https://roselabs-io.github.io/pro-code/the-map-around-claude-code.html) (part two).
+
 The shape: build in phases — **Frame → Plan → Implement** (run at scale by **Autopilot**) — and make each handoff pass a **grader** before the next phase starts.
 
 > **Each phase separates a _guide_ (feedforward — domain-specific, swappable) from a _grader_ (feedback — agnostic).**

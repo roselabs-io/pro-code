@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A map of the layers around Claude Code — the harness, the control-harness (guides and graders), and the plugin ecosystem. A follow-up to 'Two reading journeys into agent engineering.'">
+<title>The Map Around Claude Code</title>
+<style>
+  :root{
+    --bg:#0f1620; --bg2:#0b1220; --panel:#18212e; --line:#293546; --line2:#37465a;
+    --ink:#eae3d6; --muted:#9aa6b6; --dim:#616e7e;
+    --cop:#6ba3c9; --auto:#d99a5c; --judg:#7fc99b; --violet:#a596d8;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,Cambria,serif;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  }
+  :root[data-theme="light"], :root[data-theme="dark"]{ color-scheme:dark; }
+  *{box-sizing:border-box}
+  .defs{position:absolute;width:0;height:0;overflow:hidden}
+  .doc{background:var(--bg);color:var(--ink);font-family:var(--serif);line-height:1.72;min-height:100vh;
+       padding:clamp(28px,6vw,80px) clamp(20px,5vw,40px);font-size:18px;-webkit-font-smoothing:antialiased}
+  .doc *{box-sizing:border-box}
+  .col{max-width:648px;margin:0 auto}
+  .rise{animation:rise .6s ease both}
+  @keyframes rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.rise{animation:none}}
+
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--dim);margin:0}
+  h1{font-family:var(--serif);font-weight:700;font-size:clamp(34px,6.6vw,58px);line-height:1.05;letter-spacing:-.015em;
+     text-wrap:balance;margin:.26em 0 .14em}
+  .deck{font-size:clamp(17px,2.3vw,20px);color:var(--muted);font-style:italic;max-width:44ch;margin:.4em 0 0;line-height:1.5}
+  .rule{height:1px;background:linear-gradient(90deg,var(--line2),transparent);margin:clamp(30px,6vw,50px) 0}
+
+  .tldr{background:linear-gradient(180deg,var(--panel),#121a26);border:1px solid var(--line);border-left:3px solid var(--judg);
+        border-radius:11px;padding:clamp(16px,3vw,22px) clamp(18px,3.5vw,26px);margin-top:clamp(24px,5vw,34px)}
+  .tlk{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--judg);margin-bottom:12px}
+  .tll{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-family:var(--mono);
+       font-size:13px;line-height:1.55;color:var(--muted)}
+  .tll li{padding-left:15px;position:relative} .tll li::before{content:"—";position:absolute;left:0;color:var(--dim)}
+  .tll b{color:var(--ink);font-weight:600}
+
+  .doc p{margin:0 0 1.15em;text-wrap:pretty} .col > p{max-width:64ch}
+  .lead:first-of-type::first-letter{font-size:3.1em;line-height:.8;float:left;padding:.02em .1em 0 0;color:var(--cop);font-weight:700}
+  em{font-style:italic;color:#f5efe2} strong{font-weight:700;color:#fff}
+  a{color:var(--cop);text-decoration:none;border-bottom:1px solid var(--line2)} a:hover{border-color:var(--cop)}
+  .recap{font-family:var(--mono);font-size:12px;color:var(--dim);border-left:2px solid var(--line2);padding:2px 0 2px 14px;margin:0 0 1.3em;max-width:60ch}
+
+  .pin{margin-top:clamp(46px,8vw,80px)}
+  .pinhd{display:flex;align-items:baseline;gap:12px;margin-bottom:5px}
+  .pinno{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--dim);letter-spacing:.06em}
+  .pinq{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+  h2{font-family:var(--serif);font-weight:700;font-size:clamp(24px,3.8vw,32px);line-height:1.13;letter-spacing:-.01em;
+     margin:.05em 0 .7em;text-wrap:balance}
+
+  figure{margin:clamp(28px,5vw,44px) 0}
+  .board{background:linear-gradient(180deg,var(--panel),#111925);border:1px solid var(--line);border-radius:12px;
+         padding:clamp(18px,3vw,28px);overflow-x:auto}
+  figcaption{font-family:var(--mono);font-size:11.5px;line-height:1.62;color:var(--dim);margin-top:13px;max-width:70ch}
+  figcaption b{color:var(--muted)}
+  .fk{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:16px}
+  .sk{filter:url(#rough)}
+
+  /* layer stack */
+  .stack{display:grid;grid-template-columns:56px 1fr 150px;gap:9px 12px;align-items:stretch;min-width:440px}
+  .lyr{filter:url(#rough);border:1.5px solid var(--line2);border-radius:8px;padding:11px 14px;font-family:var(--mono);
+       display:flex;flex-direction:column;justify-content:center;min-height:56px}
+  .lyr .n{font-size:13px;color:var(--ink);font-weight:600} .lyr .s{font-size:11px;color:var(--dim);margin-top:2px}
+  .l3{border-color:var(--judg)} .l3 .n{color:var(--judg)}
+  .l2{border-color:var(--cop)} .l2 .n{color:var(--cop)}
+  .l1{border-color:var(--line2)} .l0{border-color:var(--dim)}
+  .lnum{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--dim);display:flex;align-items:center;justify-content:center}
+  .lnum.l3{color:var(--judg)} .lnum.l2{color:var(--cop)}
+  .cc{grid-column:3;grid-row:1 / span 3;filter:url(#rough);border:1.7px dashed var(--cop);border-radius:9px;
+      display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:10px;
+      font-family:var(--mono);font-size:11px;color:var(--cop);background:rgba(107,163,201,.05)}
+  .cc b{font-size:12.5px;color:var(--cop)} .cc span{font-size:10px;color:var(--dim);margin-top:6px;line-height:1.4}
+
+  /* steering split */
+  .steer{display:flex;flex-direction:column;gap:10px;min-width:360px}
+  .steerlbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--judg)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .box{filter:url(#rough);border:1.5px solid var(--line2);border-radius:9px;padding:12px 14px;font-family:var(--mono)}
+  .box .bt{font-size:12.5px;font-weight:600;margin-bottom:4px} .box .bs{font-size:11px;color:var(--muted);line-height:1.45;font-family:var(--serif);font-style:italic}
+  .box.guides{border-color:var(--violet)} .box.guides .bt{color:var(--violet)}
+  .box.guards{border-color:var(--judg);border-width:2px} .box.guards .bt{color:var(--judg)}
+  .harn{filter:url(#rough);border:1.5px solid var(--cop);border-radius:9px;padding:12px 14px;font-family:var(--mono);background:rgba(107,163,201,.05)}
+  .harn .bt{font-size:12.5px;font-weight:600;color:var(--cop);margin-bottom:3px} .harn .bs{font-size:11px;color:var(--muted);font-family:var(--serif);font-style:italic}
+  .downarr{text-align:center;font-family:var(--mono);color:var(--dim);font-size:14px}
+
+  /* claude code control-harness kit */
+  .cckit{display:flex;flex-direction:column;gap:9px;min-width:440px}
+  .ckhead{display:grid;grid-template-columns:78px 1fr;gap:12px;font-family:var(--mono);font-size:9.5px;color:var(--dim)}
+  .ckhead .ax{display:flex;justify-content:space-between}
+  .ckrow{display:grid;grid-template-columns:78px 1fr;gap:12px;align-items:center}
+  .cklabel{font-family:var(--mono);font-size:12px;font-weight:600}
+  .cklabel.g{color:var(--violet)} .cklabel.r{color:var(--judg)}
+  .ckband{filter:url(#rough);border:1.5px solid var(--line2);border-radius:9px;padding:9px 11px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:46px}
+  .ckband.g{border-color:var(--violet);background:linear-gradient(90deg,rgba(165,150,216,.17),transparent 62%)}
+  .ckband.r{border-color:var(--judg);background:linear-gradient(90deg,rgba(127,201,155,.17),transparent 62%)}
+  .ckchip{font-family:var(--mono);font-size:10.5px;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line2);border-radius:5px;padding:3px 7px}
+  .cksparse{margin-left:auto;font-family:var(--mono);font-size:9.5px;color:var(--dim);font-style:italic}
+  .cknote{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:3px}
+
+  /* real-plugin domain-y map */
+  .plmap{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;min-width:560px}
+  .plzone{filter:url(#rough);border:1.5px solid var(--line2);border-radius:9px;padding:10px 11px;display:flex;flex-direction:column;gap:5px}
+  .plzone.z1{border-color:var(--judg);background:linear-gradient(180deg,rgba(127,201,155,.16),transparent)}
+  .plzone.z2{border-color:#5f8f76;background:linear-gradient(180deg,rgba(127,201,155,.09),transparent)}
+  .plzone.z3{background:rgba(255,255,255,.02)}
+  .plzone.z4{border-style:dashed;background:transparent}
+  .plzh{font-family:var(--mono);font-size:10px;color:var(--ink);font-weight:600;line-height:1.2}
+  .plzh small{display:block;font-size:9px;color:var(--dim);font-weight:400;margin-top:2px}
+  .plchip{font-family:var(--mono);font-size:9.5px;color:var(--muted);line-height:1.35}
+  .plzone.z4 .plchip{color:var(--dim);font-style:italic}
+  .plnote{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:10px}
+
+  /* provenance map */
+  .prov{display:flex;flex-direction:column;min-width:440px}
+  .provrow{display:flex;gap:10px;align-items:stretch}
+  .provbox{filter:url(#rough);border:1.5px solid var(--line2);border-radius:9px;padding:11px 13px;flex:1;font-family:var(--mono)}
+  .provbox .pbt{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:4px}
+  .provbox .pbs{font-size:10.5px;color:var(--muted);line-height:1.45;font-family:var(--serif);font-style:italic}
+  .provbox.official{border-color:var(--judg)} .provbox.official .pbt{color:var(--judg)}
+  .provbox.own{border-color:var(--cop);border-width:2px} .provbox.own .pbt{color:var(--cop)}
+  .provarrow{align-self:center;font-family:var(--mono);font-size:10px;color:var(--dim);text-align:center;flex:none;padding:0 4px;line-height:1.3}
+  .provdown{text-align:center;font-family:var(--mono);font-size:10.5px;color:var(--dim);padding:11px 0}
+
+  /* anthropic grader taxonomy */
+  .ghead{font-family:var(--mono);font-size:10px;color:var(--dim);text-align:center;margin-bottom:11px} .ghead b{color:var(--muted)}
+  .gmap{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;min-width:520px}
+  .gcol{filter:url(#rough);border:1.5px solid var(--judg);border-radius:9px;padding:11px 13px;display:flex;flex-direction:column;gap:4px;font-family:var(--mono)}
+  .gcol .gt{font-size:12px;font-weight:600;color:var(--judg)}
+  .gcol .gsub{font-size:9.5px;color:var(--dim);margin-top:-2px}
+  .gcol .gd{font-size:10.5px;color:var(--muted);line-height:1.4;font-family:var(--serif);font-style:italic;margin-top:3px}
+  .gcol .gtrade{font-size:10px;color:var(--muted);margin-top:3px}
+  .gcol .gmech{font-size:10px;color:var(--cop);margin-top:auto;padding-top:7px}
+  .gfoot{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:12px;line-height:1.55;border-top:1px solid var(--line);padding-top:10px} .gfoot b{color:var(--muted)}
+
+  /* domain fill */
+  .fill{min-width:420px}
+  .fillbar{position:relative;height:60px;border:1.5px solid var(--line2);border-radius:9px;filter:url(#rough);overflow:hidden;
+           background:linear-gradient(90deg, rgba(127,201,155,.28), rgba(127,201,155,.10) 42%, rgba(255,255,255,.02) 70%, transparent)}
+  .fillbar .arrow{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:12px;color:var(--judg)}
+  .fillbar .youare{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:11px;color:var(--auto);text-align:right}
+  .fillends{display:flex;justify-content:space-between;margin-top:8px;font-family:var(--mono);font-size:11px}
+  .fillends .l{color:var(--judg)} .fillends .r{color:var(--auto)}
+  .fillnote{font-family:var(--mono);font-size:11px;color:var(--dim);text-align:center;margin-top:12px}
+
+  .xbox{filter:url(#rough);text-align:center;border:2px solid var(--judg);background:rgba(127,201,155,.06);border-radius:12px;
+        padding:clamp(22px,4vw,32px);box-shadow:0 0 40px rgba(127,201,155,.12)}
+  .xbox .k{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--judg)}
+  .xbox .big{font-family:var(--serif);font-style:italic;font-size:clamp(22px,4vw,29px);color:var(--judg);margin:8px 0 6px;line-height:1.16}
+  .xbox .sm{font-family:var(--mono);font-size:12px;color:var(--judg);opacity:.85}
+
+  .foot{margin-top:clamp(44px,8vw,76px);border-top:1px solid var(--line);padding-top:26px}
+  .foot .fp{font-family:var(--mono);font-size:12px;line-height:1.72;color:var(--dim);max-width:66ch;margin:0 0 1em} .foot .fp b{color:var(--muted);font-weight:600}
+  .sign{font-family:var(--serif);font-style:italic;font-size:16px;color:var(--muted);margin-top:6px}
+</style>
+</head>
+<body>
+
+<svg class="defs" aria-hidden="true"><defs>
+  <filter id="rough" x="-5%" y="-10%" width="110%" height="120%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="5" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="1.3" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</defs></svg>
+
+<div class="doc">
+<div class="col rise">
+
+  <p class="eyebrow">Field notes · agent engineering · 2026 · part two</p>
+  <h1>The Map Around Claude Code</h1>
+  <p class="deck">A follow-up to <a href="https://roselabs-io.github.io/pro-code/two-reading-journeys.html">the first piece</a> — the one on the harness and its guides and graders. One word — “harness” — turned out to mean two different things. Pulling them apart is a simple way to lay out what sits around the tool a lot of us use.</p>
+
+  <div class="tldr">
+    <div class="tlk">TL;DR</div>
+    <ul class="tll">
+      <li>Everything an agent involves sits at one of three heights: <b>model · harness (runtime) · control-harness</b>. Call them L0–L2.</li>
+      <li><b>Claude Code is a harness</b> — the meaning the field's been settling on: the runtime that makes an agent run. It's transversal; it stripes through several layers at once.</li>
+      <li>The layer it doesn't fully bring is the top one — the <b>control-harness</b>, split into <b>guides</b> (the AGENTS.md standard) and <b>graders</b> (the quality checks — the tools standardize fast, the domain rubric doesn't).</li>
+      <li>The grader slot is <b>filling fast, from the general end in</b> — most of it someone's already published, to grab and compose. Only the domain-specific tail still tends to need building. The skill is knowing which is which. <b>You are here.</b></li>
+    </ul>
+  </div>
+
+  <div class="rule"></div>
+
+  <p class="lead"><a href="https://roselabs-io.github.io/pro-code/two-reading-journeys.html">The last piece</a> landed on a word, and the word was doing double duty. I'd been using “harness” for the layer a developer wraps around a coding agent to control what it produces — the guidance, and the checks. The field, meanwhile, has been settling the bare word “harness” on something else: the <em>runtime</em> that makes an agent run — Anthropic's <a href="https://www.anthropic.com/engineering/building-agents-with-the-claude-agent-sdk">Claude Agent SDK</a>, the write-ups calling 2026 “the year of the agent harness.” Both are harnesses in the old sense — things strapped on to control a powerful engine — but they do different jobs, so they need telling apart. The runtime is the <em>harness</em>. The layer on top is the <em>control-harness</em>. Once they're separated, the rest of the layout is easy enough to sketch — which is what this is, for anyone who lives in Claude Code and wants to see what's around it.</p>
+
+  <div class="pin">
+    <div class="pinhd"><span class="pinno">01</span><span class="pinq">the heights</span></div>
+    <h2>Three layers, bottom to top.</h2>
+  </div>
+
+  <p>Anything an agent involves sits at one of a few heights. The <em>model</em> at the bottom — raw intelligence. The <em>runtime</em> that makes it actually run — the loop that calls the model, runs a tool, feeds the result back, and repeats, plus memory, context, and the connectors (MCP). And on top, the layer that <em>controls the output</em> — the guidance an agent is given, and the checks run on what it produces. Model, runtime, control-harness. Call them L0 to L2. For a Claude-Code native, the middle one is already home — usually unnamed.</p>
+
+  <figure>
+    <div class="board">
+      <div class="fk">the stack — and where one tool sits in it</div>
+      <div class="stack">
+        <div class="lnum l3">L2</div>
+        <div class="lyr l3"><span class="n">control-harness</span><span class="s">the guides · the checks</span></div>
+        <div class="cc"><b>Claude Code</b><span>one tool, several layers — wraps a model it doesn't own, <b>is</b> the runtime, ships a thin slice of the control-harness (its review pass)</span></div>
+
+        <div class="lnum l2">L1</div>
+        <div class="lyr l2"><span class="n">harness · runtime</span><span class="s">the loop · tools · context · MCP</span></div>
+
+        <div class="lnum l0">L0</div>
+        <div class="lyr l0"><span class="n">model</span><span class="s">raw intelligence</span></div>
+      </div>
+    </div>
+    <figcaption>Three heights, and one tool that refuses to sit at a single one. Claude Code wraps a model (L0), <b>is</b> the runtime harness (L1), and brings a thin built-in slice of the control-harness (L2) — the review pass. It reads as “the whole thing” because it nearly is.</figcaption>
+  </figure>
+
+  <div class="pin">
+    <div class="pinhd"><span class="pinno">02</span><span class="pinq">the untangling</span></div>
+    <h2>Claude Code <em>is</em> the harness.</h2>
+  </div>
+
+  <p>The distinction from last time is simple. When the field says “harness” now, it means the runtime — the loop that drives the model through tools and back, the context it manages, the connectors it reaches through. That <em>is</em> Claude Code. Claude Code is a harness — the field's harness, the L1 kind.</p>
+
+  <p>But it doesn't stay in the L1 box. It's transversal: it wraps a model it doesn't own below, it is the runtime in the middle, and it ships a thin slice of the control-harness above — the review pass, the ability to check its own work. So “where does Claude Code sit” has no single answer. It's a vertical stripe through the stack. Which is exactly why it feels like it covers everything — because it nearly does, except for the top.</p>
+
+  <div class="pin">
+    <div class="pinhd"><span class="pinno">03</span><span class="pinq">the layer on top</span></div>
+    <h2>The control-harness: guides, and graders.</h2>
+  </div>
+
+  <p>The one layer Claude Code doesn't fully bring is the top one — the control-harness, supplied for a <em>particular</em> body of work. It has two halves:</p>
+
+  <p><strong>Guides</strong> — feedforward: the conventions, the context, how-it's-done-here. The field standardized this as <strong><a href="https://agents.md/">AGENTS.md</a></strong> — an open spec since 2025, read natively by Cursor, Codex, Copilot and the rest. Claude Code is the holdout: it still reads CLAUDE.md, so you point it at AGENTS.md with an import or a symlink. Either way, everyone has one.</p>
+
+  <p><strong>Graders</strong> — feedback: the quality checks on what the agent produced. (Anthropic's own word — in <em>Demystifying Evals</em>, “logic that scores some aspect of the agent's performance,” in three kinds: code-based, model-based, and human.) Does it pass, is it correct, does it clear the bar for this kind of work. The <em>tooling</em> for this is standardizing fast — LangSmith, Braintrust, OpenAI Evals, emerging YAML eval specs. What stays specific is the <em>rubric</em>: what “good” means in a particular domain — the part no one else has published, because it's specific to the work. (It's also a different thing from safety <em>guardrails</em> — the field's real-time content and safety blocks — a separate, already-crowding layer.)</p>
+
+  <figure>
+    <div class="board">
+      <div class="fk">the control-harness, split — and the runtime under it</div>
+      <div class="steer">
+        <div class="steerlbl">control-harness · L2 · what a developer supplies</div>
+        <div class="two">
+          <div class="box guides sk"><div class="bt">guides</div><div class="bs">feedforward — conventions, context. The <b>AGENTS.md</b> standard. Commodity.</div></div>
+          <div class="box guards sk"><div class="bt">graders</div><div class="bs">feedback — quality checks on the output. Tools standardizing; the domain rubric — what good means here — is the part no one else has published.</div></div>
+        </div>
+        <div class="downarr">▲ sits on top of ▲</div>
+        <div class="harn sk"><div class="bt">harness · runtime</div><div class="bs">the loop, tools, context, MCP — Claude Code / the Agent SDK. Anthropic's now.</div></div>
+      </div>
+    </div>
+    <figcaption>The grader <em>tools</em> are standardizing fast; the domain <b>rubric</b> — what good means in a particular codebase — is the part no one else has published. The skill is telling them apart: composing what fits, writing only what's missing.</figcaption>
+  </figure>
+
+  <p>Anthropic's own guide to the grader half — <em><a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents">Demystifying Evals for AI Agents</a></em> — is the clearest thing written on it, and worth reading in full. It sorts graders three ways:</p>
+
+  <figure>
+    <div class="board">
+      <div class="fk">how a grader scores — Anthropic's three kinds</div>
+      <div class="ghead">each grades the <b>transcript</b> (the path it took) or the <b>outcome</b> (the final state)</div>
+      <div class="gmap">
+        <div class="gcol sk">
+          <div class="gt">code-based</div><div class="gsub">deterministic</div>
+          <div class="gd">string match, static analysis, outcome checks</div>
+          <div class="gtrade">cheap · exact · narrow</div>
+          <div class="gmech">≈ our hooks</div>
+        </div>
+        <div class="gcol sk">
+          <div class="gt">model-based</div><div class="gsub">LLM-as-judge</div>
+          <div class="gd">rubric scoring, natural-language assertions, pairwise comparison</div>
+          <div class="gtrade">flexible · fuzzy · needs calibrating vs experts</div>
+          <div class="gmech">≈ review subagents</div>
+        </div>
+        <div class="gcol sk">
+          <div class="gt">human</div><div class="gsub">expert review</div>
+          <div class="gd">subject-matter review, spot-checking</div>
+          <div class="gtrade">gold standard · slow · doesn't scale</div>
+          <div class="gmech">≈ a person in the loop</div>
+        </div>
+      </div>
+      <div class="gfoot">a good check is one where <b>two domain experts would reach the same pass/fail verdict</b> · write the checks before the feature (“eval-driven development”) · and above all, <b>read the transcripts</b>.</div>
+    </div>
+    <figcaption>Anthropic's grader taxonomy, from <em>Demystifying Evals for AI Agents</em>. The three kinds trade cost against judgment: code is cheap and exact but only catches what can be specified; model-based handles a fuzzy “good” but has to be calibrated against experts; human is the gold standard and the slowest. They line up with the Claude Code mechanisms below — hooks, review subagents, a person.</figcaption>
+  </figure>
+
+  <div class="pin">
+    <div class="pinhd"><span class="pinno">04</span><span class="pinq">the plugin ecosystem</span></div>
+    <h2>What's actually out there.</h2>
+  </div>
+
+  <p>In the Claude Code world, that split has concrete shapes. The <em>guides</em> are <b>CLAUDE.md / AGENTS.md</b> (project context), <b>skills</b> (packaged know-how), <b>slash commands</b> (canned workflows), output styles. The <em>graders</em> are <b>hooks</b> (deterministic checks that fire on an event — run the linter, block on fail), <b>review subagents</b> (an LLM reading the output), and external evals. <b>Plugins</b> and their marketplaces just bundle these together. And the library for each clusters the same way — thick at the agnostic, stack-level end, thinning toward the domain-specific.</p>
+
+  <figure>
+    <div class="board">
+      <div class="fk">the control-harness in the Claude Code world</div>
+      <div class="cckit">
+        <div class="ckhead"><span></span><span class="ax"><span>agnostic · stack-level — crowded</span><span>domain-specific — sparse</span></span></div>
+        <div class="ckrow"><span class="cklabel g">guides</span><span class="ckband g sk"><span class="ckchip">CLAUDE.md / AGENTS.md</span><span class="ckchip">skills</span><span class="ckchip">commands</span><span class="ckchip">output styles</span><span class="cksparse">domain skills — rare →</span></span></div>
+        <div class="ckrow"><span class="cklabel r">graders</span><span class="ckband r sk"><span class="ckchip">hooks</span><span class="ckchip">review subagents</span><span class="ckchip">evals</span><span class="cksparse">domain checks — rarer →</span></span></div>
+        <div class="cknote">plugins &amp; marketplaces bundle any of the above</div>
+      </div>
+    </div>
+    <figcaption>The same guides/graders split, in Claude Code's actual parts. The library for every one of them is thick at the agnostic end (generic lint hooks, React rules) and thins toward the domain-specific — the same gradient as the rest of the map.</figcaption>
+  </figure>
+
+  <p>The catalog that exists today bears that out. Here's a slice of the real supply — plugins, skills, rules — placed by how domain-specific it is:</p>
+
+  <figure>
+    <div class="board">
+      <div class="fk">real plugins, skills &amp; rules — by how domain-y (mid-2026)</div>
+      <div class="plmap">
+        <div class="plzone z1 sk">
+          <div class="plzh">agnostic · stack<small>the bulk — ~⅔</small></div>
+          <div class="plchip">React / Next / Tailwind rules</div>
+          <div class="plchip">pytest · Node · Postgres skills</div>
+          <div class="plchip">commit-commands (/commit · PR)</div>
+          <div class="plchip">Superpowers (skills framework)</div>
+          <div class="plchip">pr-review-toolkit</div>
+          <div class="plchip">ESLint · Prettier · ruff hooks</div>
+          <div class="plchip">awesome-claude-plugins (lists)</div>
+        </div>
+        <div class="plzone z2 sk">
+          <div class="plzh">function<small>~a quarter</small></div>
+          <div class="plchip">security-guidance (vuln patterns)</div>
+          <div class="plchip">Semgrep Guardian</div>
+          <div class="plchip">Checkov · axe-core · Snyk</div>
+          <div class="plchip">devops / legal gates</div>
+        </div>
+        <div class="plzone z3 sk">
+          <div class="plzh">regulated vertical<small>a few, codified</small></div>
+          <div class="plchip">cybersecurity-skills (PCI · HIPAA · OWASP)</div>
+          <div class="plchip">Promptfoo finance (SOX · FINRA)</div>
+          <div class="plchip">Anthropic financial-services</div>
+        </div>
+        <div class="plzone z4 sk">
+          <div class="plzh">narrow vertical<small>a few %</small></div>
+          <div class="plchip">PLC · robotics · embedded</div>
+          <div class="plchip">aerospace · medical-device</div>
+          <div class="plchip">≈ none installable</div>
+        </div>
+      </div>
+      <div class="plnote">crowded on the left, near-empty on the right — the same gradient, now in real names</div>
+    </div>
+    <figcaption>Stack-level rules and skills are the bulk; security and finance have a real but smaller set of published packs; deep verticals like PLC or medical-device are close to empty. These proportions are a rough hand-count of the main catalogs (cursor.directory, claudemarketplaces.com) in mid-2026 — not a formal survey, and shifting. Named packs above: Semgrep Guardian, cybersecurity-skills, Promptfoo, Anthropic financial-services.</figcaption>
+  </figure>
+
+  <p>And “out there” is itself a gradient. A plugin might be one person's GitHub repo, a pack in a third-party directory (<a href="https://claudemarketplaces.com/">claudemarketplaces.com</a>, <a href="https://github.com/composio-community/awesome-claude-plugins">composio-community/awesome-claude-plugins</a>), or something promoted into <a href="https://github.com/anthropics/claude-plugins-official">Anthropic's official catalog</a> — with plenty of overlap and uneven quality in between. None of it is finished: community versions get promoted, forked, abandoned. So the usual move isn't adopting one whole — it's cherry-picking across them, composing the pieces that fit, and folding them into a marketplace a team runs itself.</p>
+
+  <figure>
+    <div class="board">
+      <div class="fk">where a plugin comes from — 3rd-party to official</div>
+      <div class="prov">
+        <div class="provrow">
+          <div class="provbox community sk"><div class="pbt">3rd-party · community</div><div class="pbs">GitHub repos and directories — claudemarketplaces.com, awesome-claude-plugins. The bulk of it: many, overlapping, uneven.</div></div>
+          <div class="provarrow">some get<br>promoted →</div>
+          <div class="provbox official sk"><div class="pbt">official marketplace</div><div class="pbs">anthropics/claude-plugins-official — ~101 curated first-party &amp; partner plugins. Fewer, vetted.</div></div>
+        </div>
+        <div class="provdown">↓ &nbsp; cherry-pick · compose · adapt &nbsp; ↓</div>
+        <div class="provbox own sk"><div class="pbt">a team's own · internal marketplace</div><div class="pbs">pieces from both, composed and adapted — run privately, or published back into the community.</div></div>
+      </div>
+    </div>
+    <figcaption>Availability isn't a shelf, it's a pipeline: most plugins start third-party, some get promoted into Anthropic's official catalog, and a team's real setup is usually a composed, cherry-picked mix of both — often folded into an internal marketplace of its own. Alive and shifting, not settled. Sources: anthropics/claude-plugins-official, claudemarketplaces.com, the Claude Code plugin-marketplace docs.</figcaption>
+  </figure>
+
+  <p>And every one of these shapes is young. “Skills” is a 2025 word; plugins and their marketplaces came after; the list will read differently by the time this does. What's a skill today is a built-in tomorrow, what's a plugin becomes a default — so this map, like the ones that follow, is a still frame. Draw it in pencil.</p>
+
+  <div class="pin">
+    <div class="pinhd"><span class="pinno">05</span><span class="pinq">the map moves</span></div>
+    <h2>The map is already moving.</h2>
+  </div>
+
+  <p>A map like this is out of date the moment it's drawn — a still frame of something that won't hold still. Two currents keep redrawing it. The first is <em>absorption</em>: anything general and useful drifts downward, into the harness itself. Web search, memory, planning, a review pass — each started as something a developer bolted on, and each got pulled into the runtime: web search and web-fetch became native Anthropic tools in September 2025, a memory tool followed, and code review now ships as a native command (Claude Code's <code>/code-review</code>), with the deeper reviews still plugins. The general end of the control-harness keeps quietly emptying into the platform.</p>
+
+  <p>The second is <em>how domain-specific the work is</em> — how domain-y. Not all domains are equal. Web and SaaS work is so common it's barely a domain at all; call it domain-zero. Fintech and healthcare carry real constraints. Narrow verticals — industrial control, robotics, embedded — are sparse and walled. The more domain-y the work, the smaller the market, the fewer people building for it — for now. That line keeps sliding toward the specific: what a developer had to build by hand last year is suggested-by-default this year.</p>
+
+  <div class="pin">
+    <div class="pinhd"><span class="pinno">06</span><span class="pinq">where it lands</span></div>
+    <h2>The grader slot is filling — from the general end in.</h2>
+  </div>
+
+  <p>Put the two currents together and the last part of the map fills in. A developer works from Claude Code, and most of what the control-harness needs is already there to pick up. The grader slot is the clearest case: the quality checks for a given kind of work. It's <strong>filling fast, from the general end inward</strong> — occupied wherever a domain's idea of “good” is written down: web and SaaS conventions, and even big regulated fields, where Semgrep checks PCI and SOC 2 and Promptfoo ships FINRA and SEC plugins. It thins out as the work turns both more <em>domain-y</em> and more <em>tacit</em> — a niche vertical's safety rules, a team's own conventions, the isolation logic only this codebase needs — where “good” lives in a practitioner's head, and where a smaller market means fewer people have written anything down.</p>
+
+  <p>The filled cells are the useful part — there to lean on. Knowing someone's already published a finance rubric or a PCI check means grabbing and adapting it instead of writing one. The empty tail is the part a particular domain might still need built: checks too specific for anyone else to have written. It keeps shrinking as more gets written down and shared — each year, more of the map is something to reach for.</p>
+
+  <figure>
+    <div class="board">
+      <div class="fk">the grader slot, by how domain-y the work is</div>
+      <div class="fill">
+        <div class="fillbar sk">
+          <span class="arrow">filling this way →</span>
+          <span class="youare">✕ a domain<br>still open</span>
+        </div>
+        <div class="fillends"><span class="l">general · SaaS<br>occupied, suggested</span><span class="r">narrow · a vertical<br>empty — and open</span></div>
+        <div class="fillnote">left: lean on what's already published · right: what a domain might still need built · knowing which is which is the point</div>
+      </div>
+    </div>
+    <figcaption>The checks fill in from the common end first — SaaS and web are largely served — and thin out toward the specific. So how empty the slot feels is really a reading of how domain-y the work is. The open corner is real but keeps shrinking — each year more of the map is something to reuse rather than make.</figcaption>
+  </figure>
+
+  <p>That's the map around Claude Code. The <em>harness</em> runs it (Anthropic's), the <em>guides</em> point it (AGENTS.md, everyone's), the <em>graders</em> check it (mostly out there already, and increasingly built-in). Knowing all this is for reading the landscape — leaning on what's already published, knowing it well enough to point others to it, and building the one corner a domain might still need. The first piece drew the guides-and-graders split; this one lays out where it all sits around Claude Code. Both are snapshots; both keep moving.</p>
+
+  <div class="foot">
+    <p class="fp"><b>The reports this was drawn from.</b> The runtime meaning of “harness” — Anthropic's <a href="https://www.anthropic.com/engineering/building-agents-with-the-claude-agent-sdk">Claude Agent SDK</a> &amp; <a href="https://modelcontextprotocol.io/">MCP</a>. The guides/checks split — Birgitta Böckeler on <a href="https://martinfowler.com/articles/harness-engineering.html">harness engineering</a> (martinfowler.com). The guides standard — the <a href="https://agents.md/">AGENTS.md</a> open spec (2025). The absorption cases — Anthropic's native <a href="https://claude.com/blog/web-search-api">web-search &amp; web-fetch</a> tools (Sept 2025), memory tool, and built-in code review (previously MCP/plugin add-ons). The grader tooling — <a href="https://www.langchain.com/langsmith">LangSmith</a>, <a href="https://www.braintrust.dev/">Braintrust</a>, <a href="https://github.com/openai/evals">OpenAI Evals</a>, emerging YAML eval specs, and Anthropic's <a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents"><em>Demystifying evals</em></a>. The domain-width gradient and the codified/tacit split — <a href="https://semgrep.dev/">Semgrep</a> (PCI, SOC 2), <a href="https://www.promptfoo.dev/docs/red-team/plugins/financial/">Promptfoo's finance red-team plugins</a> (FINRA, SEC), our own rough count of the main catalogs (cursor.directory, claudemarketplaces.com) in mid-2026, and <a href="https://www.cbinsights.com/research/ai-agent-market-map/">CB Insights</a> (horizontals outnumber verticals ~2:1).</p>
+    <p class="fp"><b>On the word “harness.”</b> Both layers are harnesses; the qualifier keeps them apart. Bare <b>harness</b> = the runtime (the thing Claude Code is). <b>Control-harness</b> = the guides-and-checks layer on top (Böckeler's original guides-and-sensors sense). One makes the agent run; the other makes its output good.</p>
+    <p class="fp"><b>Snapshot, not gospel.</b> Grounded in mid-2026; the coastlines move. The open corner is smaller than it was a year ago and will be smaller next year — a map like this is a photograph, not a forecast.</p>
+    <p class="sign">— field notes, meant to be redrawn.</p>
+  </div>
+
+</div>
+</div>
+</body>
+</html>
