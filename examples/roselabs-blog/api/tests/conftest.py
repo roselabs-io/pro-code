@@ -9,6 +9,8 @@ from sqlalchemy.pool import NullPool
 from testcontainers.postgres import PostgresContainer
 
 from alembic import command
+from app.core.security import create_access_token, hash_password
+from app.models.author import Author, Role
 
 # Ryuk (the reaper) flakes on port-mapping under Docker Desktop; the container's
 # `with` context manager stops it on exit, so the reaper isn't needed.
@@ -83,7 +85,12 @@ async def client(engine):
 
     async def _override():
         async with maker() as s:
-            yield s
+            try:
+                yield s
+                await s.commit()
+            except Exception:
+                await s.rollback()
+                raise
 
     from app.core.db import get_session
     from app.main import app
@@ -93,3 +100,31 @@ async def client(engine):
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     app.dependency_overrides.pop(get_session, None)
+
+
+@pytest.fixture
+def make_author(db):
+    async def _make(
+        email: str = "ada@roselabs.io",
+        role: Role = Role.author,
+        password: str = "pw-abcdef",
+    ) -> Author:
+        author = Author(
+            email=email,
+            display_name=email.split("@")[0],
+            role=role,
+            password_hash=hash_password(password),
+        )
+        db.add(author)
+        await db.commit()
+        return author
+
+    return _make
+
+
+@pytest.fixture
+def auth_header():
+    def _header(author: Author) -> dict[str, str]:
+        return {"Authorization": f"Bearer {create_access_token(str(author.id))}"}
+
+    return _header
