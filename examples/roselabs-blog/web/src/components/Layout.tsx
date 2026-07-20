@@ -1,7 +1,10 @@
-import { AppBar, Box, Container, Toolbar, Typography } from "@mui/material";
+import { AppBar, Box, Button, Container, Stack, Toolbar, Typography } from "@mui/material";
 import { Link, Outlet } from "react-router-dom";
 
+import { useAuth } from "../auth";
+
 export function Layout() {
+  const { isAuthed, logout } = useAuth();
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
       <AppBar
@@ -19,6 +22,22 @@ export function Layout() {
           >
             roselabs · field notes
           </Typography>
+          <Stack direction="row" spacing={1}>
+            {isAuthed ? (
+              <>
+                <Button component={Link} to="/admin" color="inherit">
+                  Dashboard
+                </Button>
+                <Button onClick={logout} color="inherit">
+                  Sign out
+                </Button>
+              </>
+            ) : (
+              <Button component={Link} to="/login" color="inherit">
+                Sign in
+              </Button>
+            )}
+          </Stack>
         </Toolbar>
       </AppBar>
       <Container maxWidth="md" sx={{ py: 5 }}>
