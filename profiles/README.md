@@ -18,6 +18,7 @@ For **Plan** a profile also supplies the **design catalog** (the shapes tickets 
 
 - **`generic-saas/`** — the default. A Python + FastAPI CRUD API (API-only). Frame + Plan + Implement. Built [example #1](../examples/multi-tenant-isolation/).
 - **`edge-telemetry/`** — industrial telemetry monitoring + alerting (Python engine + served dashboard). Frame + Plan + Implement. Built [example #2](../examples/edge-telemetry-alerting/).
+- **`saas-web/`** — full-stack web SaaS: **FastAPI (async) + React/TS/MUI + async Postgres**, deployed via Docker Compose (`deploys: true`). Frame + Plan + Implement. Adds a rendered frontend *and* a graded deploy dimension (the additive [infra grader](../graders/infra-grader.md)) on top of the `generic-saas` API baseline. First example: the roselabs blog.
 - *(add your own — a research profile, a compiler profile — by copying a profile dir and swapping the content. The skills and graders don't change.)*
 
 > **Agnostic is a design property, proven by a _second_ profile — and it now is.** `edge-telemetry` dropped in with **zero changes to any skill or grader** (audited: nothing under `skills/` or `graders/` was touched). The one addition to the shared layer was a *neutral* guide skeleton — `doc-patterns/specs/ui-sketch.md` — that the UI-sketch hard gate references but the API-only #1 never exercised. Mechanism and feedback are shared byte-for-byte; only the profile content differs.
