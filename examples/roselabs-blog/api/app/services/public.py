@@ -11,8 +11,10 @@ class PublicService:
     def __init__(self, session: AsyncSession) -> None:
         self.repo = PostRepository(session)
 
-    async def list_published(self, limit: int, before: dt.datetime | None) -> list[Post]:
-        return await self.repo.list_published(limit, before)
+    async def list_published(
+        self, limit: int, before: dt.datetime | None, tag: str | None = None
+    ) -> list[Post]:
+        return await self.repo.list_published(limit, before, tag)
 
     async def get_published(self, slug: str) -> Post | None:
         post = await self.repo.get_by_slug_with_author(slug)

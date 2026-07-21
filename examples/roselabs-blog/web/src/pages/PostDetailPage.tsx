@@ -2,6 +2,7 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   CircularProgress,
   Divider,
   Stack,
@@ -10,7 +11,7 @@ import {
 } from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { type FormEvent, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import { fetchPublicPost, submitComment } from "../api";
 import { formatDate } from "../lib/format";
@@ -57,6 +58,20 @@ export function PostDetailPage() {
         {data.author_name}
         {data.published_at ? ` · ${formatDate(data.published_at)}` : ""}
       </Typography>
+      {data.tags.length > 0 && (
+        <Stack direction="row" sx={{ mt: 1, flexWrap: "wrap", gap: 1 }}>
+          {data.tags.map((name) => (
+            <Chip
+              key={name}
+              label={name}
+              size="small"
+              clickable
+              component={Link}
+              to={`/?tag=${encodeURIComponent(name)}`}
+            />
+          ))}
+        </Stack>
+      )}
       {/* Decision 0001: the article renders in a sandboxed iframe (no allow-scripts). */}
       <Box
         component="iframe"

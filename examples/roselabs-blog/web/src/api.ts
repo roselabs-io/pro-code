@@ -32,6 +32,7 @@ export interface PostSummary {
   excerpt: string;
   published_at: string | null;
   author_name: string;
+  tags: string[];
 }
 
 export interface PublicComment {
@@ -50,8 +51,10 @@ export interface PublicList {
   next_cursor: string | null;
 }
 
-export async function fetchPublicPosts(): Promise<PublicList> {
-  const { data } = await api.get<PublicList>("/public/posts");
+export async function fetchPublicPosts(tag?: string): Promise<PublicList> {
+  const { data } = await api.get<PublicList>("/public/posts", {
+    params: tag ? { tag } : undefined,
+  });
   return data;
 }
 
@@ -96,12 +99,14 @@ export interface AuthoredPost {
   status: PostStatus;
   published_at: string | null;
   created_at: string;
+  tags: string[];
 }
 
 export interface PostInput {
   title: string;
   content_html: string;
   excerpt?: string;
+  tags?: string[];
 }
 
 export async function listMyPosts(): Promise<AuthoredPost[]> {

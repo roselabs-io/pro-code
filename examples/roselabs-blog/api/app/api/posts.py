@@ -7,10 +7,26 @@ from app.api.deps import get_current_author
 from app.core.db import get_session
 from app.core.log import log_event
 from app.models.author import Author
+from app.models.post import Post
 from app.schemas.post import PostCreate, PostOut, PostUpdate
 from app.services.posts import PostService
 
 router = APIRouter(prefix="/posts", tags=["posts"])
+
+
+def _post_out(post: Post) -> PostOut:
+    return PostOut(
+        id=post.id,
+        author_id=post.author_id,
+        title=post.title,
+        slug=post.slug,
+        content_html=post.content_html,
+        excerpt=post.excerpt,
+        status=post.status,
+        published_at=post.published_at,
+        created_at=post.created_at,
+        tags=[tag.name for tag in post.tags],
+    )
 
 
 def _not_found(post_id: uuid.UUID, requester: uuid.UUID) -> HTTPException:
@@ -24,7 +40,7 @@ async def create_post(
     current: Author = Depends(get_current_author),
     session: AsyncSession = Depends(get_session),
 ) -> PostOut:
-    return await PostService(session).create_draft(current, body)
+    return _post_out(await PostService(session).create_draft(current, body))
 
 
 @router.get("/mine", response_model=list[PostOut])
@@ -32,7 +48,8 @@ async def list_my_posts(
     current: Author = Depends(get_current_author),
     session: AsyncSession = Depends(get_session),
 ) -> list[PostOut]:
-    return await PostService(session).list_mine(current)
+    posts = await PostService(session).list_mine(current)
+    return [_post_out(post) for post in posts]
 
 
 @router.get("/{post_id}", response_model=PostOut)
@@ -44,7 +61,7 @@ async def get_post(
     post = await PostService(session).get_owned(current, post_id)
     if post is None:
         raise _not_found(post_id, current.id)
-    return post
+    return _post_out(post)
 
 
 @router.patch("/{post_id}", response_model=PostOut)
@@ -57,7 +74,7 @@ async def update_post(
     post = await PostService(session).update(current, post_id, body)
     if post is None:
         raise _not_found(post_id, current.id)
-    return post
+    return _post_out(post)
 
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -80,7 +97,7 @@ async def publish_post(
     post = await PostService(session).set_status(current, post_id, publish=True)
     if post is None:
         raise _not_found(post_id, current.id)
-    return post
+    return _post_out(post)
 
 
 @router.post("/{post_id}/unpublish", response_model=PostOut)
@@ -92,4 +109,4 @@ async def unpublish_post(
     post = await PostService(session).set_status(current, post_id, publish=False)
     if post is None:
         raise _not_found(post_id, current.id)
-    return post
+    return _post_out(post)

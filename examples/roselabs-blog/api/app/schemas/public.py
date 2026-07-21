@@ -11,6 +11,7 @@ class PublicPostSummary(BaseModel):
     excerpt: str
     published_at: dt.datetime | None
     author_name: str
+    tags: list[str] = []
 
 
 class PublicPostOut(PublicPostSummary):

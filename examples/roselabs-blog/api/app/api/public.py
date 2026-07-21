@@ -20,6 +20,7 @@ def _summary(post: Post) -> PublicPostSummary:
         excerpt=post.excerpt,
         published_at=post.published_at,
         author_name=post.author.display_name,
+        tags=[tag.name for tag in post.tags],
     )
 
 
@@ -27,9 +28,10 @@ def _summary(post: Post) -> PublicPostSummary:
 async def list_published(
     limit: int = Query(10, ge=1, le=50),
     before: dt.datetime | None = None,
+    tag: str | None = None,
     session: AsyncSession = Depends(get_session),
 ) -> PublicListOut:
-    posts = await PublicService(session).list_published(limit, before)
+    posts = await PublicService(session).list_published(limit, before, tag)
     items = [_summary(p) for p in posts]
     next_cursor = items[-1].published_at if len(items) == limit else None
     return PublicListOut(items=items, next_cursor=next_cursor)
@@ -53,6 +55,7 @@ async def get_published(
         published_at=post.published_at,
         author_name=post.author.display_name,
         content_html=post.content_html,
+        tags=[tag.name for tag in post.tags],
         comments=[PublicComment.model_validate(c) for c in comments],
     )
 

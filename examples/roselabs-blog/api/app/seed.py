@@ -8,6 +8,7 @@ from app.core.log import log_event
 from app.core.security import hash_password
 from app.models.author import Author, Role
 from app.models.post import Post, PostStatus
+from app.models.tag import Tag
 
 _SAMPLE_ARTICLE = """<!doctype html><html><head><meta charset="utf8"><style>
 body{font-family:Georgia,serif;background:#faf9f5;color:#1a1a1a;padding:2rem;line-height:1.7;max-width:42rem;margin:auto}
@@ -39,36 +40,40 @@ async def _seed() -> None:
         await session.flush()
 
         now = dt.datetime.now(dt.timezone.utc)
-        session.add_all(
-            [
-                Post(
-                    author_id=author.id,
-                    title="Welcome to the roselabs blog",
-                    slug="welcome",
-                    content_html="<!doctype html><h1>Welcome</h1><p>The first published post.</p>",
-                    excerpt="The first published post.",
-                    status=PostStatus.published,
-                    published_at=now,
-                ),
-                Post(
-                    author_id=author.id,
-                    title="The iframe test",
-                    slug="the-iframe-test",
-                    content_html=_SAMPLE_ARTICLE,
-                    excerpt="A rich, self-contained article rendered in an isolated iframe.",
-                    status=PostStatus.published,
-                    published_at=now - dt.timedelta(minutes=1),
-                ),
-                Post(
-                    author_id=author.id,
-                    title="A secret draft",
-                    slug="a-secret-draft",
-                    content_html="<h1>Draft</h1><p>This must never appear publicly.</p>",
-                    excerpt="unpublished",
-                    status=PostStatus.draft,
-                ),
-            ]
+        tag_ai = Tag(name="ai", slug="ai")
+        tag_control = Tag(name="control", slug="control")
+        session.add_all([tag_ai, tag_control])
+        await session.flush()
+
+        welcome = Post(
+            author_id=author.id,
+            title="Welcome to the roselabs blog",
+            slug="welcome",
+            content_html="<!doctype html><h1>Welcome</h1><p>The first published post.</p>",
+            excerpt="The first published post.",
+            status=PostStatus.published,
+            published_at=now,
         )
+        welcome.tags = [tag_ai]
+        iframe = Post(
+            author_id=author.id,
+            title="The iframe test",
+            slug="the-iframe-test",
+            content_html=_SAMPLE_ARTICLE,
+            excerpt="A rich, self-contained article rendered in an isolated iframe.",
+            status=PostStatus.published,
+            published_at=now - dt.timedelta(minutes=1),
+        )
+        iframe.tags = [tag_ai, tag_control]
+        draft = Post(
+            author_id=author.id,
+            title="A secret draft",
+            slug="a-secret-draft",
+            content_html="<h1>Draft</h1><p>This must never appear publicly.</p>",
+            excerpt="unpublished",
+            status=PostStatus.draft,
+        )
+        session.add_all([welcome, iframe, draft])
         await session.commit()
         log_event("SEED_DONE", authors=1, posts=3)
 

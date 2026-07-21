@@ -7,12 +7,14 @@ from app.core.slug import slugify
 from app.models.author import Author, Role
 from app.models.post import Post, PostStatus
 from app.repositories.posts import PostRepository
+from app.repositories.tags import TagRepository
 from app.schemas.post import PostCreate, PostUpdate
 
 
 class PostService:
     def __init__(self, session: AsyncSession) -> None:
         self.repo = PostRepository(session)
+        self.tags = TagRepository(session)
 
     async def _unique_slug(self, title: str) -> str:
         base = slugify(title)
@@ -32,6 +34,7 @@ class PostService:
             excerpt=data.excerpt,
             status=PostStatus.draft,
         )
+        post.tags = await self.tags.get_or_create_many(data.tags)
         return await self.repo.add(post)
 
     async def list_mine(self, author: Author) -> list[Post]:
@@ -54,6 +57,8 @@ class PostService:
             post.content_html = data.content_html
         if data.excerpt is not None:
             post.excerpt = data.excerpt
+        if data.tags is not None:
+            post.tags = await self.tags.get_or_create_many(data.tags)
         return post
 
     async def delete(self, actor: Author, post_id: uuid.UUID) -> bool:

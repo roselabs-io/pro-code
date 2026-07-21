@@ -10,12 +10,14 @@ class PostCreate(BaseModel):
     title: str
     content_html: str
     excerpt: str = ""
+    tags: list[str] = []
 
 
 class PostUpdate(BaseModel):
     title: str | None = None
     content_html: str | None = None
     excerpt: str | None = None
+    tags: list[str] | None = None
 
 
 class PostOut(BaseModel):
@@ -30,3 +32,4 @@ class PostOut(BaseModel):
     status: PostStatus
     published_at: dt.datetime | None
     created_at: dt.datetime
+    tags: list[str] = []

@@ -14,6 +14,7 @@ export function EditorPage() {
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [contentHtml, setContentHtml] = useState("");
+  const [tagsText, setTagsText] = useState("");
 
   const existing = useQuery({
     queryKey: ["my-post", id],
@@ -27,12 +28,21 @@ export function EditorPage() {
       setTitle(existing.data.title);
       setExcerpt(existing.data.excerpt);
       setContentHtml(existing.data.content_html);
+      setTagsText(existing.data.tags.join(", "));
     }
   }, [existing.data]);
 
   const save = useMutation({
     mutationFn: async (publish: boolean): Promise<void> => {
-      const input = { title, content_html: contentHtml, excerpt };
+      const input = {
+        title,
+        content_html: contentHtml,
+        excerpt,
+        tags: tagsText
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean),
+      };
       const postId = editing
         ? ((await updatePost(id as string, input)) && (id as string))
         : (await createPost(input)).id;
@@ -70,6 +80,12 @@ export function EditorPage() {
           onChange={(event) => setExcerpt(event.target.value)}
           multiline
           minRows={2}
+        />
+        <TextField
+          label="Tags (comma-separated)"
+          value={tagsText}
+          onChange={(event) => setTagsText(event.target.value)}
+          placeholder="ai, control"
         />
         <TextField
           label="Body (HTML)"

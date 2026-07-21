@@ -4,6 +4,9 @@
 	handle_path /api/* {
 		reverse_proxy api:8000
 	}
+	handle /rss {
+		reverse_proxy api:8000
+	}
 	handle {
 		root * /srv
 		try_files {path} /index.html

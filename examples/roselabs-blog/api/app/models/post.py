@@ -7,9 +7,11 @@ from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+from app.models.tag import post_tags
 
 if TYPE_CHECKING:
     from app.models.author import Author
+    from app.models.tag import Tag
 
 
 class PostStatus(str, enum.Enum):
@@ -43,3 +45,4 @@ class Post(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
     author: Mapped["Author"] = relationship(lazy="raise")
+    tags: Mapped[list["Tag"]] = relationship(secondary=post_tags, lazy="selectin")

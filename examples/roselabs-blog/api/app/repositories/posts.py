@@ -5,7 +5,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.slug import slugify
 from app.models.post import Post, PostStatus
+from app.models.tag import Tag
 
 
 class PostRepository:
@@ -51,13 +53,18 @@ class PostRepository:
         return result.scalar_one_or_none()
 
     async def list_published(
-        self, limit: int, before: dt.datetime | None = None
+        self,
+        limit: int,
+        before: dt.datetime | None = None,
+        tag: str | None = None,
     ) -> list[Post]:
         stmt = (
             select(Post)
             .options(selectinload(Post.author))
             .where(Post.status == PostStatus.published)
         )
+        if tag is not None:
+            stmt = stmt.join(Post.tags).where(Tag.slug == slugify(tag))
         if before is not None:
             stmt = stmt.where(Post.published_at < before)
         stmt = stmt.order_by(Post.published_at.desc()).limit(limit)
