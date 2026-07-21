@@ -1,10 +1,12 @@
 import { AppBar, Box, Button, Container, Stack, Toolbar, Typography } from "@mui/material";
 import { Link, Outlet } from "react-router-dom";
 
-import { useAuth } from "../auth";
+import { useAuth, useMe } from "../auth";
 
 export function Layout() {
   const { isAuthed, logout } = useAuth();
+  const me = useMe();
+  const isAdmin = me.data?.role === "admin";
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default" }}>
       <AppBar
@@ -31,6 +33,11 @@ export function Layout() {
                 <Button component={Link} to="/admin/moderation" color="inherit">
                   Moderation
                 </Button>
+                {isAdmin && (
+                  <Button component={Link} to="/admin/authors" color="inherit">
+                    Authors
+                  </Button>
+                )}
                 <Button onClick={logout} color="inherit">
                   Sign out
                 </Button>

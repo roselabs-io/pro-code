@@ -21,3 +21,9 @@ class AuthorRepository:
 
     async def get_by_id(self, author_id: uuid.UUID) -> Author | None:
         return await self.session.get(Author, author_id)
+
+    async def list_all(self) -> list[Author]:
+        result = await self.session.execute(
+            select(Author).order_by(Author.created_at.asc())
+        )
+        return list(result.scalars().all())

@@ -177,3 +177,27 @@ export async function approveComment(id: string): Promise<void> {
 export async function hideComment(id: string): Promise<void> {
   await api.post(`/comments/${id}/hide`);
 }
+
+// ---- invitations / authors ----
+
+export async function acceptInvite(
+  token: string,
+  displayName: string,
+  password: string,
+): Promise<string> {
+  const { data } = await api.post<{ access_token: string }>("/invites/accept", {
+    token,
+    display_name: displayName,
+    password,
+  });
+  return data.access_token;
+}
+
+export async function inviteAuthor(email: string): Promise<void> {
+  await api.post("/invites", { email });
+}
+
+export async function listAuthors(): Promise<Me[]> {
+  const { data } = await api.get<Me[]>("/authors");
+  return data;
+}

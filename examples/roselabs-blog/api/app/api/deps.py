@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_session
 from app.core.log import log_event
 from app.core.security import decode_token
-from app.models.author import Author
+from app.models.author import Author, Role
 from app.repositories.authors import AuthorRepository
 
 _bearer = HTTPBearer(auto_error=False)
@@ -39,3 +39,12 @@ async def get_current_author(
     if author is None:
         raise _unauthorized("unknown_subject")
     return author
+
+
+async def get_current_admin(
+    current: Author = Depends(get_current_author),
+) -> Author:
+    if current.role is not Role.admin:
+        log_event("ADMIN_REQUIRED", requester=str(current.id))
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admins only")
+    return current
