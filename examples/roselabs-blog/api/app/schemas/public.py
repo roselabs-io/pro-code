@@ -2,6 +2,8 @@ import datetime as dt
 
 from pydantic import BaseModel
 
+from app.schemas.comment import PublicComment
+
 
 class PublicPostSummary(BaseModel):
     slug: str
@@ -13,6 +15,7 @@ class PublicPostSummary(BaseModel):
 
 class PublicPostOut(PublicPostSummary):
     content_html: str
+    comments: list[PublicComment] = []
 
 
 class PublicListOut(BaseModel):

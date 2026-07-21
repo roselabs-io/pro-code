@@ -28,6 +28,9 @@ export function Layout() {
                 <Button component={Link} to="/admin" color="inherit">
                   Dashboard
                 </Button>
+                <Button component={Link} to="/admin/moderation" color="inherit">
+                  Moderation
+                </Button>
                 <Button onClick={logout} color="inherit">
                   Sign out
                 </Button>

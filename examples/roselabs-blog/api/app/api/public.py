@@ -5,7 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_session
 from app.models.post import Post
+from app.schemas.comment import CommentCreate, PublicComment
 from app.schemas.public import PublicListOut, PublicPostOut, PublicPostSummary
+from app.services.comments import CommentService
 from app.services.public import PublicService
 
 router = APIRouter(prefix="/public", tags=["public"])
@@ -43,6 +45,7 @@ async def get_published(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
         )
+    comments = await CommentService(session).list_approved(post.id)
     return PublicPostOut(
         slug=post.slug,
         title=post.title,
@@ -50,4 +53,20 @@ async def get_published(
         published_at=post.published_at,
         author_name=post.author.display_name,
         content_html=post.content_html,
+        comments=[PublicComment.model_validate(c) for c in comments],
     )
+
+
+@router.post("/posts/{slug}/comments", status_code=status.HTTP_201_CREATED)
+async def submit_comment(
+    slug: str,
+    body: CommentCreate,
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, str]:
+    post = await PublicService(session).get_published(slug)
+    if post is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Post not found"
+        )
+    await CommentService(session).submit(post, body)
+    return {"status": "pending"}

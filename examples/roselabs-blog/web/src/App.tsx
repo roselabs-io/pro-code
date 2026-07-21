@@ -5,6 +5,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DashboardPage } from "./pages/DashboardPage";
 import { EditorPage } from "./pages/EditorPage";
 import { LoginPage } from "./pages/LoginPage";
+import { ModerationPage } from "./pages/ModerationPage";
 import { PostDetailPage } from "./pages/PostDetailPage";
 import { PostListPage } from "./pages/PostListPage";
 
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute />,
         children: [
           { path: "/admin", element: <DashboardPage /> },
+          { path: "/admin/moderation", element: <ModerationPage /> },
           { path: "/admin/new", element: <EditorPage /> },
           { path: "/admin/posts/:id", element: <EditorPage /> },
         ],

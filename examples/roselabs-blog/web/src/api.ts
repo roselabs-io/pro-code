@@ -34,8 +34,15 @@ export interface PostSummary {
   author_name: string;
 }
 
+export interface PublicComment {
+  author_name: string;
+  body: string;
+  created_at: string;
+}
+
 export interface PostDetail extends PostSummary {
   content_html: string;
+  comments: PublicComment[];
 }
 
 export interface PublicList {
@@ -128,4 +135,40 @@ export async function publishPost(id: string): Promise<AuthoredPost> {
 export async function unpublishPost(id: string): Promise<AuthoredPost> {
   const { data } = await api.post<AuthoredPost>(`/posts/${id}/unpublish`);
   return data;
+}
+
+// ---- comments ----
+
+export interface CommentInput {
+  author_name: string;
+  author_email: string;
+  body: string;
+}
+
+export interface ModerationComment {
+  id: string;
+  post_slug: string;
+  post_title: string;
+  author_name: string;
+  author_email: string;
+  body: string;
+  status: string;
+  created_at: string;
+}
+
+export async function submitComment(slug: string, input: CommentInput): Promise<void> {
+  await api.post(`/public/posts/${slug}/comments`, input);
+}
+
+export async function listPendingComments(): Promise<ModerationComment[]> {
+  const { data } = await api.get<ModerationComment[]>("/comments/pending");
+  return data;
+}
+
+export async function approveComment(id: string): Promise<void> {
+  await api.post(`/comments/${id}/approve`);
+}
+
+export async function hideComment(id: string): Promise<void> {
+  await api.post(`/comments/${id}/hide`);
 }
