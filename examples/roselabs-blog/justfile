@@ -1,0 +1,26 @@
+# roselabs-blog — dev recipes
+compose := "docker compose -f infra/docker-compose.yml"
+
+# Build + start the full stack (api · db · web) in the background.
+up:
+    {{compose}} up --build -d
+
+# Stop the stack and drop the database volume.
+down:
+    {{compose}} down -v
+
+# Seed a demo author + sample posts (run once after `up`).
+seed:
+    {{compose}} exec api python -m app.seed
+
+# Follow logs.
+logs:
+    {{compose}} logs -f
+
+# Backend gate: lint + tests on a real Postgres.
+gate-api:
+    cd api && uv run ruff check app tests alembic && uv run pytest -q
+
+# Frontend gate: typecheck + lint + unit tests.
+gate-web:
+    cd web && ./node_modules/.bin/tsc --noEmit && ./node_modules/.bin/eslint src && ./node_modules/.bin/vitest run

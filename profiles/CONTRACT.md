@@ -33,6 +33,10 @@ Matches the hook shape the profiles already use (`profiles/README.md`, `generic-
 - `grader_bar` *(must)* — `verifiable_means`, `usual_silent_gaps`, the clean-handoff bar (consumed by
   [`graders/frame-completeness.md`](../graders/frame-completeness.md)).
 - `has_ui` *(must)* — gates the UI-sketch hard gate + the browser grader.
+- `deploys` *(must)* — whether the profile ships a deployable stack; gates the **infra grader**
+  ([`../graders/infra-grader.md`](../graders/infra-grader.md)). An **additive** extension (same shape as
+  `has_ui` + browser-grader): a non-deploying profile sets it false and declares the infra grader n/a — no
+  skill or existing-grader change. *(v1 — first exercised by `saas-web`.)*
 
 **Plan** *(`plan-profile.md`)*
 - `design_catalog` *(must)* — the shapes tickets route against.

@@ -1,0 +1,16 @@
+# Build the SPA with pnpm (pnpm 11 needs Node 22+ for node:sqlite).
+FROM node:24-alpine AS build
+RUN corepack enable
+WORKDIR /web
+COPY web/package.json web/pnpm-lock.yaml* web/pnpm-workspace.yaml ./
+# pnpm 11 exits non-zero over unapproved build scripts (esbuild), which esbuild
+# doesn't actually need — so tolerate that and build via the binaries directly.
+RUN pnpm install --frozen-lockfile || true
+COPY web/ ./
+RUN node_modules/.bin/tsc --noEmit && node_modules/.bin/vite build
+
+# Serve the static build + reverse-proxy /api with Caddy.
+FROM caddy:2-alpine
+COPY --from=build /web/dist /srv
+COPY infra/Caddyfile /etc/caddy/Caddyfile
+EXPOSE 80

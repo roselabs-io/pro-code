@@ -1,0 +1,15 @@
+# Local: serve the SPA and proxy /api → api:8000.
+# Production (M7) swaps ":80" for "blog.roselabs.io" to get automatic TLS.
+:80 {
+	handle_path /api/* {
+		reverse_proxy api:8000
+	}
+	handle /rss {
+		reverse_proxy api:8000
+	}
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}
