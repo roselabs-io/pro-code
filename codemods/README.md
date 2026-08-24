@@ -27,12 +27,12 @@ codemods/<name>.py  <path...>     # transform files in place (or --check to dry-
 
 ```
 implement → [ ruff --fix + codemods ]  ← deterministic auto-fix arm (this dir)
-          → [ deterministic graders: lint · type · logs · test ]
-          → [ fuzzy graders: feature · drift · docs-currency ]  ← LLM, only if needed
+          → [ checks: lint · type · logs · test ]
+          → [ graders: feature · drift · docs-currency ]  ← LLM, only if needed
           → fix pass → re-grade
 ```
 
-The auto-fix arm short-circuits the cheapest drift: **a convention a codemod can enforce should never reach a fuzzy grader as a finding.** If the drift grader keeps flagging the same mechanical thing, that's the signal to write a codemod for it (the "every correction twice is a missing grader" principle, applied to the deterministic side).
+The auto-fix arm short-circuits the cheapest drift: **a convention a codemod can enforce should never reach a grader as a finding.** If the drift grader keeps flagging the same mechanical thing, that's the signal to write a codemod for it (the "every correction twice is a missing grader" principle, applied to the deterministic side).
 
 ## What the plugin ships vs BYO
 

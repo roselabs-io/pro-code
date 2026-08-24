@@ -1,8 +1,8 @@
-# security — SAST + secret scan (deterministic · tier-1)
+# Check — security (SAST + secret scan · tier-1)
 
 The **secrets-and-sinks** gate: runs the profile's static-analysis + secret-scan commands over the diff
 and turns their output into findings. Deterministic, runs in the **first tier** of the code-verification
-loop — before any fuzzy grader spends a token — and **short-circuits** (a leaked credential must never
+loop — before any grader spends a token — and **short-circuits** (a leaked credential must never
 reach a fuzzy lens). Agnostic: the *loop and the severities* live here; the *tools, ruleset, and allowlist*
 come from the profile.
 
@@ -36,8 +36,8 @@ grade(diff, rubric=<security_commands + allow>, context)
 ```
 
 Deterministic — facts, not judgment; runs first, short-circuits. Logic-level flaws a scanner can't catch
-(authz ordering, an existence oracle) stay with the **drift / core-promise** graders — this grader is the
-mechanical floor. See [`code-verification-loop.md`](code-verification-loop.md) ·
+(authz ordering, an existence oracle) stay with the **drift / core-promise** graders — this check is the
+mechanical floor. See [`code-verification-loop.md`](../graders/code-verification-loop.md) ·
 [`../profiles/CONTRACT.md`](../profiles/CONTRACT.md).
 
 > **Provenance:** built independently in pro-code and DTS, then cross-checked — the core design converged.

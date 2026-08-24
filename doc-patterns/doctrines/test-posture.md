@@ -3,7 +3,7 @@
 > A **Rule** (feedforward) for *how* this domain tests. The counterpart to
 > the false-green traps: the posture prevents the trap, the trap-list catches it.
 > Pulled from `doc-patterns/doctrines/test-posture.md`. The **mechanical floor is deterministic**
-> (`graders/checks/doctrine_lint.py` — no assert-less test, no unexplained skip); the
+> (`checks/doctrine_lint.py` — no assert-less test, no unexplained skip); the
 > posture *emphasis* is the profile's opinion, checked by the feature grader.
 
 ## Universal posture (the deterministic floor)
@@ -15,7 +15,7 @@
 ## Layer posture (the profile picks the layers this domain owes)
 
 - **An integration test per endpoint / entry point.** Every route (or public entry point) gets a test that drives the *real* request through the app and asserts the *effect*, not the status. Unit tests are a bonus; the integration test is the floor.
-- **An e2e test when there is a frontend.** A UI-bearing profile owes an end-to-end test that drives the *running* app like a user (the browser grader). An API-only profile owes none — declared, not skipped.
+- **An e2e test when there is a frontend.** A UI-bearing profile owes an end-to-end test that drives the *running* app like a user (the browser check). An API-only profile owes none — declared, not skipped.
 
 ## Altitude (the universal rule for *which* tier)
 

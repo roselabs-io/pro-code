@@ -1,6 +1,6 @@
 # Profile — `saas-web` · check-commands
 
-The deterministic graders read this file directly — the **active-profile handshake** (the pipeline resolves
+The checks read this file directly — the **active-profile handshake** (the pipeline resolves
 the active profile's `check-commands.md`, never a hardcoded path). Split out of `implement-profile.md` so a
 grader reads one file for its command.
 
@@ -27,7 +27,7 @@ common combinations (`just gate`). Paths assume `api/` (backend) and `web/` (fro
 - **browser / e2e** — run (**live**, `has_ui: true`): `uv run pytest -m browser` / `pnpm --dir web e2e` — Playwright drives the running app; `visual_invariant` — a draft never renders in the DOM for an anonymous session; an author-only control (edit/delete) never renders for a reader.
 - **a11y** — run (in the Playwright beat): `axe-core` against each rendered view; no serious/critical violations; state is not colour-only; interactive elements are keyboard-reachable and labelled.
 - **visual-regression** — run: Playwright screenshots vs committed baselines (`web/tests/e2e/__snapshots__/`); an un-reviewed visual diff is a finding. Baselines are updated deliberately (a decision), never blind-accepted.
-- **infra** — run (**live**, `deploys: true`): `docker compose -f infra/docker-compose.yml build` then bring up + smoke — `GET /health` is 200, the web root serves HTML, a migration ran cleanly on a fresh volume. See [`../../graders/infra-grader.md`](../../graders/infra-grader.md).
+- **infra** — run (**live**, `deploys: true`): `docker compose -f infra/docker-compose.yml build` then bring up + smoke — `GET /health` is 200, the web root serves HTML, a migration ran cleanly on a fresh volume. See [`../../checks/infra.md`](../../checks/infra.md).
 
 ## Declared n/a *(not skipped — why)*
 

@@ -9,8 +9,8 @@ choice-points, fixed here so they're not silent.}
 ## Deterministic checks
 Commands, thresholds, and allowlists live in this profile's [`check-commands.md`](check-commands.md) — a
 separate file the graders read directly (the active-profile handshake). This section only names *which*
-deterministic graders the domain runs; fill the commands in `check-commands.md`.
-{TODO: the deterministic graders this domain mandates (lint · tests · type-check · doctrine-lint ·
+checks the domain runs; fill the commands in `check-commands.md`.
+{TODO: the checks this domain mandates (lint · tests · type-check · doctrine-lint ·
 security · coverage · deps · schema · logs), or just point to check-commands.md.}
 
 ## Fuzzy rubrics *(must — ~3 focused graders)*

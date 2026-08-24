@@ -4,8 +4,8 @@ Domain: a CRUD SaaS backend — **Python + FastAPI, API-only**. The **default** 
 
 This is the domain where **both** guides *and* graders are deterministic — schema-as-code → CRUD → validate — so it's the cleanest possible showcase for the code-verification loop.
 
-> **This profile mandates** (its opinionated subset of the menu): a **codemod** (boundary-dependency enforcement across handlers), the **logs grader**, an **integration test per endpoint**, and the `no-print` / `no-bare-except` special-lint.
-> **It skips**: the **browser grader** + **e2e** (API-only, `has_ui` false → declared n/a), and the `config-driven-thresholds` / `severity-constant` lints (that's the telemetry profile's opinion, not this one).
+> **This profile mandates** (its opinionated subset of the menu): a **codemod** (boundary-dependency enforcement across handlers), the **logs check**, an **integration test per endpoint**, and the `no-print` / `no-bare-except` special-lint.
+> **It skips**: the **browser check** + **e2e** (API-only, `has_ui` false → declared n/a), and the `config-driven-thresholds` / `severity-constant` lints (that's the telemetry profile's opinion, not this one).
 
 ## Stack + layout
 
@@ -40,8 +40,8 @@ runtime; API-only). See `check-commands.md` for the commands + the n/a rationale
 - **LSP (guide):** `mypy` / `pyright` (Python) — consult types/refs while authoring. Advisory (`mypy app/`), not a gate step in this slice.
 - **Environment + CLIs (guide):** **poetry** for deps/venv (`poetry install`). No task-runner in this profile — the graders run directly via `poetry run` (the example README lists them). *(The env tool and whether to ship a `justfile` are a profile choice: this profile picks poetry + no justfile; `edge-telemetry` picks uv + a justfile.)*
 - **Codemods (auto-fix arm):** codemod-lite = `ruff check --fix . && ruff format .` every gate; one genuine **libcst** codemod per build enforcing a boundary convention across handlers (e.g. every route depends on `get_caller`). See the example's `codemods/`.
-- **Logs grader:** structured events per `doc-patterns/harness/log-taxonomy.md` — `HANDLER_RAN`, `CROSS_TENANT_DENIED{workspace,target}`. The grader asserts `CROSS_TENANT_DENIED` fired on a cross-tenant attempt (isolation proven from the *trace*, not the 404 alone).
-- **Browser grader:** n/a — this profile is API-only (`has_ui: false`), no rendered surface.
+- **Logs check:** structured events per `doc-patterns/harness/log-taxonomy.md` — `HANDLER_RAN`, `CROSS_TENANT_DENIED{workspace,target}`. The grader asserts `CROSS_TENANT_DENIED` fired on a cross-tenant attempt (isolation proven from the *trace*, not the 404 alone).
+- **Browser check:** n/a — this profile is API-only (`has_ui: false`), no rendered surface.
 
 ## Doctrines this profile mandates
 
@@ -54,7 +54,7 @@ runtime; API-only). See `check-commands.md` for the commands + the n/a rationale
 
 ## Special-lint (the domain forbids — `doctrine_lint.py --forbid`)
 
-- **no `print(` in app code** — use the structured `LOG` event log (the logs grader reads it). The log module itself is `doctrine: allow`.
+- **no `print(` in app code** — use the structured `LOG` event log (the logs check reads it). The log module itself is `doctrine: allow`.
 - **no bare `except:`** — catch a specific type.
 
 ## Conventions (the drift grader's rubric)

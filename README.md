@@ -1,30 +1,33 @@
 # pro-code
 
-Coding is getting commoditized, and with it a wave of hype: vibe coding, low-code, no-code — the promise that you won't really need to write software anymore. This isn't about that. Real software still needs someone who understands it — hence the name: pro-code, not no-code. Keep that person in the loop, and let agents amplify them.
+A pipeline for building software with coding agents. The name is the position: pro-code, not no-code — the pipeline assumes someone who understands the software stays in the loop, and gives agents a structure to work inside rather than replacing that person.
 
-A small, self-contained pipeline for building software with coding agents — a concrete, runnable implementation of the ideas discussed in [the article](https://roselabs-io.github.io/pro-code/two-reading-journeys.html).
+A runnable implementation of the ideas in [the article](https://roselabs-io.github.io/pro-code/two-reading-journeys.html).
 
 **Articles:** [Two reading journeys into agent engineering](https://roselabs-io.github.io/pro-code/two-reading-journeys.html) · [The Map Around Claude Code](https://roselabs-io.github.io/pro-code/the-map-around-claude-code.html) (part two).
 
-The shape: build in phases — **Frame → Plan → Implement** (run at scale by **Autopilot**) — and make each handoff pass a **grader** before the next phase starts.
+Work moves through **Frame → Plan → Implement**, run at scale by **Autopilot**. Each handoff has to pass a gate before the next phase starts.
 
-> **Each phase separates a _guide_ (feedforward — domain-specific, swappable) from a _grader_ (feedback — agnostic).**
-> The pipeline ships the graders + neutral guide skeletons; a **profile** fills the guides for a domain.
+> **Each phase separates a _guide_ (feedforward — domain-specific, swappable) from its gate (feedback — agnostic).**
+> The pipeline ships the gates and neutral guide skeletons; a **profile** fills the guides for a domain.
 
-A phase produces its output, then a grader checks it before the handoff — that gate is what makes an autonomous loop worth trusting. It's one concrete take on the feedforward/feedback split the [article](https://roselabs-io.github.io/pro-code/two-reading-journeys.html) describes, not a framework.
+Two kinds of gate, and the distinction is load-bearing:
+
+- **Checks** are deterministic — tools and scripts. Type, lint, test, coverage, dependencies, security, logs, browser, infra. Cheap, reproducible, and they short-circuit. A check that passes is proof.
+- **Graders** are LLM judgment — completeness, drift, docs-currency. Expensive, run as isolated sub-agents with fresh context, author ≠ grader enforced. A grader that passes is an opinion, which is why they vote.
 
 ## The pipeline
 
-| Phase | Produces | Guide (swappable) | Grader (agnostic) |
+| Phase | Produces | Guide (swappable) | Gate (agnostic) |
 |---|---|---|---|
 | **Frame** | the spec — *what to build* | domain checklist + sources | **frame-completeness** — ✅ |
 | **Plan** | the decomposition — *the work* | design catalog | **plan-completeness** — ✅ |
 | **Implement** | the code | conventions · principles · CfRs | **code-verification-loop** — ✅ |
 | **Autopilot** | the run — *build the backlog* | tiers + waves (from Plan) | dispatches the loop per ticket — ✅ |
 
-The **code-verification-loop** is the keystone: an auto-fix arm (codemods) → deterministic graders (type · lint · test · **logs** · **browser**) → ~3 **isolated** fuzzy graders (feature · drift · docs), fix-once-and-re-grade, with an adversarial **N-vote** on the core promise. Author ≠ grader throughout.
+The **code-verification-loop** is the Implement gate: an auto-fix arm (codemods) → checks (type · lint · test · logs · browser) → ~3 isolated graders (feature · drift · docs), fix once, re-grade, with an adversarial N-vote on the core promise.
 
-The first grader is the highest-leverage one: **errors at Frame compound through every downstream step**, so the ask→Frame handoff is where a completeness gate pays the most. That's why Frame ships first.
+Frame ships first because errors in the spec compound through every downstream phase, so the ask→Frame handoff is where a completeness gate pays most.
 
 ## Layout
 
@@ -36,14 +39,14 @@ doc-patterns/                      neutral doc skeletons, grouped by role (see d
   living-docs/                       memory kept current across the build — current-state · backlog · decision-record · assumptions
   guides/                            standing feedforward — principles · cfrs
   doctrines/                         enforced posture — comment-doctrine · test-posture · readme-doctrine
-  harness/                           grader + CLI scaffolding — log-taxonomy · justfile
+  harness/                           gate + CLI scaffolding — log-taxonomy · justfile
 codemods/README.md                 the deterministic auto-fix arm (stage 0 of the loop)
-graders/frame-completeness.md      Frame grader (the done-signal ceremony)
-graders/plan-completeness.md       Plan grader (coverage gate + well-formedness)
-graders/code-verification-loop.md  the keystone — auto-fix · deterministic graders · isolated fuzzy graders · N-vote
-graders/browser-grader.md          Playwright — grade the running UI (what the user sees)
-graders/checks/doctrine_lint.py    special-lint grader — comment doctrine · test posture · domain forbids
-profiles/                          the guide/grader seam — domain overlays
+graders/                           LLM judgment — frame-completeness · plan-completeness ·
+                                     profile-completeness · code-verification-loop
+checks/                            deterministic — coverage · dependencies · security ·
+                                     browser (Playwright) · infra (build + boot) ·
+                                     doctrine_lint.py (comment doctrine · test posture · forbids)
+profiles/                          the guide/gate seam — domain overlays
   generic-saas/                    default profile — web CRUD SaaS  (built example #1)
   edge-telemetry/                  second profile — industrial alerting  (built example #2)
 examples/
@@ -51,7 +54,7 @@ examples/
   edge-telemetry-alerting/         #2 — UI slice, hard-done = no missed critical alert
 ```
 
-> The files under `skills/` and `graders/` are shared **byte-for-byte** by both domains. Everything domain-specific lives in the swapped `profiles/<domain>/` — that separation is the point.
+> The files under `skills/`, `graders/` and `checks/` are shared **byte-for-byte** by both domains. Everything domain-specific lives in the swapped `profiles/<domain>/`.
 
 ## Status
 
@@ -62,4 +65,4 @@ The pipeline runs end-to-end twice — two example services, each gated green.
 
 Two structurally-opposite domains — a CRUD API and a stream/rule engine — run through the **same skills and graders, byte-for-byte**; everything domain-specific lives in the swapped profile. In both, the tiering rubric refused to 🟢 agent-ship the core-promise tickets, and the grader — not author confidence — certified the hard-done.
 
-Each mechanism the [article](https://roselabs-io.github.io/pro-code/two-reading-journeys.html) describes shows up in at least one of the examples: codemods (a libcst transform), a logs grader, a browser grader (Playwright), isolated review agents (author ≠ grader), orchestrator-workers, and an adversarial refutation that independently re-checked the core promise.
+Each mechanism the [article](https://roselabs-io.github.io/pro-code/two-reading-journeys.html) describes shows up in at least one of the examples: codemods (a libcst transform), a logs check, a browser check (Playwright), isolated review agents (author ≠ grader), orchestrator-workers, and an adversarial refutation that independently re-checked the core promise.

@@ -5,13 +5,13 @@ description: "Phase 3 — build a ticket: author the code, then run it through t
 
 # Implement (phase 3 — build, then grade)
 
-Implement turns a **well-formed ticket** from Plan's backlog into **working, graded code**. It's the deepest, most pattern-rich phase — and the one that carries the pipeline's whole thesis: *produce the code, then grade it.* The graders are the point. Authoring is table stakes; **the back gate — the code graders — is the keystone**: it's what makes an autonomous loop trustworthy.
+Implement turns a **well-formed ticket** from Plan's backlog into **working, graded code**. The phase is *produce the code, then gate it*. The gate is what the phase is for: authoring is the easy half, and an unattended loop is only as good as what runs after it.
 
 Implement is **domain-neutral by design.** *What* commands prove it runs, *what* conventions the drift grader enforces, *what* the false-green traps are — all come from a **profile** (`profiles/<domain>/`), not this skill. This skill is the **mechanism**; the profile is the **content**. Default profile: `generic-saas`.
 
 ## One phase, three beats
 
-**author → verify → review.** Verify and review are **gates inside Implement**, not optional follow-ups — the work isn't done until it's proven to run *and* clean. The verify + review beats are run by the **code-verification loop** ([`graders/code-verification-loop.md`](../../graders/code-verification-loop.md)) — the keystone grader. This skill drives the beats; that doc is the engine.
+**author → verify → review.** Verify and review are **gates inside Implement**, not optional follow-ups — the work isn't done until it's proven to run *and* clean. The verify and review beats are run by the **code-verification loop** ([`graders/code-verification-loop.md`](../../graders/code-verification-loop.md)). This skill drives the beats; that document specifies the loop.
 
 **One ticket or the whole backlog.** This skill is *ticket-scoped* — the driver pulls one ticket and works it with you. To run the backlog at scale — fan out a worker per ticket across the dependency waves, each graded by isolated sub-agents — use [`skills/autopilot`](../autopilot/SKILL.md) (the orchestrator-workers runner). Autopilot dispatches; `implement` is what each worker runs.
 
@@ -37,11 +37,11 @@ Per ticket, in order — and if any is missing, **push back to Plan before writi
 1. **Read the context** (above).
 2. **Sketch the change** — out loud: "We're adding X, shaped by `<hook>`, touching these files. Anything missing?" Don't code yet.
 3. **Author** — code shaped to the design hook. The catalog is the *shape*; this code is the *adaptation*.
-4. **Verify + review** — hand the diff to the [code-verification loop](../../graders/code-verification-loop.md): deterministic graders first, then the fuzzy ones, fix once, re-grade, until green / capped / stalled.
+4. **Verify + review** — hand the diff to the [code-verification loop](../../graders/code-verification-loop.md): checks first, then the fuzzy ones, fix once, re-grade, until green / capped / stalled.
 5. **Maintain the living docs** — your second job (below).
 6. **Hand off the residual** — not the whole diff; the ~10% the loop couldn't resolve.
 
-Deliberate, not magical. One ticket at a time.
+One ticket at a time.
 
 ## No "done" without fresh evidence
 

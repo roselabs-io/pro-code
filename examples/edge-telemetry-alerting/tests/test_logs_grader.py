@@ -1,4 +1,4 @@
-"""Logs grader — the no-missed-critical promise proven from the TRACE, not the alert list.
+"""Logs check — the no-missed-critical promise proven from the TRACE, not the alert list.
 
 A breach fixture must leave an ALERT_RAISED{severity:critical} event; the nominal fixture
 must leave none.

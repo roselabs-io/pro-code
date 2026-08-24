@@ -1,6 +1,6 @@
 # Profile — `edge-telemetry` · check-commands
 
-The deterministic graders read this file directly — the **active-profile handshake** (the pipeline resolves
+The checks read this file directly — the **active-profile handshake** (the pipeline resolves
 the active profile's `check-commands.md`, never a hardcoded path). Split out of `implement-profile.md` so a
 grader reads one file for its command.
 
@@ -36,4 +36,4 @@ grader reads one file for its command.
   doctrine, not here).
 - **license allowlist** — MIT · BSD-2/3 · Apache-2.0 · ISC · PSF.
 - **manifest paths** — `pyproject.toml` + `uv.lock`.
-- **coverage exclude** — the served static HTML/JS view (the browser grader covers it, not unit coverage).
+- **coverage exclude** — the served static HTML/JS view (the browser check covers it, not unit coverage).

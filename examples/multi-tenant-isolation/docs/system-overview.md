@@ -11,7 +11,7 @@
 | Tenant-scoped store (`app/store.py`) | in-memory project store; **every** query takes a `workspace_id` and returns only matching rows — deny-by-default is enforced here, not in the handlers |
 | Request boundary (`app/main.py`) | FastAPI routes; every route depends on `get_caller`; scopes at the store, then applies the role gate |
 | Error envelope (`app/errors.py`) | typed `{status, code, detail}` responses; chooses 404 vs 403 deliberately; no bare 500 for expected failures |
-| Structured log (`app/log.py`) | emits stable-code events (`PROJECT_CREATED`, `CROSS_TENANT_DENIED`, …) the logs grader reads |
+| Structured log (`app/log.py`) | emits stable-code events (`PROJECT_CREATED`, `CROSS_TENANT_DENIED`, …) the logs check reads |
 | Boundary codemod (`codemods/require_caller_dep.py`) | deterministic check that **every** route carries the `get_caller` dependency (drift can't sneak an unguarded route in) |
 
 ## Key dataflows

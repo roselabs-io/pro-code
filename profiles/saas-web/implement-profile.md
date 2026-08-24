@@ -8,7 +8,7 @@ proven the way isolation was in `generic-saas`: by an integration test on the re
 e2e test on the rendered surface, then held under the adversarial N-vote. The grader, not confidence,
 certifies it.
 
-> **This profile mandates** (its opinionated subset — the union of the SaaS *and* UI opinions, plus deploy): a **codemod** (every protected router depends on `get_current_user`), the **logs grader**, an **integration test per endpoint against a real Postgres**, the **browser grader + an e2e test**, an **a11y check** (`axe`), **visual-regression snapshots**, and the **infra grader** (`deploys: true`). The `no-print` / `no-bare-except` / `no-raw-color` / `no-create-all-in-app` special-lints.
+> **This profile mandates** (its opinionated subset — the union of the SaaS *and* UI opinions, plus deploy): a **codemod** (every protected router depends on `get_current_user`), the **logs check**, an **integration test per endpoint against a real Postgres**, the **browser check + an e2e test**, an **a11y check** (`axe`), **visual-regression snapshots**, and the **infra grader** (`deploys: true`). The `no-print` / `no-bare-except` / `no-raw-color` / `no-create-all-in-app` special-lints.
 > **It skips**: nothing agnostic — it's the fullest profile. `schema-validation` is declared n/a (pydantic + TS types validate at the edges).
 
 ## Stack + layout
@@ -40,9 +40,9 @@ Commands, thresholds, and allowlists live in this profile's [`check-commands.md`
 - **LSP (guide):** `mypy app/` (backend) + `tsc --noEmit` (frontend) — types/refs while authoring. Advisory, not a gate step this slice.
 - **Environment + CLIs (guide):** **uv** (`uv sync`) + **pnpm** + a **`justfile`** (`just gate`) whose recipes call `uv run` / `pnpm`. Template: `doc-patterns/harness/justfile`.
 - **Codemods (auto-fix arm):** codemod-lite = `ruff check --fix . && ruff format .` + `eslint --fix && prettier -w` every gate; one **libcst** codemod enforcing that **every protected route depends on `get_current_user`** (the boundary convention, across `app/api/`). See the example's `codemods/`.
-- **Logs grader:** structured events per `doc-patterns/harness/log-taxonomy.md` — `HANDLER_RAN`, `AUTH_DENIED{reason}`, `DRAFT_ACCESS_DENIED{post,requester}`. The grader replays an anonymous request for a draft and asserts `DRAFT_ACCESS_DENIED` fired (the *no-draft-leak* promise proven from the trace, not the 404 alone).
-- **Browser grader (LIVE here):** `has_ui: true`. Playwright drives the running app; **`visual_invariant`: a draft never appears in the DOM for an anonymous session, and an author-only control (edit/delete) never renders for a reader.** The only grader that catches a client rendering withheld content while every API test stays green.
-- **Infra grader (LIVE here):** `deploys: true`. `docker compose build` + bring the stack up + a smoke check (the API `/health` is 200, the web root serves, a migration ran) — "it builds and boots" is part of done. See [`../../graders/infra-grader.md`](../../graders/infra-grader.md).
+- **Logs check:** structured events per `doc-patterns/harness/log-taxonomy.md` — `HANDLER_RAN`, `AUTH_DENIED{reason}`, `DRAFT_ACCESS_DENIED{post,requester}`. The grader replays an anonymous request for a draft and asserts `DRAFT_ACCESS_DENIED` fired (the *no-draft-leak* promise proven from the trace, not the 404 alone).
+- **Browser check (LIVE here):** `has_ui: true`. Playwright drives the running app; **`visual_invariant`: a draft never appears in the DOM for an anonymous session, and an author-only control (edit/delete) never renders for a reader.** The only grader that catches a client rendering withheld content while every API test stays green.
+- **Infra check (LIVE here):** `deploys: true`. `docker compose build` + bring the stack up + a smoke check (the API `/health` is 200, the web root serves, a migration ran) — "it builds and boots" is part of done. See [`../../checks/infra.md`](../../checks/infra.md).
 
 ## Doctrines this profile mandates
 
@@ -85,7 +85,7 @@ Commands, thresholds, and allowlists live in this profile's [`check-commands.md`
   - **`200 ≠ the handler ran`** — assert the *effect* (a row changed, a draft *absent* from the payload), not the status.
   - **happy-path-only** — an endpoint with no auth-denied / validation / not-found / non-owner case is under-tested; the per-endpoint matrix is the floor.
   - **e2e asserts the positive, not the negative** — a test that a *published* post renders says nothing about whether a **draft leaks**; assert the withheld thing is **absent** for the anonymous session.
-  - **client renders what the API withheld** — the API returns only published, but a template/route bug renders a draft or an author-only control to a reader; the browser grader is the only catch.
+  - **client renders what the API withheld** — the API returns only published, but a template/route bug renders a draft or an author-only control to a reader; the browser check is the only catch.
   - **serialization drops a falsy field** — a `false`/`0`/`""` silently missing looks like "not returned"; assert presence.
   - **no red-green on a fix** — a regression test never seen to fail first proves nothing.
 

@@ -1,4 +1,4 @@
-"""Demo seed — a deterministic monitor state for the dashboard + browser grader.
+"""Demo seed — a deterministic monitor state for the dashboard + browser check.
 
 One nominal signal, one CRITICAL (overpressure), one stale (dropped) — so the rendered
 view exercises both the red-critical path and the '— stale' invariant.

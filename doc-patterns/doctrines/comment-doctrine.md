@@ -4,7 +4,7 @@
 > why-not, the history, or a ticket number. The durable home for *why* is the commit / ADR;
 > inline bloat is noise every future reader has to read past.
 > Pulled from `doc-patterns/doctrines/comment-doctrine.md`. The **regex-able subset is enforced
-> deterministically** (`graders/checks/doctrine_lint.py`); the judgment cases are the fuzzy
+> deterministically** (`checks/doctrine_lint.py`); the judgment cases are the fuzzy
 > drift grader's job.
 
 ## Banned (the deterministic floor — the linter flags these)

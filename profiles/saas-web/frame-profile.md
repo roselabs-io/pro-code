@@ -30,11 +30,11 @@ List the *product* this app adds — the resources, who may see/change them, and
 
 ## `has_ui` *(must)*
 
-- **`has_ui`:** true — the React frontend. The browser grader + UI-sketch gate are **live** for this profile.
+- **`has_ui`:** true — the React frontend. The browser check + UI-sketch gate are **live** for this profile.
 
 ## `deploys` *(must — new hook, see the infra grader)*
 
-- **`deploys`:** true — the app ships as a Docker Compose stack; the **infra grader** (`graders/infra-grader.md`) gates that it builds and boots. A profile that doesn't deploy (e.g. `generic-saas`) sets this false and the infra grader is declared n/a.
+- **`deploys`:** true — the app ships as a Docker Compose stack; the **infra grader** (`checks/infra.md`) gates that it builds and boots. A profile that doesn't deploy (e.g. `generic-saas`) sets this false and the infra grader is declared n/a.
 
 ## Principles + CfRs (feedforward guides)
 

@@ -23,7 +23,7 @@ The shapes Plan routes tickets against — a full-stack set centered on the visi
 | `structured-error-envelope` | any failure response — a typed `{status, code, detail}`, never a bare 500 or a leaked stack; the status (404 vs 403) is chosen deliberately. |
 | `react-query-data-view` | any view that fetches — data via React Query (fetch + mutation); the view renders **loading · empty · error** states, not just the happy path. |
 | `mui-themed-component` | any rendered component — built from **MUI + theme tokens**; no raw hex, no magic px, no ad-hoc element where an MUI one exists. The styling-discipline shape. |
-| `write-through-audit-log` | any state mutation or denied access — emit a structured **log event** (a stable code) as it lands, so the logs grader can prove the handler ran / the denial fired. |
+| `write-through-audit-log` | any state mutation or denied access — emit a structured **log event** (a stable code) as it lands, so the logs check can prove the handler ran / the denial fired. |
 
 *(Add shapes as real builds surface them; flag `novel` tickets for promotion once they stabilize.)*
 

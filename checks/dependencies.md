@@ -1,4 +1,4 @@
-# dependencies — supply-chain gate (deterministic · tier-1)
+# Check — dependencies (supply-chain gate · tier-1)
 
 Grades **new or changed dependencies** in the diff: vetted, vuln-free, lockfile-consistent, license-clean.
 Deterministic, tier-1, short-circuits — a known-vulnerable dep must never reach a fuzzy lens. Agnostic: the
@@ -38,7 +38,7 @@ grade(diff, rubric=<audit + license + manifest>, context)
 
 Deterministic — facts. **Scoped to deps the diff introduces or bumps**, not a full-tree audit every gate
 (that's a periodic job, not a per-change gate — the whole tree doesn't change every ticket). See
-[`code-verification-loop.md`](code-verification-loop.md) · [`../profiles/CONTRACT.md`](../profiles/CONTRACT.md).
+[`code-verification-loop.md`](../graders/code-verification-loop.md) · [`../profiles/CONTRACT.md`](../profiles/CONTRACT.md).
 
 > **Provenance:** built independently in pro-code and DTS, then cross-checked — the core design converged.
 > The hard-fail-on-critical + scoped-to-diff-not-full-tree framing originated here and were adopted in both.

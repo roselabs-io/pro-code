@@ -27,8 +27,8 @@ List the *monitoring logic this product adds* — rule evaluation, staleness, al
 ## Principles + CfRs (feedforward guides)
 
 - **Principles** (`doc-patterns/guides/principles.md`): *missing data is a fact, not a gap — absence alerts*; *a per-signal fault must not halt the whole station* (severity scoping).
-- **CfRs that bite** (`doc-patterns/guides/cfrs.md`): **Safety/Reliability** (no missed critical alert — hard, fixture-replay), **Observability** (every alert open/clear emits a structured event the logs grader reads), **Accessibility** (the dashboard's status is not colour-only — the browser grader checks the text label too).
-- **`has_ui`:** true — the monitoring dashboard. The browser grader + UI-sketch gate are **live** for this profile.
+- **CfRs that bite** (`doc-patterns/guides/cfrs.md`): **Safety/Reliability** (no missed critical alert — hard, fixture-replay), **Observability** (every alert open/clear emits a structured event the logs check reads), **Accessibility** (the dashboard's status is not colour-only — the browser check checks the text label too).
+- **`has_ui`:** true — the monitoring dashboard. The browser check + UI-sketch gate are **live** for this profile.
 
 ## Grader bar (consumed by `frame-completeness`)
 

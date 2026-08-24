@@ -20,5 +20,5 @@ Every non-trivial choice either traces to a **declared source** (profile choice-
 | {TODO: e.g., in-memory store, not a DB} | spec / Plan seed | yes | — (declared) |
 | {TODO: e.g., HS256 for the JWT} | agent default | no | flag — driver confirms the algorithm |
 
-> The point is the **`no`** rows: a choice with no declared source is a silent bias until it's
+> The **`no`** rows are what the ledger is for: a choice with no declared source is a silent bias until it's
 > here. An empty ledger means *either* everything was declared *or* nobody looked — say which.

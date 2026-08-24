@@ -24,7 +24,7 @@ Domain: a CRUD SaaS backend — **Python + FastAPI, API-only** (no frontend). Th
 
 - **Principles** (`doc-patterns/guides/principles.md`): *deny by default* — an unscoped query returns nothing, not a leak; *enforce at the boundary, not the caller*.
 - **CfRs that bite** (`doc-patterns/guides/cfrs.md`): **Security** (tenant isolation — hard, isolation test), **Observability** (every denied cross-tenant attempt logs a structured event), **Maintainability** (lint + comment-doctrine). A biting CfR with no verifiable bar is a 🔴 for the plan grader.
-- **`has_ui`:** false — API-only; no UI sketch and no browser grader (that's the `edge-telemetry` profile's territory).
+- **`has_ui`:** false — API-only; no UI sketch and no browser check (that's the `edge-telemetry` profile's territory).
 
 ## Grader bar (consumed by `frame-completeness`)
 

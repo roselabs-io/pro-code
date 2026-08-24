@@ -10,7 +10,7 @@
 | Severity enum (`engine/severity.py`) | the one source of truth for severity constants (`Severity.CRITICAL/WARNING/INFO`); the only place the strings live (`doctrine: allow`) |
 | Monitor (`engine/monitor.py`) | the rule engine — ingests readings, maintains per-signal state, applies level+hysteresis+debounce, staleness, dedup, out-of-order tolerance; opens/clears alerts |
 | Replay (`engine/replay.py`) | feeds a recorded fixture (JSONL) through the monitor and returns the resulting state/alerts — the deterministic verify harness |
-| Structured log (`engine/log.py`) | emits `ALERT_RAISED{signal,severity}` / `ALERT_CLEARED` the logs grader reads |
+| Structured log (`engine/log.py`) | emits `ALERT_RAISED{signal,severity}` / `ALERT_CLEARED` the logs check reads |
 | Dashboard API (`dashboard/app.py`) | FastAPI `/state` — the monitor's current per-signal state as JSON (staleness computed against the query clock) |
 | Dashboard view (`dashboard/index.html`) | the served static view — polls `/state`, renders value/status, stale as "— stale", critical as red, with a text label (not colour-only) |
 

@@ -17,7 +17,7 @@ Domain: {TODO: one line — what this domain builds and the stack}.
 {TODO: phase-specific blockers that must be pinned before Plan, or "none"}
 
 ## `has_ui` *(must)*
-{TODO: true/false — gates the UI-sketch hard gate + the browser grader}
+{TODO: true/false — gates the UI-sketch hard gate + the browser check}
 
 ## Grader bar *(must — consumed by `frame-completeness`)*
 - **`verifiable_means`:** {TODO: what "verifiable" means here}

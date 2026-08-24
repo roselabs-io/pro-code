@@ -32,10 +32,10 @@ Matches the hook shape the profiles already use (`profiles/README.md`, `generic-
 - `hard_gates` *(may)* — phase-specific blockers (e.g. isolation rules pinned before Plan).
 - `grader_bar` *(must)* — `verifiable_means`, `usual_silent_gaps`, the clean-handoff bar (consumed by
   [`graders/frame-completeness.md`](../graders/frame-completeness.md)).
-- `has_ui` *(must)* — gates the UI-sketch hard gate + the browser grader.
+- `has_ui` *(must)* — gates the UI-sketch hard gate + the browser check.
 - `deploys` *(must)* — whether the profile ships a deployable stack; gates the **infra grader**
-  ([`../graders/infra-grader.md`](../graders/infra-grader.md)). An **additive** extension (same shape as
-  `has_ui` + browser-grader): a non-deploying profile sets it false and declares the infra grader n/a — no
+  ([`../checks/infra.md`](../checks/infra.md)). An **additive** extension (same shape as
+  `has_ui` + browser check): a non-deploying profile sets it false and declares the infra grader n/a — no
   skill or existing-grader change. *(v1 — first exercised by `saas-web`.)*
 
 **Plan** *(`plan-profile.md`)*
@@ -51,7 +51,7 @@ Matches the hook shape the profiles already use (`profiles/README.md`, `generic-
 - `living_docs` *(must)* — the docs-currency grader's set.
 
 **Check commands** *(`check-commands.md` — a separate file · the active-profile handshake)*
-- `check_commands` *(must)* — every deterministic grader (lint · tests · type-check · doctrine-lint ·
+- `check_commands` *(must)* — every check (lint · tests · type-check · doctrine-lint ·
   **security** · **coverage** · **deps** · schema · logs) reads its command + threshold + allowlist from
   `profiles/<active-profile>/check-commands.md`, resolved at run time (never hardcoded). Split out of
   `implement-profile.md` so a grader reads one file for its command and profile-switching is explicit. An
@@ -63,7 +63,7 @@ Matches the hook shape the profiles already use (`profiles/README.md`, `generic-
 ## Composition — how the layers combine
 
 `/review-gate` (or the code-verification loop) composes, in order:
-1. **agnostic graders** (`graders/`, `graders/checks/`) — always run;
+1. **agnostic checks and graders** (`checks/`, `graders/`) — always run;
 2. **active domain profile** — its rubrics, check-commands, and any `profiles/<domain>/graders/`;
 3. **optional personal overlay** — its *additional* rows/forbids + `profiles/personal/<name>/graders/`.
 
@@ -84,7 +84,7 @@ not only a lint rule" step). A profile grader is a `.md` def in the profile's `g
 
 **Budget:** deterministic profile graders are unlimited (cheap, factual). **Fuzzy** graders stay at **~3**
 — but the cap is on the **shared** set (agnostic + domain), where too many blur. A **personal overlay**'s
-fuzzy grader is the person's *opt-in* and rides as a justified **+1** above the shared cap (you're
+grader is the person's *opt-in* and rides as a justified **+1** above the shared cap (you're
 tightening on yourself, not the team). GATE-0 **warns** when the composed set exceeds ~3; it does **not**
 block — a warned 4 that's `feature · drift · docs-currency · <a personal-voice grader>` is expected, not a
 defect. *(Confirmed by the cold run: 4 composed graders held, all stayed sharp.)*
