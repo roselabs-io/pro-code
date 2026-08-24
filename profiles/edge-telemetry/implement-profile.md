@@ -4,7 +4,7 @@ Domain: industrial edge telemetry monitoring + alerting. Completes the trio. Con
 
 The hard-done requirement — **no missed critical alert** — is proven the way isolation was in `generic-saas`: by replaying recorded fixtures and asserting the exact alert output. The grader, not confidence, certifies it.
 
-> **This profile mandates** (its opinionated subset — deliberately *different* from generic-saas): the **browser grader** + an **e2e test** (it has a dashboard), **fixture-replay per rule** (fire + no-fire), the **logs grader**, and the `severity-constant` special-lint.
+> **This profile mandates** (its opinionated subset — deliberately *different* from generic-saas): the **browser check** + an **e2e test** (it has a dashboard), **fixture-replay per rule** (fire + no-fire), the **logs check**, and the `severity-constant` special-lint.
 > **It skips**: the **codemod** (this domain's drift is caught by the drift grader, not bulk transforms — so no `codemods/` here), and the `no-print` lint (the engine has no request handlers to police).
 
 ## Stack + layout
@@ -37,8 +37,8 @@ drift caught by the drift grader). See `check-commands.md` for the commands + th
 - **LSP (guide):** `mypy engine/` — types/refs while authoring. Advisory, not a gate step in this slice.
 - **Environment + CLIs (guide):** **uv** for deps/venv (`uv sync`) + a `justfile` runner (`just gate`) whose recipes call `uv run`. Template: `doc-patterns/harness/justfile`. *(The env tool and runner are a profile choice: this profile picks uv + a justfile; `generic-saas` picks poetry + no justfile.)*
 - **Codemods (auto-fix arm):** codemod-lite = `ruff check --fix . && ruff format .` every gate. (A semantic codemod is optional here; the domain's drift is caught more by the drift grader than by bulk transforms.)
-- **Logs grader:** structured events per `doc-patterns/harness/log-taxonomy.md` — `ALERT_RAISED{signal,severity}`, `ALERT_CLEARED`. The grader replays a breach fixture and asserts `ALERT_RAISED{severity:critical}` fired (the *no-missed-critical* promise proven from the trace, not just the active-alert list).
-- **Browser grader (LIVE here):** `has_ui: true`. Playwright drives the running dashboard; **`visual_invariant`: a stale signal renders "— stale", never a number, and a CRITICAL row renders red.** The only grader that catches a template rendering last-good over a stale flag while every API test stays green.
+- **Logs check:** structured events per `doc-patterns/harness/log-taxonomy.md` — `ALERT_RAISED{signal,severity}`, `ALERT_CLEARED`. The grader replays a breach fixture and asserts `ALERT_RAISED{severity:critical}` fired (the *no-missed-critical* promise proven from the trace, not just the active-alert list).
+- **Browser check (LIVE here):** `has_ui: true`. Playwright drives the running dashboard; **`visual_invariant`: a stale signal renders "— stale", never a number, and a CRITICAL row renders red.** The only grader that catches a template rendering last-good over a stale flag while every API test stays green.
 
 ## Doctrines this profile mandates
 
@@ -46,7 +46,7 @@ drift caught by the drift grader). See `check-commands.md` for the commands + th
 - **README doctrine** (`doc-patterns/doctrines/readme-doctrine.md`) — shared/universal. The service README carries a "Run it" section: set up the env (`uv sync`), run `just gate`, launch (`just demo`). Checked by the docs-currency grader.
 - **Test posture** (`doc-patterns/doctrines/test-posture.md`) — this domain's opinion:
   - **Fixture-replay per rule** — every alert rule owes a **fire** fixture and a **no-fire** fixture; a never-firing rule passes a no-alert-only test trivially.
-  - **An e2e test, because there is a frontend** — the browser grader drives the running dashboard and asserts the visual invariant. A UI-bearing profile *owes* this layer.
+  - **An e2e test, because there is a frontend** — the browser check drives the running dashboard and asserts the visual invariant. A UI-bearing profile *owes* this layer.
   - Plus the floor: every test asserts; no silent skip; red-green on a fix.
 
 ## Special-lint (the domain forbids — `doctrine_lint.py --forbid`)

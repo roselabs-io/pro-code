@@ -1,4 +1,4 @@
-# coverage — changed-line test coverage (deterministic · tier-1)
+# Check — coverage (changed-line test coverage · tier-1)
 
 Grades whether the **diff's** new/changed lines are exercised by tests — a *delta* check, not a whole-repo
 percentage. Deterministic, tier-1, short-circuits. Agnostic: the *rule* (changed lines must be covered; a
@@ -15,7 +15,7 @@ come from the profile.
 ## Preconditions are findings
 
 A change with **no test at all** is the loudest finding — *"untested change"* — never a silent pass (the
-precondition-is-a-finding rule). The fix pass can *write* the missing test; this grader's job is to refuse
+precondition-is-a-finding rule). The fix pass can *write* the missing test; this check's job is to refuse
 to call it done without one. Non-coverable lines (pure declarations, generated code) are excluded per the
 profile — declared, not hand-waved.
 
@@ -35,7 +35,7 @@ grade(diff, rubric=<coverage_command + floor>, context)
 Deterministic. **Coverage proves a line *ran* under test — not that the test *asserts* the right thing.**
 That's the feature grader + the test-posture floor. Pair them: coverage = reach, posture = quality; a
 line can be 100% covered by an assert-less smoke test and still be untested in the way that matters. See
-[`code-verification-loop.md`](code-verification-loop.md) ·
+[`code-verification-loop.md`](../graders/code-verification-loop.md) ·
 [`../doc-patterns/doctrines/test-posture.md`](../doc-patterns/doctrines/test-posture.md).
 
 > **Provenance:** built independently in pro-code and DTS, then cross-checked — the core design converged

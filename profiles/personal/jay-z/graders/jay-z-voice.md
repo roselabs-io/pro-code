@@ -5,7 +5,7 @@ doctrine, never instead of it. Copy-target contract: [`../../../_skeleton/grader
 
 ## kind
 `fuzzy` — a fresh sub-agent, one rubric. Counts against the ~3 fuzzy budget (agnostic + domain +
-personal). Advisory, like every fuzzy grader.
+personal). Advisory, like every grader.
 
 ## rubric_source
 Inline (below). The orchestrator injects this text into the grader sub-agent's prompt.

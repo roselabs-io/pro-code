@@ -14,7 +14,7 @@ the doctrine), never less. GATE-0 warns that the composed fuzzy set is 4 (featur
 
 - **Deny by default at the store** — every query scoped by `workspace_id`; a foreign id returns nothing.
 - **Scope before role** — a cross-tenant delete 404s before the admin gate, so 403 never leaks existence (`decisions/0002`).
-- **Proven from the trace** — every denial emits `CROSS_TENANT_DENIED{workspace,target}`; the logs grader asserts it.
+- **Proven from the trace** — every denial emits `CROSS_TENANT_DENIED{workspace,target}`; the logs check asserts it.
 - **Guarded against drift** — `codemods/require_caller_dep.py` enforces `Depends(get_caller)` on every route.
 
 ## The voice (a taste of what the overlay demands)
@@ -39,8 +39,8 @@ Both carry the swagger *and* pass `doctrine_lint.py` — one line, stating what 
    ```sh
    poetry run ruff check app tests codemods
    poetry run pytest --cov=app --cov-report=term-missing
-   python3 ../../graders/checks/doctrine_lint.py app tests
-   python3 ../../graders/checks/doctrine_lint.py app --forbid 'print\(@@use LOG' --forbid 'except\s*:@@no bare except'
+   python3 ../../checks/doctrine_lint.py app tests
+   python3 ../../checks/doctrine_lint.py app --forbid 'print\(@@use LOG' --forbid 'except\s*:@@no bare except'
    python3 codemods/require_caller_dep.py --check app/main.py
    poetry run bandit -q -r app && poetry run detect-secrets scan app tests
    poetry export --only main --without-hashes | poetry run pip-audit -r /dev/stdin
@@ -56,6 +56,6 @@ Both carry the swagger *and* pass `doctrine_lint.py` — one line, stating what 
 ```
 app/        the service — same logic as #1, every comment re-voiced (doctrine-clean)
 codemods/   require_caller_dep.py — boundary-dependency enforcement across handlers
-tests/      integration tests per endpoint + the isolation + logs graders
+tests/      integration tests per endpoint + the isolation + logs checks
 docs/       the living spec + build memory
 ```

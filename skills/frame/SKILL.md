@@ -5,7 +5,7 @@ description: "Phase 1 — turn upstream material, or an interactive brainstorm w
 
 # Frame (phase 1 — the spec)
 
-Frame turns whatever context exists into a **reviewed spec** the downstream phases build against. It's the first phase and the highest-leverage one: a vague or wrong spec here compounds through Plan and Implement, so Frame **closes with a grader** — [`graders/frame-completeness.md`](../../graders/frame-completeness.md) — before anything hands off.
+Frame turns whatever context exists into a **reviewed spec** the downstream phases build against. It runs first: a vague or wrong spec compounds through Plan and Implement, so Frame **closes with a grader** — [`graders/frame-completeness.md`](../../graders/frame-completeness.md) — before anything hands off.
 
 Frame is **domain-neutral by design.** *What* questions to ask, *what* sources to expect, and *what* sections a spec needs come from a **profile** (`profiles/<domain>/`), not from this skill. This skill is the **mechanism**; the profile is the **content**. Default profile: `generic-saas`.
 

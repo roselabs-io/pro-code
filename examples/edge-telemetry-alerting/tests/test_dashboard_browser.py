@@ -1,4 +1,4 @@
-"""Browser grader — the visual invariant on the RUNNING dashboard.
+"""Browser check — the visual invariant on the RUNNING dashboard.
 
 Playwright drives the live view and asserts the DOM: a stale signal shows '— stale'
 (never a number), a CRITICAL row renders red AND carries a text label (not colour-only).

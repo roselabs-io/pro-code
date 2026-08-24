@@ -38,9 +38,9 @@ profiles produce correct, gated builds from the profile alone. CLEAN-ROOM: you h
    dangling ref, or malformed grader → STOP and report; don't work around it.
 2. Frame → Plan → Implement per skills/. Produce BOTH the code AND the living docs (doc-patterns/living-docs
    — current-state, backlog, assumptions, decisions).
-3. Verify loop: deterministic graders first (commands from the profile's check-commands.md — lint · tests ·
+3. Verify loop: checks first (commands from the profile's check-commands.md — lint · tests ·
    type-check · doctrine-lint · special-lint · security · coverage · deps · [codemod for #1/#3] · logs ·
-   [browser for #2]), short-circuit; then the ~3 fuzzy graders (feature · drift · docs-currency; + jay-z-voice
+   [browser for #2]), short-circuit; then the ~3 graders (feature · drift · docs-currency; + jay-z-voice
    for #3), fix once, re-grade. On the core promise, run the adversarial N-vote.
 
 ## Report at the end (per build)

@@ -42,7 +42,7 @@ Plan predicted a tier per ticket; autopilot routes on it:
 ## Two rules that keep it honest
 
 - **Pickup re-check (the runtime tier confirmation).** Before a worker commits to a 🟢/🟡 ticket, it reads the real context and **bails to the handoff if reality contradicts the tier** — a ticket that looked shippable but touches a boundary the spec missed is escalated, not forced. Plan predicts; the worker confirms; the verify gate arbitrates.
-- **Isolated graders (author ≠ grader, enforced).** A worker never grades its own output. Autopilot runs the fuzzy graders as **separate sub-agents with fresh context** — the generative/adversarial split made structural.
+- **Isolated graders (author ≠ grader, enforced).** A worker never grades its own output. Autopilot runs the graders as **separate sub-agents with fresh context** — the generative/adversarial split made structural.
 
 ## Parallelization — waves, not a free-for-all
 

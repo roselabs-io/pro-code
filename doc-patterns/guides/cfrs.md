@@ -14,8 +14,8 @@ Score each: **bites** (a hard requirement for this build) · **baseline** (a def
 | Security | {TODO} | {TODO: e.g., "no cross-tenant read/write; asserted by an isolation test"} | test / review |
 | Reliability / Safety | {TODO} | {TODO: e.g., "no missed critical alert; fixture-replay"} | test |
 | Performance | {TODO} | {TODO: e.g., "p95 < 200ms"} | load check |
-| Observability | {TODO} | {TODO: e.g., "every state change emits a structured log the logs-grader reads"} | logs grader |
-| Accessibility | {TODO} | {TODO} | browser grader |
+| Observability | {TODO} | {TODO: e.g., "every state change emits a structured log the logs-grader reads"} | logs check |
+| Accessibility | {TODO} | {TODO} | browser check |
 | Scalability | {TODO} | {TODO} | — |
 | Maintainability | {TODO} | {TODO: e.g., "lint + type clean; comment-doctrine"} | static analysis |
 

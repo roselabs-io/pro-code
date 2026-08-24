@@ -16,15 +16,15 @@ memory (`current-state`, `backlog`, `decisions/`, `assumptions`).
 - **No transient spikes** — a debounce count holds N samples before firing.
 - **No storm** — a burst dedups into one active alert with an occurrence count.
 - **No resurrection** — a late earlier-ts reading can't reopen a cleared alert.
-- **Proven from the trace** — every alert emits `ALERT_RAISED{signal,severity}` / `ALERT_CLEARED`; the logs grader asserts the critical fired.
-- **Proven on screen** — a Playwright browser grader drives the running dashboard and asserts the stale row shows "— stale" and the critical row renders red + a text label (not colour-only).
+- **Proven from the trace** — every alert emits `ALERT_RAISED{signal,severity}` / `ALERT_CLEARED`; the logs check asserts the critical fired.
+- **Proven on screen** — a Playwright browser check drives the running dashboard and asserts the stale row shows "— stale" and the critical row renders red + a text label (not colour-only).
 
 ## Run it
 
 1. **Set up the environment**
    ```sh
    uv sync
-   uv run playwright install chromium   # for the browser grader only
+   uv run playwright install chromium   # for the browser check only
    ```
 2. **Run the gate** (`just gate` runs them in short-circuit order)
    ```sh
@@ -45,6 +45,6 @@ engine/     the rule engine — config · severity · models · monitor · repla
 dashboard/  the served view — app (/state) · index.html · seed
 config/     station.toml — the signal catalog + thresholds (config-driven)
 fixtures/   recorded telemetry (JSONL) — fire + no-fire per rule
-tests/      fixture-replay per rule + the /state + logs + Playwright browser graders
+tests/      fixture-replay per rule + the /state + logs + Playwright browser checks
 docs/       the living spec + build memory
 ```

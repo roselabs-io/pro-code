@@ -1,11 +1,11 @@
 # Profile — `{domain}` · check-commands
 
-The deterministic graders read this file directly for their commands, thresholds, and allowlists — the
+The checks read this file directly for their commands, thresholds, and allowlists — the
 **active-profile handshake**: the pipeline resolves `profiles/<active-profile>/check-commands.md` at run
 time, never a hardcoded path. Swap the profile → the graders read the new commands, unchanged. Split out
 of `implement-profile.md` so each grader reads *one* file for its command and profile-switching is explicit.
 
-## Commands *(must — one row per deterministic grader this domain runs)*
+## Commands *(must — one row per check this domain runs)*
 
 | grader | command | rule / threshold |
 |---|---|---|

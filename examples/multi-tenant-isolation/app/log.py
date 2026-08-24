@@ -27,7 +27,7 @@ def emit(code: str, level: str = "info", **fields: Any) -> None:
 
 
 def events() -> list[dict[str, Any]]:
-    """Return the events emitted so far — the logs grader reads this in-process."""
+    """Return the events emitted so far — the logs check reads this in-process."""
     return list(_sink)
 
 

@@ -1,6 +1,6 @@
 # Profile — `generic-saas` · check-commands
 
-The deterministic graders read this file directly — the **active-profile handshake** (the pipeline resolves
+The checks read this file directly — the **active-profile handshake** (the pipeline resolves
 the active profile's `check-commands.md`, never a hardcoded path). Split out of `implement-profile.md` so a
 grader reads one file for its command.
 

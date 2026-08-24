@@ -12,7 +12,7 @@ living spec (`functional-analysis`, `system-overview`, `surfaces/projects`) and 
 
 - **Deny by default at the store** — every query is scoped by `workspace_id`; a foreign id returns nothing.
 - **Scope before role** — a cross-tenant delete 404s before the admin gate runs, so 403 never leaks existence (`decisions/0002`).
-- **Proven from the trace** — every denial emits `CROSS_TENANT_DENIED{workspace,target}`; the logs grader asserts it fired.
+- **Proven from the trace** — every denial emits `CROSS_TENANT_DENIED{workspace,target}`; the logs check asserts it fired.
 - **Guarded against drift** — `codemods/require_caller_dep.py` enforces `Depends(get_caller)` on every route.
 
 ## Run it
@@ -26,8 +26,8 @@ living spec (`functional-analysis`, `system-overview`, `surfaces/projects`) and 
    ```sh
    poetry run ruff check app tests codemods
    poetry run pytest --cov=app --cov-report=term-missing
-   python3 ../../graders/checks/doctrine_lint.py app tests
-   python3 ../../graders/checks/doctrine_lint.py app --forbid 'print\(@@use LOG' --forbid 'except\s*:@@no bare except'
+   python3 ../../checks/doctrine_lint.py app tests
+   python3 ../../checks/doctrine_lint.py app --forbid 'print\(@@use LOG' --forbid 'except\s*:@@no bare except'
    python3 codemods/require_caller_dep.py --check app/main.py
    poetry run bandit -q -r app && poetry run detect-secrets scan app tests
    poetry export --only main --without-hashes | poetry run pip-audit -r /dev/stdin
@@ -50,6 +50,6 @@ curl -H "Authorization: Bearer $TOKEN" localhost:8000/projects
 ```
 app/        the service — auth · store (scoped) · main (routes) · errors · log · config
 codemods/   require_caller_dep.py — boundary-dependency enforcement across handlers
-tests/      integration tests per endpoint + the isolation + logs graders
+tests/      integration tests per endpoint + the isolation + logs checks
 docs/       the living spec + build memory
 ```

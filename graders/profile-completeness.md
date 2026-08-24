@@ -11,7 +11,7 @@ any profile-authored graders. It's the "is the profile ready?" ceremony, the mir
 **A domain profile** (`profiles/<domain>/`):
 - **every *(must)* slot is filled** — no `{TODO}` left in `frame|plan|implement-profile.md`;
 - **referenced files resolve** — the guides/doc-patterns the profile names exist;
-- **`has_ui` is set** — it gates the UI-sketch hard gate + the browser grader.
+- **`has_ui` is set** — it gates the UI-sketch hard gate + the browser check.
 
 **A personal overlay** (`profiles/personal/<name>/`) — a *lighter* bar:
 - it's **additive-only** — flag any row/forbid that tries to *relax or remove* a domain/agnostic rule;
@@ -21,7 +21,7 @@ any profile-authored graders. It's the "is the profile ready?" ceremony, the mir
 **Any profile-shipped grader** (`profiles/<x>/graders/*.md`):
 - **conforms to the contract** — declares `kind` (deterministic|fuzzy) + `rubric_source`, and states a
   checkable assertion (not "handle X well");
-- the **shared fuzzy set** (agnostic + domain) stays **within ~3**; a personal overlay's fuzzy grader is an
+- the **shared fuzzy set** (agnostic + domain) stays **within ~3**; a personal overlay's grader is an
   opt-in **+1** — warn on the composed total, don't block (the person is tightening on themselves).
 
 ## Output — gate the pipeline entry

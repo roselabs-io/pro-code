@@ -26,11 +26,11 @@ The assumptions ledger is the antidote to **silent bias**: a profile's *declared
 
 ## doctrines — enforced posture
 
-The opinionated rules a profile mandates: `comment-doctrine.md` (comments state what the code is, not its history or a ticket number), `test-posture.md` (every test asserts; the layers a domain owes), and `readme-doctrine.md` (every service ships a README with launch instructions). The regex-able floor is enforced deterministically by [`graders/checks/doctrine_lint.py`](../graders/checks/doctrine_lint.py); the judgment cases are the drift grader's.
+The opinionated rules a profile mandates: `comment-doctrine.md` (comments state what the code is, not its history or a ticket number), `test-posture.md` (every test asserts; the layers a domain owes), and `readme-doctrine.md` (every service ships a README with launch instructions). The regex-able floor is enforced deterministically by [`checks/doctrine_lint.py`](../checks/doctrine_lint.py); the judgment cases are the drift grader's.
 
 ## harness — grader + CLI scaffolding
 
-`log-taxonomy.md` defines the structured events the code emits and the logs grader reads back (proving behaviour from the trace, not the return value). `justfile` is the CLI skeleton — one named target per action, so the graders and a person run the same commands.
+`log-taxonomy.md` defines the structured events the code emits and the logs check reads back (proving behaviour from the trace, not the return value). `justfile` is the CLI skeleton — one named target per action, so the graders and a person run the same commands.
 
 ---
 

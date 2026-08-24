@@ -1,4 +1,4 @@
-"""Logs grader — isolation proven from the TRACE, not the 404 alone.
+"""Logs check — isolation proven from the TRACE, not the 404 alone.
 
 A 404 could come from a genuinely-missing id; the CROSS_TENANT_DENIED event proves the
 denial path actually fired against a real foreign resource.

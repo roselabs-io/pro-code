@@ -7,7 +7,7 @@
 ## The contract
 
 Every behaviour that matters emits **one structured event** — a stable `code`, a level, and
-fields — so the **logs grader** can replay a run and assert the right events fired.
+fields — so the **logs check** can replay a run and assert the right events fired.
 
 ```
 { "code": "<STABLE_CODE>", "level": "info|warning|error|critical", "ts": <t>, ...fields }
@@ -21,8 +21,8 @@ fields — so the **logs grader** can replay a run and assert the right events f
 | {TODO: e.g., CROSS_TENANT_DENIED} | a scoped query rejects a foreign id | warning | workspace, target | "isolation fired, didn't silently pass" |
 | {TODO: e.g., ALERT_RAISED} | a rule opens an alert | critical/warning | signal, severity | "the alert fired — from the log, not the return value" |
 
-## How the logs grader grades
+## How the logs check grades
 
 - **Assert presence, not just return value** — a passing status with no `HANDLER_RAN` event is a false green.
 - **Assert the code, level, and key fields** — `ALERT_RAISED{severity:critical}` proves the *critical* path, not just *an* alert.
-- **Deterministic** — the logs grader is a script over captured logs; it runs in the gate before the fuzzy graders.
+- **Deterministic** — the logs check is a script over captured logs; it runs in the gate before the graders.

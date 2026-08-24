@@ -18,7 +18,7 @@ The shapes Plan routes tickets against. A small, isolation-centered set — enou
 | `cursor-pagination` | any list that can grow unbounded — stable cursor paging, not offset |
 | `idempotent-webhook-handler` | an inbound webhook that may redeliver — dedupe on event id, safe to replay |
 | `structured-error-envelope` | any failure response — a typed `{status, code, detail}`, never a bare 500 or a leaked stack; the status is chosen (404 vs 403) deliberately |
-| `write-through-audit-log` | any state mutation — emit a structured **log event** (a stable event code) *as* the write lands, so the logs grader can prove the handler ran (ties to the Observability CfR) |
+| `write-through-audit-log` | any state mutation — emit a structured **log event** (a stable event code) *as* the write lands, so the logs check can prove the handler ran (ties to the Observability CfR) |
 
 *(Add shapes as real builds surface them; flag `novel` tickets for promotion once they stabilize.)*
 

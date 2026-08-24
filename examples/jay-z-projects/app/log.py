@@ -27,7 +27,7 @@ def emit(code: str, level: str = "info", **fields: Any) -> None:
 
 
 def events() -> list[dict[str, Any]]:
-    """Hand back every event dropped so far — the logs grader reads it in-process."""
+    """Hand back every event dropped so far — the logs check reads it in-process."""
     return list(_sink)
 
 

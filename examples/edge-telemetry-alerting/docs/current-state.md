@@ -10,7 +10,7 @@
 - **Staleness watchdog (T3)** — evaluated **lazily on read** against the query clock; past-TTL → stale, value nulled, "— stale"; safety-critical stale → CRITICAL; a never-reported signal is stale-critical **from boot**.
 - **Dedup + ordering (T4)** — a burst collapses to one active alert with an occurrence count; a late earlier-ts reading is ignored, so it can't resurrect a cleared alert.
 - **No missed critical (T5)** — every fire fixture (bearing overheat, overpressure, dead-from-boot) raises `ALERT_RAISED{severity:critical}`; the nominal fixture is silent. Proven from the trace + the active-alert list.
-- **Dashboard (T6)** — `GET /state` serializes each signal (stale → `value:null, "— stale"`); the served view renders stale as "— stale", critical as red, always with a text label; verified by the Playwright browser grader on the running app.
+- **Dashboard (T6)** — `GET /state` serializes each signal (stale → `value:null, "— stale"`); the served view renders stale as "— stale", critical as red, always with a text label; verified by the Playwright browser check on the running app.
 
 ## What's in flight
 
@@ -26,5 +26,5 @@
 
 - Set up: `uv sync` (then `uv run playwright install chromium` for the browser test).
 - Gate: `just gate` (fix · lint · typecheck · doctrine · security · test · coverage).
-- Browser grader: `just browsertest`.
+- Browser check: `just browsertest`.
 - Launch: `just demo` (or `uv run uvicorn dashboard.app:app --port 8000`) → dashboard on :8000.

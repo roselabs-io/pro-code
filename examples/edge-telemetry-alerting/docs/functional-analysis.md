@@ -49,6 +49,6 @@
 ## Metrics + non-functionals
 
 - **No missed critical alert** — hard requirement; asserted by fixture-replay (fire + no-fire) + an adversarial N-vote.
-- **Stale renders "— stale"** — the load-bearing visual invariant; asserted by the browser grader.
+- **Stale renders "— stale"** — the load-bearing visual invariant; asserted by the browser check.
 - **Observability** — every alert open/clear emits `ALERT_RAISED{signal,severity}` / `ALERT_CLEARED`.
-- **Accessibility** — status is not colour-only; a text label accompanies the colour (browser grader checks the label).
+- **Accessibility** — status is not colour-only; a text label accompanies the colour (browser check checks the label).
