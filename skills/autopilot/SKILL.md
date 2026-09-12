@@ -14,7 +14,7 @@ Domain-neutral by design. *What* the tickets are, *what* the graders check, *wha
 ## What it consumes
 
 - `docs/backlog.md` — the tickets, their `depends-on`, and the **autonomy tiers** (🟢/🟡/🔴) + the **build order** (waves + critical path). Plan already computed all of it; autopilot executes it.
-- The active profile — the verification-loop roster (deterministic checks, fuzzy rubrics, graders) each worker's output is graded against.
+- The active profile (resolved per [`profiles/CONTRACT.md#active-profile-resolution`](../../profiles/CONTRACT.md#active-profile-resolution)) — the check commands and grader rubrics each worker's output is gated against, run by [`skills/review-gate`](../review-gate/SKILL.md).
 
 ## The loop
 

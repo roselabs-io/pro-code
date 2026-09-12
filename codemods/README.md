@@ -26,9 +26,9 @@ codemods/<name>.py  <path...>     # transform files in place (or --check to dry-
 ## Where it sits in the verification loop
 
 ```
-implement → [ ruff --fix + codemods ]  ← deterministic auto-fix arm (this dir)
-          → [ checks: lint · type · logs · test ]
-          → [ graders: feature · drift · docs-currency ]  ← LLM, only if needed
+implement → [ ruff --fix + codemods ]  ← deterministic auto-fix arm (this dir) — stage 0
+          → [ checks, in the order checks/README.md fixes, short-circuit ]
+          → [ graders: feature · drift · docs-currency · simplicity ]  ← LLM, only if every check is green
           → fix pass → re-grade
 ```
 
@@ -36,5 +36,5 @@ The auto-fix arm short-circuits the cheapest drift: **a convention a codemod can
 
 ## What the plugin ships vs BYO
 
-- **Ships (agnostic):** this contract + the loop stage + the `just codemod <name>` entry point.
+- **Ships (agnostic):** this contract + the loop stage (row 0 in [`../checks/README.md`](../checks/README.md#the-deterministic-tier-in-order); `codemod-check` is row 4) + the `just codemod <name>` entry point.
 - **BYO (per example/profile):** the actual transforms — they encode *your* conventions. See each example's `codemods/`.

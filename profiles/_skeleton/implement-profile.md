@@ -6,17 +6,18 @@ Fill every `{TODO}`. *(must)* slots are gated by GATE-0. See [`../CONTRACT.md`](
 {TODO: framework · env/runner · language version · layout · lint/format · tests — the declared
 choice-points, fixed here so they're not silent.}
 
-## Deterministic checks
+## Checks
 Commands, thresholds, and allowlists live in this profile's [`check-commands.md`](check-commands.md) — a
-separate file the graders read directly (the active-profile handshake). This section only names *which*
-checks the domain runs; fill the commands in `check-commands.md`.
-{TODO: the checks this domain mandates (lint · tests · type-check · doctrine-lint ·
-security · coverage · deps · schema · logs), or just point to check-commands.md.}
+separate file the checks read directly (the active-profile handshake). This section only names *which*
+checks the domain runs; fill the commands in `check-commands.md`. The row names and order:
+[`../../checks/README.md`](../../checks/README.md#the-deterministic-tier-in-order).
+{TODO: the checks this domain mandates, or just point to check-commands.md.}
 
-## Fuzzy rubrics *(must — ~3 focused graders)*
+## Rubrics *(must — ~4 focused graders)*
 - **feature / spec** → {TODO: the acceptance criterion}
 - **pattern / drift** → {TODO: the design catalog hooks + the conventions below}
 - **docs-currency** → {TODO: the living-docs set below}
+- **simplicity** → {TODO: what "in scope" traces to — the ticket's criterion + hooks + the Stack choice-points above; any domain items always in scope}
 
 ## verify_means + false_green_traps *(must)*
 - **verify_means:** {TODO: how "done" is proven in this domain}

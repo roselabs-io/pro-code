@@ -5,10 +5,10 @@
 > **"the code is right but it doesn't ship."**
 
 Applies only to **deploying** profiles (a profile declares `deploys: true`). A library or an in-process
-service skips it — there's nothing to build and boot. API-only or engine profiles set `deploys: false`
-and declare it n/a in `check-commands.md`.
+service skips it — there's nothing to build and boot. API-only or engine profiles set `deploys: false`,
+declare it n/a in `check-commands.md`, and run [`runtime-smoke.md`](runtime-smoke.md) as their boot floor.
 
-## What it grades
+## What it checks
 
 The verify gate's arbiter for *deliverability*: does the app build and boot as it will in production, from empty?
 
@@ -24,7 +24,7 @@ infra check = build + up + smoke script → { pass, findings }
   - build the images, compose up on a fresh volume, wait for healthy
   - run migrations from empty, then a smoke check against the running stack
   - deterministic: no LLM; the profile supplies the compose file + smoke command
-  - runs in the verify beat, after unit/integration are green (and alongside the browser check)
+  - runs last in the deterministic tier ([the order](README.md#the-deterministic-tier-in-order)), after tests are green, alongside the browser check
 ```
 
 - **pass** = images build · stack reaches healthy · migrations apply from empty · smoke is green.
@@ -32,7 +32,7 @@ infra check = build + up + smoke script → { pass, findings }
 
 ## Why it's not redundant with the tests
 
-The integration tests run the app **in-process** against a **testcontainers** database — they prove the *logic* is right. They say nothing about whether the *shipped image* builds, whether the compose wiring and env are correct, or whether the schema applies from empty. Green tests + a broken Dockerfile, a missing env var, or a `create_all`-only schema **still doesn't deploy**. The infra check is the only sensor that exercises the artifact you actually ship. (Same spirit as `200 ≠ handler ran` and the browser check's `green-below ≠ correct-on-screen`: **tests-green ≠ ships**.)
+The integration tests run the app **in-process** against a **testcontainers** database — they prove the *logic* is right. They say nothing about whether the *shipped image* builds, whether the compose wiring and env are correct, or whether the schema applies from empty. Green tests + a broken Dockerfile, a missing env var, or a `create_all`-only schema **still doesn't deploy**. The infra check is the only check that exercises the artifact you actually ship. (Same spirit as `200 ≠ handler ran` and the browser check's `green-below ≠ correct-on-screen`: **tests-green ≠ ships**.)
 
 ## Profile hooks
 
@@ -41,4 +41,4 @@ The integration tests run the app **in-process** against a **testcontainers** da
 
 ## Note — this is an additive model extension
 
-The `deploys` hook and this check are an **additive** extension of the pro-code model, the same shape the `has_ui` + browser check pair took for `edge-telemetry`: **no skill changes, no change to any existing check or grader.** Profiles that don't deploy set `deploys: false` and declare it n/a — their behaviour is untouched. First exercised by `saas-web`. "Profiles swap, the sensors don't" still holds: this check is agnostic; the compose file and smoke command are profile content.
+The `deploys` hook and this check are an **additive** extension of the pro-code model, the same shape the `has_ui` + browser check pair took for `edge-telemetry`: **no skill changes, no change to any existing check or grader.** Profiles that don't deploy set `deploys: false` and declare it n/a — their behaviour is untouched. First exercised by `saas-web`. "Profiles swap, the checks don't" still holds: this check is agnostic; the compose file and smoke command are profile content.

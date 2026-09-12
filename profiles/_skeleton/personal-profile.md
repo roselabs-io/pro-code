@@ -18,7 +18,7 @@ Extra `doctrine_lint --forbid` rules (regex-able).
 
 ## graders/ *(may)*
 Drop profile-authored grader units here (copy [`grader.md`](grader.md)). They compose with the agnostic +
-domain graders (the ~3 fuzzy budget still applies — see CONTRACT). Delete the dir if you ship none.
+domain graders (a personal grader is a +1 above the shared ~4 budget — see CONTRACT). Delete the dir if you ship none.
 
 ## notes *(may)*
 {TODO: anything about how you like reviews framed — or delete}

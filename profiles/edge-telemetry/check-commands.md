@@ -1,12 +1,13 @@
 # Profile — `edge-telemetry` · check-commands
 
 The checks read this file directly — the **active-profile handshake** (the pipeline resolves
-the active profile's `check-commands.md`, never a hardcoded path). Split out of `implement-profile.md` so a
-grader reads one file for its command.
+the active profile's `check-commands.md` per [`../CONTRACT.md#active-profile-resolution`](../CONTRACT.md#active-profile-resolution),
+never a hardcoded path). Split out of `implement-profile.md` so a check reads one file for its command.
+Row names + order: [`../../checks/README.md`](../../checks/README.md#the-deterministic-tier-in-order).
 
 ## Commands *(shell — run first, short-circuit)*
 
-| grader | command | rule / threshold |
+| check | command | rule / threshold |
 |---|---|---|
 | lint | `ruff check engine dashboard tests` | no lint errors |
 | tests | `pytest -m "not browser"` (fixture-replay) + `pytest -m browser` (e2e) | zero failures, this session |
@@ -16,8 +17,9 @@ grader reads one file for its command.
 | security | `bandit -q -r engine dashboard` + `detect-secrets scan` | no high-severity SAST finding · **secrets = hard fail** |
 | coverage | `pytest -m "not browser" --cov=engine --cov=dashboard --cov-report=term-missing` | changed-line ≥ 80% |
 | deps | `uv export --no-dev --no-hashes \| pip-audit -r -` | **critical vuln = hard fail** · lockfile consistent · audits the **shipped tree**, not dev/security tooling |
+| smoke | launch `just up` · probe `curl -sf localhost:8000/state` → 200 · stop `just down` | the dashboard boots and answers; `covered-by: browser` (the browser row boots the same process) — declared, still run when the browser suite is skipped |
 
-## Other graders wired
+## Other checks wired
 
 - **logs** — run: replays a breach fixture and asserts `ALERT_RAISED{severity:critical}` fired (the
   *no-missed-critical* promise proven from the trace). Events: `ALERT_RAISED{signal,severity}`, `ALERT_CLEARED`.
@@ -29,6 +31,7 @@ grader reads one file for its command.
 - **schema-validation** — a reading is validated at ingest (`parse_line` rejects a malformed line), so
   there's no separate schema command.
 - **codemod** — no bulk transform; this domain's drift is caught by the drift grader, not codemods.
+- **infra** — `deploys: false`; a single-process dashboard, no image to build. The smoke row is the boot floor.
 
 ## Allowlists + paths
 

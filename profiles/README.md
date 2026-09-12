@@ -1,6 +1,6 @@
-# Profiles — the guide/grader seam
+# Profiles — the guide/gate seam
 
-A **profile** is the domain overlay. The pipeline ships agnostic **graders** + neutral **guide skeletons**; a profile fills the guides and tunes the graders for one domain. **Swap the profile, retarget the whole pipeline** — this is what makes pro-code agnostic.
+A **profile** is the domain overlay. The pipeline ships agnostic **checks** + **graders** + neutral **guide skeletons**; a profile fills the guides and supplies the check commands and grader rubrics for one domain. **Swap the profile, retarget the whole pipeline** — this is what makes pro-code agnostic.
 
 pro-code draws this boundary explicitly: the *mechanism* (how a phase runs) and the *content* (what it asks about) stay separate, not tangled in one skill.
 
@@ -12,13 +12,15 @@ For **Frame**:
 - **hard gates** — phase-specific blockers (`generic-saas`: a reviewed UI sketch for any user-facing app).
 - **grader bar** — `verifiable_means`, `usual_silent_gaps`, the clean-handoff bar (consumed by [`graders/frame-completeness.md`](../graders/frame-completeness.md)).
 
-For **Plan** a profile also supplies the **design catalog** (the shapes tickets route against) and the **tiering signals**; for **Implement**, the **deterministic-check commands**, the fuzzy-grader **rubrics**, and the domain **false-green traps**. Same hook *shape* every skill and grader reads; entirely different *content* per domain.
+For **Plan** a profile also supplies the **design catalog** (the shapes tickets route against) and the **tiering signals**; for **Implement**, the **check commands**, the grader **rubrics**, and the domain **false-green traps**. Same hook *shape* every skill, check, and grader reads; entirely different *content* per domain. The exhaustive list is [`CONTRACT.md`](CONTRACT.md); the check-vs-grader split is defined in [`../checks/README.md`](../checks/README.md).
+
+**Which profile is active** is resolved per run from `$PROFILE` or the project's `.pipeline-profile` file ([`CONTRACT.md#active-profile-resolution`](CONTRACT.md#active-profile-resolution)). There is no default.
 
 ## Profiles
 
-- **`generic-saas/`** — the default. A Python + FastAPI CRUD API (API-only). Frame + Plan + Implement. Built [example #1](../examples/multi-tenant-isolation/).
+- **`generic-saas/`** — A Python + FastAPI CRUD API (API-only). Frame + Plan + Implement. Built [example #1](../examples/multi-tenant-isolation/) and, with the `personal/jay-z` overlay, [example #4](../examples/jay-z-projects/).
 - **`edge-telemetry/`** — industrial telemetry monitoring + alerting (Python engine + served dashboard). Frame + Plan + Implement. Built [example #2](../examples/edge-telemetry-alerting/).
-- **`saas-web/`** — full-stack web SaaS: **FastAPI (async) + React/TS/MUI + async Postgres**, deployed via Docker Compose (`deploys: true`). Frame + Plan + Implement. Adds a rendered frontend *and* a graded deploy dimension (the additive [infra grader](../checks/infra.md)) on top of the `generic-saas` API baseline. First example: the roselabs blog.
-- *(add your own — a research profile, a compiler profile — by copying a profile dir and swapping the content. The skills and graders don't change.)*
+- **`saas-web/`** — full-stack web SaaS: **FastAPI (async) + React/TS/MUI + async Postgres**, deployed via Docker Compose (`deploys: true`). Frame + Plan + Implement. Adds a rendered frontend *and* a graded deploy dimension (the additive [infra check](../checks/infra.md)) on top of the `generic-saas` API baseline. Built [example #3](../examples/roselabs-blog/).
+- *(add your own — a research profile, a compiler profile — by copying a profile dir and swapping the content. The skills, checks, and graders don't change.)*
 
-> **Agnostic is a design property, proven by a _second_ profile — and it now is.** `edge-telemetry` dropped in with **zero changes to any skill or grader** (audited: nothing under `skills/` or `graders/` was touched). The one addition to the shared layer was a *neutral* guide skeleton — `doc-patterns/specs/ui-sketch.md` — that the UI-sketch hard gate references but the API-only #1 never exercised. Mechanism and feedback are shared byte-for-byte; only the profile content differs.
+> **Agnostic is a design property, proven by a _second_ profile — and it now is.** `edge-telemetry` dropped in with **zero changes to any skill, check, or grader** (audited: nothing under `skills/`, `checks/`, or `graders/` was touched); `saas-web` then added the `deploys` flag + infra check additively. The one addition to the shared layer was a *neutral* guide skeleton — `doc-patterns/specs/ui-sketch.md` — that the UI-sketch hard gate references but the API-only #1 never exercised. Mechanism and feedback are shared byte-for-byte; only the profile content differs.

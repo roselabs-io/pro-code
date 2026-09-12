@@ -6,7 +6,7 @@
 
 Applies only to **UI-bearing** profiles (a profile declares `has_ui: true`). API-only slices skip it — there's no surface to observe.
 
-## What it grades
+## What it checks
 
 The verify gate's arbiter for a UI: does the *running* app do the right thing when driven like a user?
 
@@ -20,12 +20,12 @@ The verify gate's arbiter for a UI: does the *running* app do the right thing wh
 browser check = Playwright script → { pass, findings }
   - launch the app, drive it as a user, assert on the RENDERED DOM (not the response)
   - deterministic: seed the app state via a fixture/endpoint, then observe
-  - runs in the verify beat, after the API-level tests are green
+  - runs in the verify beat, after the API-level tests are green ([the order](README.md#the-deterministic-tier-in-order))
 ```
 
 ## Why it's not redundant with the API tests
 
-An endpoint-shape test proves the *server* serializes `stale:true, value:null`. It says nothing about whether the *client* honours it — a template bug can render the last-good number over a stale flag and every API test still passes. **The browser check is the only sensor that sees what the operator sees.** (Same reason `200 ≠ handler ran`: green-below ≠ correct-on-screen.)
+An endpoint-shape test proves the *server* serializes `stale:true, value:null`. It says nothing about whether the *client* honours it — a template bug can render the last-good number over a stale flag and every API test still passes. **The browser check is the only check that sees what the operator sees.** (Same reason `200 ≠ handler ran`: green-below ≠ correct-on-screen.)
 
 ## Profile hooks
 

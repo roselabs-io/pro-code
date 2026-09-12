@@ -3,7 +3,7 @@
 The **secrets-and-sinks** gate: runs the profile's static-analysis + secret-scan commands over the diff
 and turns their output into findings. Deterministic, runs in the **first tier** of the code-verification
 loop — before any grader spends a token — and **short-circuits** (a leaked credential must never
-reach a fuzzy lens). Agnostic: the *loop and the severities* live here; the *tools, ruleset, and allowlist*
+reach a grader). Agnostic: the *loop and the severities* live here; the *tools, ruleset, and allowlist*
 come from the profile.
 
 ## What it checks (over the diff)
@@ -31,13 +31,13 @@ surfaced to the driver / GATE-0, never assumed clean. A scanner that errors is a
 ## Contract
 
 ```
-grade(diff, rubric=<security_commands + allow>, context)
+check(diff, config=<security_commands + allow>, context)
   → { pass, findings: [{file, line, rule, severity, fix}], hard_fail_on: secret }
 ```
 
 Deterministic — facts, not judgment; runs first, short-circuits. Logic-level flaws a scanner can't catch
 (authz ordering, an existence oracle) stay with the **drift / core-promise** graders — this check is the
-mechanical floor. See [`code-verification-loop.md`](../graders/code-verification-loop.md) ·
+mechanical floor. See [`README.md`](README.md) · [`skills/review-gate`](../skills/review-gate/SKILL.md) ·
 [`../profiles/CONTRACT.md`](../profiles/CONTRACT.md).
 
 > **Provenance:** built independently in pro-code and DTS, then cross-checked — the core design converged.

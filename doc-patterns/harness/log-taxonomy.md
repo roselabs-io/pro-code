@@ -2,7 +2,7 @@
 
 > **Logs** (feedback, ⚙️): runtime traces the agent *reads* to confirm
 > what actually happened — the defense against "200 ≠ the handler ran." Structured, so a
-> grader can assert on them, not just eyeball. Pulled from `doc-patterns/harness/log-taxonomy.md`.
+> check can assert on them, not just eyeball. Pulled from `doc-patterns/harness/log-taxonomy.md`.
 
 ## The contract
 

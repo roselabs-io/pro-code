@@ -8,7 +8,7 @@ proven the way isolation was in `generic-saas`: by an integration test on the re
 e2e test on the rendered surface, then held under the adversarial N-vote. The grader, not confidence,
 certifies it.
 
-> **This profile mandates** (its opinionated subset — the union of the SaaS *and* UI opinions, plus deploy): a **codemod** (every protected router depends on `get_current_user`), the **logs check**, an **integration test per endpoint against a real Postgres**, the **browser check + an e2e test**, an **a11y check** (`axe`), **visual-regression snapshots**, and the **infra grader** (`deploys: true`). The `no-print` / `no-bare-except` / `no-raw-color` / `no-create-all-in-app` special-lints.
+> **This profile mandates** (its opinionated subset — the union of the SaaS *and* UI opinions, plus deploy): a **codemod** (every protected router depends on `get_current_user`), the **logs check**, an **integration test per endpoint against a real Postgres**, the **browser check + an e2e test**, an **a11y check** (`axe`), **visual-regression snapshots**, and the **infra check** (`deploys: true`). The `no-print` / `no-bare-except` / `no-raw-color` / `no-create-all-in-app` special-lints.
 > **It skips**: nothing agnostic — it's the fullest profile. `schema-validation` is declared n/a (pydantic + TS types validate at the edges).
 
 ## Stack + layout
@@ -25,28 +25,29 @@ certifies it.
 
 > These are the profile's **declared choice-points** — fixed here so they're not silent. Any build choice *not* covered here (or by the Conventions below) goes in `docs/assumptions.md` with a disposition.
 
-## Deterministic checks
+## Checks
 
-Commands, thresholds, and allowlists live in this profile's [`check-commands.md`](check-commands.md) — the file the graders read directly (the active-profile handshake). This profile **runs**: lint (backend + frontend) · tests (integration on real Postgres + unit + e2e) · type-check (advisory: `mypy` + `tsc`) · doctrine-lint · special-lint · codemod-check · **security** · **coverage** · **deps** · logs · **browser** · **a11y** · **visual-regression** · **infra**. It declares **schema-validation** *n/a* (pydantic + TS types validate at the edges). See `check-commands.md`.
+Commands, thresholds, and allowlists live in this profile's [`check-commands.md`](check-commands.md) — the file the checks read directly (the active-profile handshake). This profile **runs**: lint (backend + frontend) · tests (integration on real Postgres + unit + e2e) · type-check (advisory: `mypy` + `tsc`) · doctrine-lint · special-lint · codemod-check · **security** · **coverage** · **deps** · logs · **browser** · **a11y** · **visual-regression** · **infra**. It declares **schema-validation** *n/a* (pydantic + TS types validate at the edges). See `check-commands.md`.
 
-## Fuzzy rubrics (~3 focused graders — what each points at)
+## Rubrics (~4 focused graders — what each points at)
 
 - **feature / spec** → the ticket's acceptance criterion. Does the diff satisfy the assertion end-to-end — including the **negative** (the withheld thing is absent for an anonymous session), not a 200 proxy?
 - **pattern / drift** → the design catalog (`plan-profile.md`) hooks + the conventions below, **including the styling discipline**. Was `owner-scoped-query-guard` applied to **every** verb, deny-by-default? Is styling theme-only, no raw hex? Plus the **undeclared-choice lens** (a library/pattern no input specified → `docs/assumptions.md`).
 - **docs-currency** → the living-docs set below. Backlog pruned + forward-only, current-state fresh, a decision record for any new decision, open-questions flipped, UI sketches + surfaces current.
+- **simplicity** → the ticket's criterion + hooks + the Stack choice-points. Always in scope: the per-endpoint matrix, the e2e negative, loading/empty/error states. An unrequested page, endpoint, or option is a finding.
 
-## Full-coverage machinery (guides + graders this profile wires)
+## Full-coverage machinery (guides + checks this profile wires)
 
 - **LSP (guide):** `mypy app/` (backend) + `tsc --noEmit` (frontend) — types/refs while authoring. Advisory, not a gate step this slice.
 - **Environment + CLIs (guide):** **uv** (`uv sync`) + **pnpm** + a **`justfile`** (`just gate`) whose recipes call `uv run` / `pnpm`. Template: `doc-patterns/harness/justfile`.
 - **Codemods (auto-fix arm):** codemod-lite = `ruff check --fix . && ruff format .` + `eslint --fix && prettier -w` every gate; one **libcst** codemod enforcing that **every protected route depends on `get_current_user`** (the boundary convention, across `app/api/`). See the example's `codemods/`.
 - **Logs check:** structured events per `doc-patterns/harness/log-taxonomy.md` — `HANDLER_RAN`, `AUTH_DENIED{reason}`, `DRAFT_ACCESS_DENIED{post,requester}`. The grader replays an anonymous request for a draft and asserts `DRAFT_ACCESS_DENIED` fired (the *no-draft-leak* promise proven from the trace, not the 404 alone).
-- **Browser check (LIVE here):** `has_ui: true`. Playwright drives the running app; **`visual_invariant`: a draft never appears in the DOM for an anonymous session, and an author-only control (edit/delete) never renders for a reader.** The only grader that catches a client rendering withheld content while every API test stays green.
+- **Browser check (LIVE here):** `has_ui: true`. Playwright drives the running app; **`visual_invariant`: a draft never appears in the DOM for an anonymous session, and an author-only control (edit/delete) never renders for a reader.** The only check that catches a client rendering withheld content while every API test stays green.
 - **Infra check (LIVE here):** `deploys: true`. `docker compose build` + bring the stack up + a smoke check (the API `/health` is 200, the web root serves, a migration ran) — "it builds and boots" is part of done. See [`../../checks/infra.md`](../../checks/infra.md).
 
 ## Doctrines this profile mandates
 
-- **Comment doctrine** (`doc-patterns/doctrines/comment-doctrine.md`) — shared/universal, enforced by `doctrine_lint.py` + the fuzzy drift grader.
+- **Comment doctrine** (`doc-patterns/doctrines/comment-doctrine.md`) — shared/universal, enforced by `doctrine_lint.py` + the drift grader.
 - **README doctrine** (`doc-patterns/doctrines/readme-doctrine.md`) — the service README carries a "Run it" section: set up (`uv sync` · `pnpm install`), run `just gate`, launch (`just up`). Checked by the docs-currency grader.
 - **Test posture** (`doc-patterns/doctrines/test-posture.md`) — this domain's opinion:
   - **An integration test per endpoint, against a real Postgres** — every route drives the *real* request through the app (async, testcontainers Postgres) and asserts the **effect** (a row changed, a field serialized, a draft *not* returned), not the status. Mocking the DB is a false green.
@@ -79,8 +80,8 @@ Commands, thresholds, and allowlists live in this profile's [`check-commands.md`
 
 ## verify_means + false-green traps
 
-- **verify_means:** an **integration test on the real query path (real Postgres)** asserts the API effect, **and** a **Playwright e2e** asserts the rendered behaviour *and its negative*, with fresh output this session — a test, not a person, confirms it. For the deploy dimension, the **infra grader** proves the stack builds and boots.
-- **false-green traps** (the `check-passes-but-behaviour-is-broken` class the fuzzy feature grader must probe past):
+- **verify_means:** an **integration test on the real query path (real Postgres)** asserts the API effect, **and** a **Playwright e2e** asserts the rendered behaviour *and its negative*, with fresh output this session — a test, not a person, confirms it. For the deploy dimension, the **infra check** proves the stack builds and boots.
+- **false-green traps** (the `check-passes-but-behaviour-is-broken` class the feature grader must probe past):
   - **mock-green ≠ real-green** — a mocked DB that always says yes hides the integration bug; the visibility test must hit the **real** async query path (testcontainers Postgres).
   - **`200 ≠ the handler ran`** — assert the *effect* (a row changed, a draft *absent* from the payload), not the status.
   - **happy-path-only** — an endpoint with no auth-denied / validation / not-found / non-owner case is under-tested; the per-endpoint matrix is the floor.

@@ -14,7 +14,7 @@ request**, certified by an integration test on the real query path + an adversar
 - **`web/`** — React + TS + Vite + MUI, the roselabs "field-notes" theme. Article bodies render in a
   **sandboxed iframe** (decision 0001) — full CSS/SVG isolation.
 - **`infra/`** — Dockerfiles + Compose (`api · db · web`), Caddy serving the SPA and proxying `/api`.
-- **`docs/`** — the Frame + Plan artifacts (functional-analysis · ui-sketches · backlog · decisions).
+- **`docs/`** — the Frame + Plan artifacts (functional-analysis · ui-sketches · system-overview) and the living docs (current-state · backlog · assumptions · open-questions · decisions).
 
 ## Run it
 
@@ -35,5 +35,5 @@ just gate-api   # ruff + pytest (spins a real Postgres via testcontainers)
 just gate-web   # tsc + eslint + vitest
 ```
 
-Backend tests need Docker (testcontainers). The frontend end-to-end (browser) grader runs against the
+Backend tests need Docker (testcontainers). The frontend end-to-end (browser) check runs against the
 running Compose stack.

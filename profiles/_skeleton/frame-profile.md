@@ -19,6 +19,9 @@ Domain: {TODO: one line — what this domain builds and the stack}.
 ## `has_ui` *(must)*
 {TODO: true/false — gates the UI-sketch hard gate + the browser check}
 
+## `deploys` *(must)*
+{TODO: true/false — true gates the infra check (build + boot the shipped stack); false routes the runtime floor to the smoke check}
+
 ## Grader bar *(must — consumed by `frame-completeness`)*
 - **`verifiable_means`:** {TODO: what "verifiable" means here}
 - **`usual_silent_gaps`:** {TODO: the gaps briefs in this domain routinely omit}

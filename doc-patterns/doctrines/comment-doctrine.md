@@ -4,7 +4,7 @@
 > why-not, the history, or a ticket number. The durable home for *why* is the commit / ADR;
 > inline bloat is noise every future reader has to read past.
 > Pulled from `doc-patterns/doctrines/comment-doctrine.md`. The **regex-able subset is enforced
-> deterministically** (`checks/doctrine_lint.py`); the judgment cases are the fuzzy
+> deterministically** (`checks/doctrine_lint.py`); the judgment cases are the
 > drift grader's job.
 
 ## Banned (the deterministic floor — the linter flags these)
@@ -13,7 +13,7 @@
 - **Backward-narration** — "previously / used to / no longer / renamed from / originally …". A comment describes the present, not the diff.
 - **Defensive why-not** — "we don't X / why not Y". If the *why* matters, it's an ADR, not a code comment.
 
-## Discouraged (the fuzzy drift grader's judgment call)
+## Discouraged (the drift grader's judgment call)
 
 - A comment that **re-justifies a settled decision** or argues the alternative.
 - A **3-line essay** where one line states the fact.

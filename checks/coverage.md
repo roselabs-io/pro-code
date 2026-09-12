@@ -1,6 +1,6 @@
 # Check — coverage (changed-line test coverage · tier-1)
 
-Grades whether the **diff's** new/changed lines are exercised by tests — a *delta* check, not a whole-repo
+Checks whether the **diff's** new/changed lines are exercised by tests — a *delta* check, not a whole-repo
 percentage. Deterministic, tier-1, short-circuits. Agnostic: the *rule* (changed lines must be covered; a
 drop is a finding; no test at all is the loudest finding) lives here; the *command, floor, and exclusions*
 come from the profile.
@@ -28,14 +28,14 @@ profile — declared, not hand-waved.
 ## Contract
 
 ```
-grade(diff, rubric=<coverage_command + floor>, context)
+check(diff, config=<coverage_command + floor>, context)
   → { pass, findings: [{file, line, issue: uncovered | regression | no-test, fix}] }
 ```
 
 Deterministic. **Coverage proves a line *ran* under test — not that the test *asserts* the right thing.**
 That's the feature grader + the test-posture floor. Pair them: coverage = reach, posture = quality; a
 line can be 100% covered by an assert-less smoke test and still be untested in the way that matters. See
-[`code-verification-loop.md`](../graders/code-verification-loop.md) ·
+[`README.md`](README.md) · [`skills/review-gate`](../skills/review-gate/SKILL.md) ·
 [`../doc-patterns/doctrines/test-posture.md`](../doc-patterns/doctrines/test-posture.md).
 
 > **Provenance:** built independently in pro-code and DTS, then cross-checked — the core design converged
