@@ -1,6 +1,6 @@
 # Profile — `edge-telemetry` · Implement
 
-Domain: industrial edge telemetry monitoring + alerting. Completes the trio. Consumed by the unchanged `skills/implement` + `graders/code-verification-loop`.
+Domain: industrial edge telemetry monitoring + alerting. Completes the trio. Consumed by the unchanged `skills/implement` + `skills/review-gate`.
 
 The hard-done requirement — **no missed critical alert** — is proven the way isolation was in `generic-saas`: by replaying recorded fixtures and asserting the exact alert output. The grader, not confidence, certifies it.
 
@@ -18,31 +18,32 @@ The hard-done requirement — **no missed critical alert** — is proven the way
 
 > These are the profile's **declared choice-points** — fixed here so they're not silent. Any build choice *not* covered here (or by the Conventions below) goes in `docs/assumptions.md` with a disposition, so a default the agent reached for is visible, not buried.
 
-## Deterministic checks
+## Checks
 
 Commands, thresholds, and allowlists live in this profile's [`check-commands.md`](check-commands.md) — the
-file the graders read directly (the active-profile handshake). This profile **runs**: lint · tests
+file the checks read directly (the active-profile handshake). This profile **runs**: lint · tests
 (fixture-replay + e2e) · type-check (advisory) · doctrine-lint · special-lint · **security** · **coverage**
 · **deps** · logs · browser. It declares **schema-validation** and **codemod** *n/a* (validated at ingest;
 drift caught by the drift grader). See `check-commands.md` for the commands + the n/a rationale.
 
-## Fuzzy rubrics (~3 focused graders — what each points at)
+## Rubrics (~4 focused graders — what each points at)
 
 - **feature / spec** → the ticket's alert condition. Does the rule fire on the fire-fixture and stay silent on the no-fire fixture — exactly, at the right time and severity?
 - **pattern / drift** → the design catalog (`plan-profile.md`) hooks + the conventions below. Was `staleness-watchdog` applied to every critical signal? Does every threshold carry hysteresis?
 - **docs-currency** → the living-docs set below.
+- **simplicity** → the ticket's alert condition + hooks + the Stack choice-points. Always in scope: the fire + no-fire fixture pair per rule. A rule engine generalized past the catalog's shapes is a finding.
 
-## Full-coverage machinery (guides + graders this profile wires)
+## Full-coverage machinery (guides + checks this profile wires)
 
 - **LSP (guide):** `mypy engine/` — types/refs while authoring. Advisory, not a gate step in this slice.
 - **Environment + CLIs (guide):** **uv** for deps/venv (`uv sync`) + a `justfile` runner (`just gate`) whose recipes call `uv run`. Template: `doc-patterns/harness/justfile`. *(The env tool and runner are a profile choice: this profile picks uv + a justfile; `generic-saas` picks poetry + no justfile.)*
 - **Codemods (auto-fix arm):** codemod-lite = `ruff check --fix . && ruff format .` every gate. (A semantic codemod is optional here; the domain's drift is caught more by the drift grader than by bulk transforms.)
 - **Logs check:** structured events per `doc-patterns/harness/log-taxonomy.md` — `ALERT_RAISED{signal,severity}`, `ALERT_CLEARED`. The grader replays a breach fixture and asserts `ALERT_RAISED{severity:critical}` fired (the *no-missed-critical* promise proven from the trace, not just the active-alert list).
-- **Browser check (LIVE here):** `has_ui: true`. Playwright drives the running dashboard; **`visual_invariant`: a stale signal renders "— stale", never a number, and a CRITICAL row renders red.** The only grader that catches a template rendering last-good over a stale flag while every API test stays green.
+- **Browser check (LIVE here):** `has_ui: true`. Playwright drives the running dashboard; **`visual_invariant`: a stale signal renders "— stale", never a number, and a CRITICAL row renders red.** The only check that catches a template rendering last-good over a stale flag while every API test stays green.
 
 ## Doctrines this profile mandates
 
-- **Comment doctrine** (`doc-patterns/doctrines/comment-doctrine.md`) — shared/universal, enforced by `doctrine_lint.py` + the fuzzy drift grader. `doctrine: allow` exempts the `Severity` enum definition (the one place the strings live).
+- **Comment doctrine** (`doc-patterns/doctrines/comment-doctrine.md`) — shared/universal, enforced by `doctrine_lint.py` + the drift grader. `doctrine: allow` exempts the `Severity` enum definition (the one place the strings live).
 - **README doctrine** (`doc-patterns/doctrines/readme-doctrine.md`) — shared/universal. The service README carries a "Run it" section: set up the env (`uv sync`), run `just gate`, launch (`just demo`). Checked by the docs-currency grader.
 - **Test posture** (`doc-patterns/doctrines/test-posture.md`) — this domain's opinion:
   - **Fixture-replay per rule** — every alert rule owes a **fire** fixture and a **no-fire** fixture; a never-firing rule passes a no-alert-only test trivially.

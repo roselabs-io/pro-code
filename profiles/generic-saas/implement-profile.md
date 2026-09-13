@@ -1,8 +1,8 @@
 # Profile — `generic-saas` · Implement
 
-Domain: a CRUD SaaS backend — **Python + FastAPI, API-only**. The **default** profile. Completes the trio with `frame-profile.md` and `plan-profile.md`.
+Domain: a CRUD SaaS backend — **Python + FastAPI, API-only**. Completes the trio with `frame-profile.md` and `plan-profile.md`.
 
-This is the domain where **both** guides *and* graders are deterministic — schema-as-code → CRUD → validate — so it's the cleanest possible showcase for the code-verification loop.
+This is the domain where **both** guides *and* checks are deterministic — schema-as-code → CRUD → validate — so it's the cleanest possible showcase for the code-verification loop.
 
 > **This profile mandates** (its opinionated subset of the menu): a **codemod** (boundary-dependency enforcement across handlers), the **logs check**, an **integration test per endpoint**, and the `no-print` / `no-bare-except` special-lint.
 > **It skips**: the **browser check** + **e2e** (API-only, `has_ui` false → declared n/a), and the `config-driven-thresholds` / `severity-constant` lints (that's the telemetry profile's opinion, not this one).
@@ -10,7 +10,7 @@ This is the domain where **both** guides *and* graders are deterministic — sch
 ## Stack + layout
 
 - **Framework:** Python + **FastAPI** (ASGI); served with `uvicorn`.
-- **Env / runner:** **poetry** (`poetry install`); no task-runner — the graders run via `poetry run`.
+- **Env / runner:** **poetry** (`poetry install`); no task-runner — the checks run via `poetry run`.
 - **Python:** ≥ 3.12.
 - **Layout:** `app/` (the service), `tests/`, `codemods/`; docs in `docs/`.
 - **Lint / format:** `ruff` — `line-length = 90`, rules `E, F, I, B`; `extend-immutable-calls` for FastAPI
@@ -21,32 +21,33 @@ This is the domain where **both** guides *and* graders are deterministic — sch
 
 > These are the profile's **declared choice-points** — fixed here so they're not silent. Any build choice *not* covered here (or by the Conventions below) goes in `docs/assumptions.md` with a disposition, so a default the agent reached for is visible, not buried.
 
-## Deterministic checks
+## Checks
 
 Commands, thresholds, and allowlists live in this profile's [`check-commands.md`](check-commands.md) — the
-file the graders read directly (the active-profile handshake). This profile **runs**: lint · tests ·
+file the checks read directly (the active-profile handshake). This profile **runs**: lint · tests ·
 type-check (advisory) · doctrine-lint · special-lint · codemod-check · **security** · **coverage** ·
-**deps** · logs. It declares **schema-validation** and **browser/e2e** *n/a* (pydantic validates at
-runtime; API-only). See `check-commands.md` for the commands + the n/a rationale.
+**deps** · logs · **smoke** (`deploys: false` — the boot floor). It declares **schema-validation**,
+**browser/e2e**, and **infra** *n/a* (pydantic validates at runtime; API-only; nothing to build and boot). See `check-commands.md` for the commands + the n/a rationale.
 
-## Fuzzy rubrics (~3 focused graders — what each points at)
+## Rubrics (~4 focused graders — what each points at)
 
 - **feature / spec** → the ticket's acceptance criterion. Does the diff satisfy the assertion, not a proxy?
 - **pattern / drift** → the design catalog (`plan-profile.md`) hooks on the ticket + the conventions below. Was every hook applied where the shape says (e.g. `tenant-scoped-query-guard` on **every** verb, deny-by-default)?
 - **docs-currency** → the living-docs set below. Backlog pruned + forward-only, current-state fresh, a decision record for any new decision, open-questions flipped.
+- **simplicity** → the ticket's criterion + hooks + the Stack choice-points above. Always in scope here: the per-endpoint test matrix and the structured log event. Anything else the diff adds traces to a source or is removed / split to a ticket.
 
-## Full-coverage machinery (guides + graders this profile wires)
+## Full-coverage machinery (guides + checks this profile wires)
 
 - **LSP (guide):** `mypy` / `pyright` (Python) — consult types/refs while authoring. Advisory (`mypy app/`), not a gate step in this slice.
-- **Environment + CLIs (guide):** **poetry** for deps/venv (`poetry install`). No task-runner in this profile — the graders run directly via `poetry run` (the example README lists them). *(The env tool and whether to ship a `justfile` are a profile choice: this profile picks poetry + no justfile; `edge-telemetry` picks uv + a justfile.)*
+- **Environment + CLIs (guide):** **poetry** for deps/venv (`poetry install`). No task-runner in this profile — the checks run directly via `poetry run` (the example README lists them). *(The env tool and whether to ship a `justfile` are a profile choice: this profile picks poetry + no justfile; `edge-telemetry` picks uv + a justfile.)*
 - **Codemods (auto-fix arm):** codemod-lite = `ruff check --fix . && ruff format .` every gate; one genuine **libcst** codemod per build enforcing a boundary convention across handlers (e.g. every route depends on `get_caller`). See the example's `codemods/`.
 - **Logs check:** structured events per `doc-patterns/harness/log-taxonomy.md` — `HANDLER_RAN`, `CROSS_TENANT_DENIED{workspace,target}`. The grader asserts `CROSS_TENANT_DENIED` fired on a cross-tenant attempt (isolation proven from the *trace*, not the 404 alone).
 - **Browser check:** n/a — this profile is API-only (`has_ui: false`), no rendered surface.
 
 ## Doctrines this profile mandates
 
-- **Comment doctrine** (`doc-patterns/doctrines/comment-doctrine.md`) — shared/universal. Enforced by `doctrine_lint.py` (regex-able subset) + the fuzzy drift grader (judgment cases). `doctrine: allow` exempts the rare legit line (the LOG module's own `print`).
-- **README doctrine** (`doc-patterns/doctrines/readme-doctrine.md`) — shared/universal. The service README carries a "Run it" section: set up the env (`poetry install`), run the graders, launch. Checked by the docs-currency grader.
+- **Comment doctrine** (`doc-patterns/doctrines/comment-doctrine.md`) — shared/universal. Enforced by `doctrine_lint.py` (regex-able subset) + the drift grader (judgment cases). `doctrine: allow` exempts the rare legit line (the LOG module's own `print`).
+- **README doctrine** (`doc-patterns/doctrines/readme-doctrine.md`) — shared/universal. The service README carries a "Run it" section: set up the env (`poetry install`), run the checks, launch. Checked by the docs-currency grader.
 - **Test posture** (`doc-patterns/doctrines/test-posture.md`) — this domain's opinion:
   - **An integration test per endpoint** — every route gets a test that drives the *real* request through the app (`TestClient`) and asserts the **effect** (a row changed, a field serialized), not the status.
   - **No e2e** — API-only slice, no frontend, so no browser/e2e layer is owed. Declared, not skipped.
@@ -69,7 +70,7 @@ runtime; API-only). See `check-commands.md` for the commands + the n/a rationale
 ## verify_means + false-green traps
 
 - **verify_means:** an automated test asserts the criterion against the dev stack or a mock, with fresh output this session — a test, not a person, confirms it.
-- **false-green traps** (the `check-passes-but-behaviour-is-broken` class — the fuzzy feature grader must probe past the status code):
+- **false-green traps** (the `check-passes-but-behaviour-is-broken` class — the feature grader must probe past the status code):
   - **`200 ≠ the handler ran`** — a wrapper can return 200 while the inner logic 422'd or was skipped. Assert the *effect* (a row changed, a field serialized), not just the status.
   - **serialization omits a falsy field** — a `false`/`0`/`""` silently dropped from the response looks like "not returned." Assert the field's presence, not just truthiness.
   - **mock-green ≠ real-green** — a mocked dependency that always says yes hides the integration bug. The isolation test must hit the real query path.

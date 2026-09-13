@@ -26,20 +26,20 @@ List the *product* this app adds — the resources, who may see/change them, and
 
 - **UI sketch** — the app is user-facing, so no handoff to Plan without a reviewed `docs/ui-sketches.md` (view inventory + a wireframe per view + a declined list; template: `doc-patterns/specs/ui-sketch.md`). Missing/unreviewed = 🔴 blocking.
 - **Visibility / ownership rules** — for any resource with a **public vs private/draft** state or **per-user ownership**, the scoping rule **and** the withheld response (what an anonymous or non-owner request sees — a draft is *absent* from public reads; non-owner write → 404 not 403) must be pinned before Plan. Unspecified = 🔴 blocking: it's the core promise (the blog's is *"no draft leaks to public"*), and Plan can't decompose it without the rule — exactly as isolation is for `generic-saas`.
-- **Deploy target** — the target topology (single VPS · Docker Compose · the services · TLS · the secrets/config the app needs) is named before Plan, because it is **graded** (the infra grader). A profile that declares `deploys: true` with a `{TBD}` topology = 🔴 blocking.
+- **Deploy target** — the target topology (single VPS · Docker Compose · the services · TLS · the secrets/config the app needs) is named before Plan, because it is **graded** (the infra check). A profile that declares `deploys: true` with a `{TBD}` topology = 🔴 blocking.
 
 ## `has_ui` *(must)*
 
 - **`has_ui`:** true — the React frontend. The browser check + UI-sketch gate are **live** for this profile.
 
-## `deploys` *(must — new hook, see the infra grader)*
+## `deploys` *(must — new hook, see the infra check)*
 
-- **`deploys`:** true — the app ships as a Docker Compose stack; the **infra grader** (`checks/infra.md`) gates that it builds and boots. A profile that doesn't deploy (e.g. `generic-saas`) sets this false and the infra grader is declared n/a.
+- **`deploys`:** true — the app ships as a Docker Compose stack; the **infra check** (`checks/infra.md`) gates that it builds and boots. A profile that doesn't deploy (e.g. `generic-saas`) sets this false and the infra check is declared n/a.
 
 ## Principles + CfRs (feedforward guides)
 
 - **Principles** (`doc-patterns/guides/principles.md`): *deny by default* — an unscoped or unauthenticated read returns nothing, never a leak; *enforce at the boundary, not the client* — the browser is convenience only; *the rendered surface must not show what the API withholds* — no draft in the DOM the API refused to serve.
-- **CfRs that bite** (`doc-patterns/guides/cfrs.md`): **Security** (auth + visibility isolation — hard, proven by integration *and* e2e test), **Accessibility** (state is not colour-only; `axe` passes; keyboard-reachable), **Observability** (every denied/withheld access logs a structured event), **Maintainability** (lint + comment doctrine + the **styling discipline** — theme-only, no ad-hoc styling), **Deliverability** (the stack builds and boots via Compose — the infra grader). A biting CfR with no verifiable bar is a 🔴 for the plan grader.
+- **CfRs that bite** (`doc-patterns/guides/cfrs.md`): **Security** (auth + visibility isolation — hard, proven by integration *and* e2e test), **Accessibility** (state is not colour-only; `axe` passes; keyboard-reachable), **Observability** (every denied/withheld access logs a structured event), **Maintainability** (lint + comment doctrine + the **styling discipline** — theme-only, no ad-hoc styling), **Deliverability** (the stack builds and boots via Compose — the infra check). A biting CfR with no verifiable bar is a 🔴 for the plan grader.
 
 ## Grader bar (consumed by `frame-completeness`)
 

@@ -8,7 +8,7 @@ Every markdown the pipeline reads or writes starts from a template here. The tem
 | [`living-docs/`](living-docs/) | **Memory kept current across the build** — what's built, what's left, why, and what it silently assumed. Graded for currency. | `current-state.md`, `backlog.md`, `decision-record.md`, `assumptions.md` |
 | [`guides/`](guides/) | **Standing feedforward** — the values and quality bar the code is written against. | `principles.md`, `cfrs.md` |
 | [`doctrines/`](doctrines/) | **Enforced posture** — opinionated rules the code is held to, checked by the doctrine linter + the drift grader. | `comment-doctrine.md`, `test-posture.md`, `readme-doctrine.md` |
-| [`harness/`](harness/) | **Grader + CLI scaffolding** — the structured events a grader reads, and the command entry points. | `log-taxonomy.md`, `justfile` |
+| [`harness/`](harness/) | **Check + CLI scaffolding** — the structured events the logs check reads, and the command entry points. | `log-taxonomy.md`, `justfile` |
 
 ## specs — the doc-set the pipeline produces
 
@@ -28,9 +28,9 @@ The assumptions ledger is the antidote to **silent bias**: a profile's *declared
 
 The opinionated rules a profile mandates: `comment-doctrine.md` (comments state what the code is, not its history or a ticket number), `test-posture.md` (every test asserts; the layers a domain owes), and `readme-doctrine.md` (every service ships a README with launch instructions). The regex-able floor is enforced deterministically by [`checks/doctrine_lint.py`](../checks/doctrine_lint.py); the judgment cases are the drift grader's.
 
-## harness — grader + CLI scaffolding
+## harness — check + CLI scaffolding
 
-`log-taxonomy.md` defines the structured events the code emits and the logs check reads back (proving behaviour from the trace, not the return value). `justfile` is the CLI skeleton — one named target per action, so the graders and a person run the same commands.
+`log-taxonomy.md` defines the structured events the code emits and the logs check reads back (proving behaviour from the trace, not the return value). `justfile` is the CLI skeleton — one named target per action, so the checks and a person run the same commands.
 
 ---
 

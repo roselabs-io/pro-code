@@ -2,13 +2,13 @@
 
 A grader a **profile** ships (domain or personal), discovered and run alongside the agnostic graders.
 Copy into `profiles/<profile>/graders/<grader-name>.md` and fill it. Must conform to the grader contract
-in [`../../graders/code-verification-loop.md`](../../graders/code-verification-loop.md).
+in [`../../checks/README.md`](../../checks/README.md#checks-vs-graders).
 
-## kind *(must)*
-`deterministic` | `fuzzy`
-- **deterministic** — a command/script; returns facts; runs first; short-circuits; no LLM. Unlimited.
-- **fuzzy** — a fresh sub-agent, one rubric. Counts against the ~3 fuzzy budget (agnostic + domain +
-  personal combined) — justify it, or fold it into an existing lens.
+A grader unit is always **LLM judgment** — a fresh sub-agent, one rubric. It counts against the ~4
+shared budget (agnostic + domain; a personal overlay's unit is a +1) — justify it, or fold it into an
+existing lens. If what you want to enforce is mechanical (a regex, a script, a command exit code), it is
+not a grader: add a **row to `check-commands.md`** instead (a `--forbid`, a codemod `--check`). Check
+rows are unlimited.
 
 ## rubric_source *(must)*
 Where the grader judges against. **The orchestrator reads this and injects it into the sub-agent's
@@ -27,6 +27,5 @@ grade(diff, rubric=<above>, context) → { pass, findings: [{file, line, issue, 
 - a **missing precondition** (no tests / no schema / no rendered surface) is a *finding*, not a silent pass.
 
 ## authoring discipline
-Few, focused, non-overlapping — one clear responsibility, same bar as the agnostic graders. If two fuzzy
-graders would flag the same class of thing, make it one. (Deterministic checks are cheap — add as many as
-there are mechanical rules; the ~3 cap is for the fuzzy ones only.)
+Few, focused, non-overlapping — one clear responsibility, same bar as the agnostic graders. If two
+graders would flag the same class of thing, make it one.

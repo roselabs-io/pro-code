@@ -7,11 +7,11 @@ description: "Phase 3 — build a ticket: author the code, then run it through t
 
 Implement turns a **well-formed ticket** from Plan's backlog into **working, graded code**. The phase is *produce the code, then gate it*. The gate is what the phase is for: authoring is the easy half, and an unattended loop is only as good as what runs after it.
 
-Implement is **domain-neutral by design.** *What* commands prove it runs, *what* conventions the drift grader enforces, *what* the false-green traps are — all come from a **profile** (`profiles/<domain>/`), not this skill. This skill is the **mechanism**; the profile is the **content**. Default profile: `generic-saas`.
+Implement is **domain-neutral by design.** *What* commands prove it runs, *what* conventions the drift grader enforces, *what* the false-green traps are — all come from a **profile** (`profiles/<domain>/`), not this skill. This skill is the **mechanism**; the profile is the **content**. The active profile is resolved per run from `$PROFILE` or the project's `.pipeline-profile` ([`profiles/CONTRACT.md#active-profile-resolution`](../../profiles/CONTRACT.md#active-profile-resolution)); there is no default.
 
 ## One phase, three beats
 
-**author → verify → review.** Verify and review are **gates inside Implement**, not optional follow-ups — the work isn't done until it's proven to run *and* clean. The verify and review beats are run by the **code-verification loop** ([`graders/code-verification-loop.md`](../../graders/code-verification-loop.md)). This skill drives the beats; that document specifies the loop.
+**author → verify → review.** Verify and review are **gates inside Implement**, not optional follow-ups — the work isn't done until it's proven to run *and* clean. The verify and review beats are run by [`skills/review-gate`](../review-gate/SKILL.md) — the code-verification loop. This skill drives the beats; that skill specifies the loop.
 
 **One ticket or the whole backlog.** This skill is *ticket-scoped* — the driver pulls one ticket and works it with you. To run the backlog at scale — fan out a worker per ticket across the dependency waves, each graded by isolated sub-agents — use [`skills/autopilot`](../autopilot/SKILL.md) (the orchestrator-workers runner). Autopilot dispatches; `implement` is what each worker runs.
 
@@ -19,8 +19,8 @@ Implement is **domain-neutral by design.** *What* commands prove it runs, *what*
 
 Author *with* the feedforward tools, not just against the docs:
 - **Language server (LSP)** — consult defs/refs/types (pyright/mypy/tsc) *before* editing, not just to type-check after. Semantic facts beat guessing a signature.
-- **CLIs / scripts** — one entry point per action (`just up/down/test/lint/typecheck/fix/gate`; template: [`doc-patterns/harness/justfile`](../../doc-patterns/harness/justfile)). The loop's graders and you invoke the *same* commands.
-- **Codemods** — when a convention spans N files, a script enforces it ([`codemods/`](../../codemods/README.md)); the loop runs the auto-fix arm before spending a grader finding on mechanical drift.
+- **CLIs / scripts** — one entry point per action (`just up/down/test/lint/typecheck/fix/gate`; template: [`doc-patterns/harness/justfile`](../../doc-patterns/harness/justfile)). The loop's checks and you invoke the *same* commands.
+- **Codemods** — when a convention spans N files, a script enforces it ([`codemods/`](../../codemods/README.md)); the loop runs the auto-fix arm before a check or grader reports mechanical drift.
 
 ## What you read at ticket start
 
@@ -37,7 +37,7 @@ Per ticket, in order — and if any is missing, **push back to Plan before writi
 1. **Read the context** (above).
 2. **Sketch the change** — out loud: "We're adding X, shaped by `<hook>`, touching these files. Anything missing?" Don't code yet.
 3. **Author** — code shaped to the design hook. The catalog is the *shape*; this code is the *adaptation*.
-4. **Verify + review** — hand the diff to the [code-verification loop](../../graders/code-verification-loop.md): checks first, then the fuzzy ones, fix once, re-grade, until green / capped / stalled.
+4. **Verify + review** — hand the diff to [review-gate](../review-gate/SKILL.md): checks first, in order, then the graders in parallel, fix once, re-grade, until green / capped / stalled.
 5. **Maintain the living docs** — your second job (below).
 6. **Hand off the residual** — not the whole diff; the ~10% the loop couldn't resolve.
 
@@ -78,4 +78,4 @@ Implement is the loop's main **spill producer** — reality bites here. **Grasp 
 
 ## Close — the loop, not a self-review
 
-Implement closes by running the code through the [code-verification loop](../../graders/code-verification-loop.md) and handing off the **residual** — "all graders green except these two the loop couldn't resolve" — not the whole diff for re-audit. That's what removes the human as the bottleneck: you review the ~10% a grader couldn't settle, not the 100% a grader already checked.
+Implement closes by running the code through [review-gate](../review-gate/SKILL.md) and handing off the **residual** — "all graders green except these two the loop couldn't resolve" — not the whole diff for re-audit. That's what removes the human as the bottleneck: you review the ~10% a grader couldn't settle, not the 100% a grader already checked.

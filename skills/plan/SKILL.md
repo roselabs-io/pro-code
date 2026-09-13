@@ -9,7 +9,7 @@ Plan turns the **reviewed spec** Frame produced into **the work** Implement exec
 
 **Frame's opposite.** Frame was human dialogue — pattern-*less*, mostly *in* the loop. Plan is an agent **transform** (frame docs → tickets) — pattern-*rich*, mostly *on* the loop: the agent decomposes and sequences, you review and own the two judgment calls (architecture, tiering). De-black-boxed, Plan is exactly three things: **a chain, two routings, and an exit grader.**
 
-Plan is **domain-neutral by design.** *What* design shapes exist to route against and *what* a "surface" even is come from a **profile** (`profiles/<domain>/`), not from this skill. This skill is the **mechanism**; the profile is the **content**. Default profile: `generic-saas`.
+Plan is **domain-neutral by design.** *What* design shapes exist to route against and *what* a "surface" even is come from a **profile** (`profiles/<domain>/`), not from this skill. This skill is the **mechanism**; the profile is the **content**. The active profile is resolved per run from `$PROFILE` or the project's `.pipeline-profile` ([`profiles/CONTRACT.md#active-profile-resolution`](../../profiles/CONTRACT.md#active-profile-resolution)); there is no default.
 
 ## What you read
 

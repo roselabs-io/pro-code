@@ -7,7 +7,7 @@ description: "Phase 1 — turn upstream material, or an interactive brainstorm w
 
 Frame turns whatever context exists into a **reviewed spec** the downstream phases build against. It runs first: a vague or wrong spec compounds through Plan and Implement, so Frame **closes with a grader** — [`graders/frame-completeness.md`](../../graders/frame-completeness.md) — before anything hands off.
 
-Frame is **domain-neutral by design.** *What* questions to ask, *what* sources to expect, and *what* sections a spec needs come from a **profile** (`profiles/<domain>/`), not from this skill. This skill is the **mechanism**; the profile is the **content**. Default profile: `generic-saas`.
+Frame is **domain-neutral by design.** *What* questions to ask, *what* sources to expect, and *what* sections a spec needs come from a **profile** (`profiles/<domain>/`), not from this skill. This skill is the **mechanism**; the profile is the **content**. The active profile is resolved per run from `$PROFILE` or the project's `.pipeline-profile` ([`profiles/CONTRACT.md#active-profile-resolution`](../../profiles/CONTRACT.md#active-profile-resolution)); there is no default. On a new project, Frame's first action is to write `.pipeline-profile` with the driver's choice.
 
 ## Two modes
 
@@ -25,7 +25,7 @@ Not one-shot. **Incremental and cumulative** — read what's there, fold in what
 
 ## What you produce
 
-The spec is a **doc-set**, not one master file. The active profile names the exact set; the `generic-saas` default:
+The spec is a **doc-set**, not one master file. The active profile names the exact set; for `generic-saas`:
 
 | Artifact | Content |
 |---|---|
@@ -39,7 +39,7 @@ Docs are **collaborative + cumulative**. Read before adding; append open-questio
 
 Walk the sections the active profile defines, asking only what the inputs (or the driver) don't already answer. Keep entries tight. **A half-filled section is worse than an empty one** — don't fill to fill.
 
-The `generic-saas` required sections: **Actors · Top-level workflows · Data model · Integrations · Functionalities · Metrics.** (Details + which are optional: [`profiles/generic-saas/frame-profile.md`](../../profiles/generic-saas/frame-profile.md).)
+For example, the `generic-saas` required sections: **Actors · Top-level workflows · Data model · Integrations · Functionalities · Metrics.** (Details + which are optional: [`profiles/generic-saas/frame-profile.md`](../../profiles/generic-saas/frame-profile.md).)
 
 ## Park what spills
 

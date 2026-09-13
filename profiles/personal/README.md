@@ -15,7 +15,7 @@ An overlay can **only tighten** — add checks, never relax or remove a domain/a
 any overlay that tries to weaken the gate.
 
 ## Budget
-Deterministic personal graders are free. **Fuzzy** ones count against the shared ~3 fuzzy budget
-(agnostic + domain + personal) — add one only if it earns its place.
+A personal **check** (a `--forbid` row) is free. A personal **grader** rides as a +1 above the shared ~4
+grader budget (agnostic + domain) — add one only if it earns its place. See `../../checks/README.md`.
 
 *No personal profiles are committed — this is the ready-to-use home.*

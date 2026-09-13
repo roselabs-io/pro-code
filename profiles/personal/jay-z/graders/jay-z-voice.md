@@ -1,11 +1,7 @@
 # jay-z-voice — profile-authored grader unit
 
 Checks that new/changed docstrings and comments carry **Jay-Z's voice** — *on top of* the comment
-doctrine, never instead of it. Copy-target contract: [`../../../_skeleton/grader.md`](../../../_skeleton/grader.md).
-
-## kind
-`fuzzy` — a fresh sub-agent, one rubric. Counts against the ~3 fuzzy budget (agnostic + domain +
-personal). Advisory, like every grader.
+doctrine, never instead of it. Copy-target contract: [`../../../_skeleton/grader.md`](../../../_skeleton/grader.md). A fresh sub-agent, one rubric; the personal overlay's +1 above the shared ~4.
 
 ## rubric_source
 Inline (below). The orchestrator injects this text into the grader sub-agent's prompt.
@@ -41,6 +37,6 @@ grade(diff, rubric=<inline above>, context) → { pass, findings: [{file, line, 
   only ever adds the "needs voice" finding.
 
 ## authoring discipline
-One responsibility (voice), fuzzy, few. It rides the comment doctrine; it never contradicts it. This is
+One responsibility (voice), few. It rides the comment doctrine; it never contradicts it. This is
 the additive-only rule made concrete: a personal grader **tightens** (demands more — voice *and* the
 doctrine), it never **loosens**.
