@@ -48,6 +48,8 @@ checks/                            deterministic — README.md (the check/grader
                                      doctrine_lint.py (comment doctrine · test posture · forbids)
 graders/                           LLM judgment — profile-completeness (GATE 0) · frame-completeness ·
                                      plan-completeness · simplicity
+evals/                             mutation tests for the graders — README.md (the method) · build.py ·
+                                     one case per rule shown to steer
 profiles/                          the guide/gate seam — domain overlays (CONTRACT.md is the hook list)
   generic-saas/                    API-only Python SaaS
   edge-telemetry/                  industrial telemetry + alerting, with a dashboard

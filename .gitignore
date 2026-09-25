@@ -13,3 +13,4 @@ htmlcov/
 uv.lock
 poetry.lock
 .claude/
+evals/results/
