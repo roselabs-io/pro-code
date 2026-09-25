@@ -1,0 +1,7 @@
+{
+  "name": "pro-code",
+  "description": "A pipeline for building software with coding agents: Frame → Plan → Implement, each handoff gated by checks (deterministic) and graders (LLM judgment), with the domain content supplied by a swappable profile.",
+  "author": {
+    "name": "Patrick Saint-Denis"
+  }
+}
