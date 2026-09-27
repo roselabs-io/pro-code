@@ -1,6 +1,6 @@
 ---
-consumed_by: [orchestrator, build]
-canonical_for: `saas-web` check rows: command, threshold, n/a reasons
+consumed_by: ["orchestrator", "build"]
+canonical_for: "`saas-web` check rows: command, threshold, n/a reasons"
 profile: saas-web
 ---
 

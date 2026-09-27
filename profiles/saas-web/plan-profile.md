@@ -1,6 +1,6 @@
 ---
-consumed_by: [plan, grader:plan, build, grader:drift]
-canonical_for: `saas-web` design catalog and tiering signals
+consumed_by: ["plan", "grader:plan", "build", "grader:drift"]
+canonical_for: "`saas-web` design catalog and tiering signals"
 profile: saas-web
 ---
 

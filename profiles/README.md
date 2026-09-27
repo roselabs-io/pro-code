@@ -1,6 +1,6 @@
 ---
-consumed_by: [orchestrator]
-canonical_for: the profile index
+consumed_by: ["orchestrator"]
+canonical_for: "the profile index"
 profile: agnostic
 ---
 

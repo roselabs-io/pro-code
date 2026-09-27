@@ -1,6 +1,6 @@
 ---
-consumed_by: [orchestrator, build]
-canonical_for: `local-app` check rows: command, threshold, n/a reasons
+consumed_by: ["orchestrator", "build"]
+canonical_for: "`local-app` check rows: command, threshold, n/a reasons"
 profile: local-app
 ---
 

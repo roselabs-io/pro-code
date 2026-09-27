@@ -1,6 +1,6 @@
 ---
-consumed_by: [build, grader:drift, grader:feature]
-canonical_for: `saas-web` stack, conventions, forbids, false-green traps
+consumed_by: ["build", "grader:drift", "grader:feature"]
+canonical_for: "`saas-web` stack, conventions, forbids, false-green traps"
 profile: saas-web
 ---
 

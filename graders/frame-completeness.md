@@ -1,6 +1,6 @@
 ---
-consumed_by: [grader:frame]
-canonical_for: the Frame readiness rubric
+consumed_by: ["grader:frame"]
+canonical_for: "the Frame readiness rubric"
 profile: agnostic
 ---
 

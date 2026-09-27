@@ -1,6 +1,6 @@
 ---
-consumed_by: [grader:boundary]
-canonical_for: the `local-app` boundary rubric
+consumed_by: ["grader:boundary"]
+canonical_for: "the `local-app` boundary rubric"
 profile: local-app
 ---
 

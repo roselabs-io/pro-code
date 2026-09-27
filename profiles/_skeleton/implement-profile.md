@@ -1,6 +1,6 @@
 ---
-consumed_by: [build, grader:drift, grader:feature]
-canonical_for: `_skeleton` stack, conventions, forbids, false-green traps
+consumed_by: ["build", "grader:drift", "grader:feature"]
+canonical_for: "`_skeleton` stack, conventions, forbids, false-green traps"
 profile: _skeleton
 ---
 

@@ -1,6 +1,6 @@
 ---
-consumed_by: [orchestrator]
-canonical_for: how a personal overlay composes
+consumed_by: ["orchestrator"]
+canonical_for: "how a personal overlay composes"
 profile: personal
 ---
 

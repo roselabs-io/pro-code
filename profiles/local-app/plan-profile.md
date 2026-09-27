@@ -1,6 +1,6 @@
 ---
-consumed_by: [plan, grader:plan, build, grader:drift, grader:simplicity]
-canonical_for: `local-app` design catalog and tiering signals
+consumed_by: ["plan", "grader:plan", "build", "grader:drift", "grader:simplicity"]
+canonical_for: "`local-app` design catalog and tiering signals"
 profile: local-app
 ---
 

@@ -1,6 +1,6 @@
 ---
-consumed_by: [build]
-canonical_for: the auto-fix arm
+consumed_by: ["build"]
+canonical_for: "the auto-fix arm"
 profile: agnostic
 ---
 

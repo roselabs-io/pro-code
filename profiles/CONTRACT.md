@@ -1,6 +1,6 @@
 ---
-consumed_by: [orchestrator]
-canonical_for: what a profile must supply and how the active one resolves
+consumed_by: ["orchestrator"]
+canonical_for: "what a profile must supply and how the active one resolves"
 profile: agnostic
 ---
 

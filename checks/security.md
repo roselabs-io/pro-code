@@ -1,6 +1,6 @@
 ---
-consumed_by: [check:security]
-canonical_for: the security check
+consumed_by: ["check:security"]
+canonical_for: "the security check"
 profile: agnostic
 ---
 

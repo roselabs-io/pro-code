@@ -1,6 +1,6 @@
 ---
-consumed_by: [check:deps]
-canonical_for: the dependency check
+consumed_by: ["check:deps"]
+canonical_for: "the dependency check"
 profile: agnostic
 ---
 

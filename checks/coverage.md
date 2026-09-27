@@ -1,6 +1,6 @@
 ---
-consumed_by: [check:coverage]
-canonical_for: the coverage check
+consumed_by: ["check:coverage"]
+canonical_for: "the coverage check"
 profile: agnostic
 ---
 

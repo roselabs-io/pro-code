@@ -1,6 +1,6 @@
 ---
-consumed_by: [orchestrator]
-canonical_for: the verify-gate contract
+consumed_by: ["orchestrator"]
+canonical_for: "the verify-gate contract"
 profile: agnostic
 ---
 

@@ -1,8 +1,8 @@
 ---
-name: autopilot
+name: "autopilot"
 description: "Phase 3 runner — the orchestrator-workers pattern. Decompose Plan's backlog into independent chains, fan out a worker sub-agent per ticket across the dependency waves, run each through the verification loop with isolated graders, and aggregate one residual handoff."
-consumed_by: [orchestrator]
-canonical_for: running the phases unattended
+consumed_by: ["orchestrator"]
+canonical_for: "running the phases unattended"
 profile: agnostic
 ---
 

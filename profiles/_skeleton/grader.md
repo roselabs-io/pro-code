@@ -1,6 +1,6 @@
 ---
-consumed_by: [grader:profile]
-canonical_for: the grader unit skeleton
+consumed_by: ["grader:profile"]
+canonical_for: "the grader unit skeleton"
 profile: _skeleton
 ---
 

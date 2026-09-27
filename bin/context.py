@@ -16,7 +16,7 @@ import re
 import sys
 from pathlib import Path
 
-FM = re.compile(r"\A---\n(.*?)\n---\n", re.S)
+FM = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
 
 
 def frontmatter(text: str) -> dict[str, str]:
@@ -27,17 +27,23 @@ def frontmatter(text: str) -> dict[str, str]:
     for line in m.group(1).splitlines():
         if ":" in line:
             k, v = line.split(":", 1)
-            out[k.strip()] = v.strip()
+            out[k.strip()] = (
+                v.strip().strip("\"'") if not v.strip().startswith("[") else v.strip()
+            )
     return out
 
 
 def listed(value: str) -> list[str]:
-    return [p.strip() for p in value.strip("[]").split(",") if p.strip()]
+    """A YAML flow sequence, entries quoted. Values carry colons, so they must be."""
+    return [p.strip().strip("\"'") for p in value.strip("[]").split(",") if p.strip()]
 
 
 def select(root: Path, role: str, profile: str, scopes: set[str], tickets: set[str]):
     for f in sorted(root.rglob("*.md")):
-        if any(p in {".git", "examples", "evals", ".pytest_cache", "node_modules"} for p in f.parts):
+        if any(
+            p in {".git", "examples", "evals", ".pytest_cache", "node_modules"}
+            for p in f.parts
+        ):
             continue
         text = f.read_text(encoding="utf-8")
         fm = frontmatter(text)
@@ -53,17 +59,21 @@ def select(root: Path, role: str, profile: str, scopes: set[str], tickets: set[s
         own = set(listed(fm.get("tickets", "")))
         if own and tickets and not (own & tickets):
             continue
-        yield f, text[FM.match(text).end():] if FM.match(text) else text
+        yield f, text[FM.match(text).end() :] if FM.match(text) else text
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--role", required=True)
     ap.add_argument("--profile", default="local-app")
-    ap.add_argument("--project", default=None, help="a second root to scan (the project's docs/)")
+    ap.add_argument(
+        "--project", default=None, help="a second root to scan (the project's docs/)"
+    )
     ap.add_argument("--scopes", default="mvp1,reference")
     ap.add_argument("--tickets", default="")
-    ap.add_argument("--list", action="store_true", help="print paths and sizes, not content")
+    ap.add_argument(
+        "--list", action="store_true", help="print paths and sizes, not content"
+    )
     a = ap.parse_args()
 
     roots = [Path(__file__).resolve().parent.parent]

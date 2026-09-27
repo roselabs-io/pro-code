@@ -1,6 +1,6 @@
 ---
-consumed_by: [orchestrator]
-canonical_for: checks vs graders, and the deterministic tier in order
+consumed_by: ["orchestrator"]
+canonical_for: "checks vs graders, and the deterministic tier in order"
 profile: agnostic
 ---
 

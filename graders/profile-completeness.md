@@ -1,6 +1,6 @@
 ---
-consumed_by: [grader:profile]
-canonical_for: the profile authoring rubric
+consumed_by: ["grader:profile"]
+canonical_for: "the profile authoring rubric"
 profile: agnostic
 ---
 

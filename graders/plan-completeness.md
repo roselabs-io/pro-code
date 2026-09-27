@@ -1,6 +1,6 @@
 ---
-consumed_by: [grader:plan]
-canonical_for: the Plan coverage gate and well-formedness rubric
+consumed_by: ["grader:plan"]
+canonical_for: "the Plan coverage gate and well-formedness rubric"
 profile: agnostic
 ---
 

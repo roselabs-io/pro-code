@@ -1,6 +1,6 @@
 ---
-consumed_by: [build, grader:drift, grader:feature, grader:boundary, grader:docs]
-canonical_for: `local-app` stack, conventions, forbids, false-green traps
+consumed_by: ["build", "grader:drift", "grader:feature", "grader:boundary", "grader:docs"]
+canonical_for: "`local-app` stack, conventions, forbids, false-green traps"
 profile: local-app
 ---
 

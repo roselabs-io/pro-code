@@ -1,6 +1,6 @@
 ---
-consumed_by: [frame, grader:frame]
-canonical_for: `_skeleton` Frame bar and silent gaps
+consumed_by: ["frame", "grader:frame"]
+canonical_for: "`_skeleton` Frame bar and silent gaps"
 profile: _skeleton
 ---
 

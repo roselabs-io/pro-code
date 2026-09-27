@@ -1,6 +1,6 @@
 ---
-consumed_by: [check:browser]
-canonical_for: the browser check
+consumed_by: ["check:browser"]
+canonical_for: "the browser check"
 profile: agnostic
 ---
 

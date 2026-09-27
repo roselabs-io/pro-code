@@ -1,8 +1,8 @@
 ---
-name: review-gate
+name: "review-gate"
 description: "Implement's gate — the code-verification loop. Run the auto-fix arm, then the checks in short-circuit order, then the graders as isolated sub-agents; collect all findings, fix once, re-grade until green, capped, or stalled. Composes the agnostic layer, the active domain profile, and an optional personal overlay."
-consumed_by: [orchestrator]
-canonical_for: the gate loop: order, policy, stopping conditions
+consumed_by: ["orchestrator"]
+canonical_for: "the gate loop: order, policy, stopping conditions"
 profile: agnostic
 ---
 

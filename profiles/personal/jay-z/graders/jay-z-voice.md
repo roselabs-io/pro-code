@@ -1,6 +1,6 @@
 ---
-consumed_by: [grader:voice]
-canonical_for: the jay-z voice rubric
+consumed_by: ["grader:voice"]
+canonical_for: "the jay-z voice rubric"
 profile: personal
 ---
 

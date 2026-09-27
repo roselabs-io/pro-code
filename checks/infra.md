@@ -1,6 +1,6 @@
 ---
-consumed_by: [check:infra]
-canonical_for: the infra check
+consumed_by: ["check:infra"]
+canonical_for: "the infra check"
 profile: agnostic
 ---
 

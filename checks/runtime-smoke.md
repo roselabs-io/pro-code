@@ -1,6 +1,6 @@
 ---
-consumed_by: [check:runtime-smoke]
-canonical_for: the runtime-smoke check
+consumed_by: ["check:runtime-smoke"]
+canonical_for: "the runtime-smoke check"
 profile: agnostic
 ---
 

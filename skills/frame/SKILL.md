@@ -1,8 +1,8 @@
 ---
-name: frame
+name: "frame"
 description: "Phase 1 — turn upstream material, or an interactive brainstorm when there's none, into a reviewed spec (functional analysis + open questions) that Plan can consume."
-consumed_by: [frame]
-canonical_for: the Frame phase mechanism
+consumed_by: ["frame"]
+canonical_for: "the Frame phase mechanism"
 profile: agnostic
 ---
 

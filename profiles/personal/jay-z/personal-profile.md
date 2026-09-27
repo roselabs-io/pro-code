@@ -1,6 +1,6 @@
 ---
-consumed_by: [orchestrator]
-canonical_for: the jay-z overlay
+consumed_by: ["orchestrator"]
+canonical_for: "the jay-z overlay"
 profile: personal
 ---
 

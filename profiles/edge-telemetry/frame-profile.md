@@ -1,6 +1,6 @@
 ---
-consumed_by: [frame, grader:frame]
-canonical_for: `edge-telemetry` Frame bar and silent gaps
+consumed_by: ["frame", "grader:frame"]
+canonical_for: "`edge-telemetry` Frame bar and silent gaps"
 profile: edge-telemetry
 ---
 

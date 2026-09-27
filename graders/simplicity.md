@@ -1,6 +1,6 @@
 ---
-consumed_by: [grader:simplicity]
-canonical_for: the over-building rubric
+consumed_by: ["grader:simplicity"]
+canonical_for: "the over-building rubric"
 profile: agnostic
 ---
 

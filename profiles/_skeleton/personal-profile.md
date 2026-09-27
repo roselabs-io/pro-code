@@ -1,6 +1,6 @@
 ---
-consumed_by: [orchestrator]
-canonical_for: the personal overlay skeleton
+consumed_by: ["orchestrator"]
+canonical_for: "the personal overlay skeleton"
 profile: _skeleton
 ---
 
