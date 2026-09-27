@@ -1,3 +1,9 @@
+---
+consumed_by: [orchestrator, build]
+canonical_for: `local-app` check rows: command, threshold, n/a reasons
+profile: local-app
+---
+
 # Profile — `local-app` · check-commands
 
 The checks read this file directly — the active-profile handshake. Row names and order:

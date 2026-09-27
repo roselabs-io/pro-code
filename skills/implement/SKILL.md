@@ -1,6 +1,9 @@
 ---
 name: implement
 description: "Phase 3 — build a ticket: author the code, then run it through the verification loop (author ≠ grader) until the graders are green, maintaining the living docs. Produces a residual handoff, not a wall of unreviewed diff."
+consumed_by: [build]
+canonical_for: the Implement phase mechanism
+profile: agnostic
 ---
 
 # Implement (phase 3 — build, then grade)

@@ -1,3 +1,9 @@
+---
+consumed_by: [check:infra]
+canonical_for: the infra check
+profile: agnostic
+---
+
 # Check — infra
 
 > **Infra** (feedback, ⚙️): builds the app's container images and boots the stack the way

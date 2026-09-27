@@ -1,3 +1,9 @@
+---
+consumed_by: [orchestrator, build]
+canonical_for: `saas-web` check rows: command, threshold, n/a reasons
+profile: saas-web
+---
+
 # Profile — `saas-web` · check-commands
 
 The checks read this file directly — the **active-profile handshake** (the pipeline resolves

@@ -1,3 +1,9 @@
+---
+consumed_by: [plan, grader:plan, build, grader:drift, grader:simplicity]
+canonical_for: `local-app` design catalog and tiering signals
+profile: local-app
+---
+
 # Profile — `local-app` · Plan
 
 Domain: a local desktop application around a model pipeline. Pairs with `frame-profile.md`. Consumed

@@ -1,3 +1,9 @@
+---
+consumed_by: [orchestrator]
+canonical_for: the profile index
+profile: agnostic
+---
+
 # Profiles — the guide/gate seam
 
 A **profile** is the domain overlay. The pipeline ships agnostic **checks** + **graders** + neutral **guide skeletons**; a profile fills the guides and supplies the check commands and grader rubrics for one domain. **Swap the profile, retarget the whole pipeline** — this is what makes pro-code agnostic.

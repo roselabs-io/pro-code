@@ -1,3 +1,9 @@
+---
+consumed_by: [frame, grader:frame]
+canonical_for: `local-app` Frame bar and silent gaps
+profile: local-app
+---
+
 # Profile — `local-app` · Frame
 
 Domain: a **local desktop application around a model pipeline**: a Python process on the user's

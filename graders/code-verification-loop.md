@@ -1,3 +1,9 @@
+---
+consumed_by: [orchestrator]
+canonical_for: the verify-gate contract
+profile: agnostic
+---
+
 # code-verification-loop — moved
 
 The loop is an orchestrator, not a grader. It now lives at

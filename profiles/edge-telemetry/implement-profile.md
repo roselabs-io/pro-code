@@ -1,3 +1,9 @@
+---
+consumed_by: [build, grader:drift, grader:feature]
+canonical_for: `edge-telemetry` stack, conventions, forbids, false-green traps
+profile: edge-telemetry
+---
+
 # Profile — `edge-telemetry` · Implement
 
 Domain: industrial edge telemetry monitoring + alerting. Completes the trio. Consumed by the unchanged `skills/implement` + `skills/review-gate`.

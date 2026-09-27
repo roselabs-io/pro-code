@@ -1,3 +1,9 @@
+---
+consumed_by: [orchestrator]
+canonical_for: how a personal overlay composes
+profile: personal
+---
+
 # Personal profiles — reviewing taste, layered on
 
 A **personal profile** is a lean overlay that composes *on top of* the active domain profile

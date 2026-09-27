@@ -1,3 +1,9 @@
+---
+consumed_by: [check:deps]
+canonical_for: the dependency check
+profile: agnostic
+---
+
 # Check — dependencies (supply-chain gate · tier-1)
 
 Checks **new or changed dependencies** in the diff: vetted, vuln-free, lockfile-consistent, license-clean.

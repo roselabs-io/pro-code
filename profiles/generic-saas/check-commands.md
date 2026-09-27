@@ -1,3 +1,9 @@
+---
+consumed_by: [orchestrator, build]
+canonical_for: `generic-saas` check rows: command, threshold, n/a reasons
+profile: generic-saas
+---
+
 # Profile — `generic-saas` · check-commands
 
 The checks read this file directly — the **active-profile handshake** (the pipeline resolves

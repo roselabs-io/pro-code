@@ -1,3 +1,9 @@
+---
+consumed_by: [build, grader:drift, grader:feature]
+canonical_for: `_skeleton` stack, conventions, forbids, false-green traps
+profile: _skeleton
+---
+
 # Profile — `{domain}` · Implement
 
 Fill every `{TODO}`. *(must)* slots are gated by GATE-0. See [`../CONTRACT.md`](../CONTRACT.md).

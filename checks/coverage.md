@@ -1,3 +1,9 @@
+---
+consumed_by: [check:coverage]
+canonical_for: the coverage check
+profile: agnostic
+---
+
 # Check — coverage (changed-line test coverage · tier-1)
 
 Checks whether the **diff's** new/changed lines are exercised by tests — a *delta* check, not a whole-repo

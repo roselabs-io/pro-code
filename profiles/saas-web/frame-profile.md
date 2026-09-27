@@ -1,3 +1,9 @@
+---
+consumed_by: [frame, grader:frame]
+canonical_for: `saas-web` Frame bar and silent gaps
+profile: saas-web
+---
+
 # Profile — `saas-web` · Frame
 
 Domain: a **full-stack web SaaS** — **Python + FastAPI (async)** backend, **React + TypeScript + MUI**

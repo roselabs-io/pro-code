@@ -1,3 +1,9 @@
+---
+consumed_by: [plan, grader:plan, build, grader:drift]
+canonical_for: `generic-saas` design catalog and tiering signals
+profile: generic-saas
+---
+
 # Profile — `generic-saas` · Plan
 
 Domain: a CRUD SaaS backend — **Python + FastAPI, API-only**. The **default** profile. Pairs with `frame-profile.md`.

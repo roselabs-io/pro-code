@@ -1,3 +1,9 @@
+---
+consumed_by: [build, grader:drift, grader:feature, grader:boundary, grader:docs]
+canonical_for: `local-app` stack, conventions, forbids, false-green traps
+profile: local-app
+---
+
 # Profile — `local-app` · Implement
 
 Domain: a local desktop application around a model pipeline. Consumed by the unchanged

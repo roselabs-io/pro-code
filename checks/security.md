@@ -1,3 +1,9 @@
+---
+consumed_by: [check:security]
+canonical_for: the security check
+profile: agnostic
+---
+
 # Check — security (SAST + secret scan · tier-1)
 
 The **secrets-and-sinks** gate: runs the profile's static-analysis + secret-scan commands over the diff

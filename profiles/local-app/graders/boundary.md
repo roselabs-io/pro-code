@@ -1,3 +1,9 @@
+---
+consumed_by: [grader:boundary]
+canonical_for: the `local-app` boundary rubric
+profile: local-app
+---
+
 # boundary — profile-authored grader unit (`local-app`)
 
 The domain's core promise: nothing of the user's leaves the machine unredacted, and nothing raw is

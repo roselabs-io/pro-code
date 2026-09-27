@@ -1,3 +1,9 @@
+---
+consumed_by: [plan, grader:plan, build, grader:drift]
+canonical_for: `_skeleton` design catalog and tiering signals
+profile: _skeleton
+---
+
 # Profile — `{domain}` · Plan
 
 Fill every `{TODO}`. *(must)* slots are gated by GATE-0. See [`../CONTRACT.md`](../CONTRACT.md).
