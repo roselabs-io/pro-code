@@ -1,3 +1,9 @@
+---
+consumed_by: ["orchestrator"]
+canonical_for: "the personal overlay skeleton"
+profile: _skeleton
+---
+
 # personal-profile — `{name}`
 
 A **personal overlay** — your reviewing taste, layered on top of whatever domain profile is active. Copy

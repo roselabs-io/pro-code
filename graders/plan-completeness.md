@@ -1,3 +1,9 @@
+---
+consumed_by: ["grader:plan"]
+canonical_for: "the Plan coverage gate and well-formedness rubric"
+profile: agnostic
+---
+
 # Grader — plan-completeness
 
 The **second** grader in the pipeline — the Plan→Implement gate. It grades the **plan artifacts** (system overview, surface specs, backlog) *before Implement consumes them*, so it's still **"grade the context, not just the code"**: the plan is the guides Implement builds against, and a plan with a hole becomes code with a hole.

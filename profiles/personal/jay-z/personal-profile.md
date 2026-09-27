@@ -1,3 +1,9 @@
+---
+consumed_by: ["orchestrator"]
+canonical_for: "the jay-z overlay"
+profile: personal
+---
+
 # personal-profile — jay-z
 
 A **demo** personal overlay: docstrings and comments carry Jay-Z's voice. It shows two things at once —

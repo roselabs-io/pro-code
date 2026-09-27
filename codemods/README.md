@@ -1,3 +1,9 @@
+---
+consumed_by: ["build"]
+canonical_for: "the auto-fix arm"
+profile: agnostic
+---
+
 # codemods — the deterministic auto-fix arm
 
 > **Code mods** (feedforward + auto-fix, ⚙️): AST-based **bulk transforms**

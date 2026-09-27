@@ -1,3 +1,9 @@
+---
+consumed_by: ["build", "grader:drift", "grader:feature"]
+canonical_for: "`generic-saas` stack, conventions, forbids, false-green traps"
+profile: generic-saas
+---
+
 # Profile — `generic-saas` · Implement
 
 Domain: a CRUD SaaS backend — **Python + FastAPI, API-only**. Completes the trio with `frame-profile.md` and `plan-profile.md`.

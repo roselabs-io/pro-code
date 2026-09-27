@@ -1,3 +1,9 @@
+---
+consumed_by: ["grader:frame"]
+canonical_for: "the Frame readiness rubric"
+profile: agnostic
+---
+
 # Grader — frame-completeness
 
 The **first** grader in the pipeline, and the highest-leverage: errors in the spec compound through Plan and Implement, so the ask→Frame handoff is where a completeness gate pays the most. **"Grade the context, not just the code"** starts here.

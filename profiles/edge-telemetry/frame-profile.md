@@ -1,3 +1,9 @@
+---
+consumed_by: ["frame", "grader:frame"]
+canonical_for: "`edge-telemetry` Frame bar and silent gaps"
+profile: edge-telemetry
+---
+
 # Profile — `edge-telemetry` · Frame
 
 Domain: industrial **edge telemetry monitoring + alerting** (Python rule engine + a served dashboard). The second profile — the agnosticism proof. Nothing in `skills/` or `graders/` changes to support it; only this overlay differs from `generic-saas`.

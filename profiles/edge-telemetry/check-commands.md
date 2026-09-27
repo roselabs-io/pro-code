@@ -1,3 +1,9 @@
+---
+consumed_by: ["orchestrator", "build"]
+canonical_for: "`edge-telemetry` check rows: command, threshold, n/a reasons"
+profile: edge-telemetry
+---
+
 # Profile — `edge-telemetry` · check-commands
 
 The checks read this file directly — the **active-profile handshake** (the pipeline resolves

@@ -1,3 +1,9 @@
+---
+consumed_by: ["plan", "grader:plan", "build", "grader:drift"]
+canonical_for: "`saas-web` design catalog and tiering signals"
+profile: saas-web
+---
+
 # Profile — `saas-web` · Plan
 
 Domain: a **full-stack web SaaS** — FastAPI (async) + React/TS/MUI + async Postgres, deployed via Docker

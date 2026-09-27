@@ -1,3 +1,9 @@
+---
+consumed_by: ["grader:voice"]
+canonical_for: "the jay-z voice rubric"
+profile: personal
+---
+
 # jay-z-voice — profile-authored grader unit
 
 Checks that new/changed docstrings and comments carry **Jay-Z's voice** — *on top of* the comment

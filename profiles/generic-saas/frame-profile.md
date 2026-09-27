@@ -1,3 +1,9 @@
+---
+consumed_by: ["frame", "grader:frame"]
+canonical_for: "`generic-saas` Frame bar and silent gaps"
+profile: generic-saas
+---
+
 # Profile — `generic-saas` · Frame
 
 Domain: a CRUD SaaS backend — **Python + FastAPI, API-only** (no frontend). The **default** profile.

@@ -1,3 +1,9 @@
+---
+consumed_by: ["orchestrator"]
+canonical_for: "what a profile must supply and how the active one resolves"
+profile: agnostic
+---
+
 # Profile contract — the hook interface a profile supplies
 
 A **profile** is the domain overlay: the pipeline ships agnostic phase skills + checks + graders + neutral

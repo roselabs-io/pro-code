@@ -1,6 +1,9 @@
 ---
-name: plan
+name: "plan"
 description: "Phase 2 — transform the reviewed spec (functional-analysis + open-questions) into the work: a system overview, per-surface specs, and a sequenced, tiered backlog of well-formed tickets that Implement can execute."
+consumed_by: ["plan"]
+canonical_for: "the Plan phase mechanism"
+profile: agnostic
 ---
 
 # Plan (phase 2 — the work)

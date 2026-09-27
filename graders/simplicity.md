@@ -1,3 +1,9 @@
+---
+consumed_by: ["grader:simplicity"]
+canonical_for: "the over-building rubric"
+profile: agnostic
+---
+
 # Grader — simplicity (over-building)
 
 Checks that the diff builds **what the ticket asked for and nothing else**. The other graders look for

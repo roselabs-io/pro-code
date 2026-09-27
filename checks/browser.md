@@ -1,3 +1,9 @@
+---
+consumed_by: ["check:browser"]
+canonical_for: "the browser check"
+profile: agnostic
+---
+
 # Check — browser
 
 > **Browser** (feedback, ⚙️): an automated browser (Playwright) that

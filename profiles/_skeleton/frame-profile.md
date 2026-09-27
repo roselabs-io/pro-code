@@ -1,3 +1,9 @@
+---
+consumed_by: ["frame", "grader:frame"]
+canonical_for: "`_skeleton` Frame bar and silent gaps"
+profile: _skeleton
+---
+
 # Profile — `{domain}` · Frame
 
 Copy this dir to `profiles/<domain>/` and fill every `{TODO}`. *(must)* slots are gated by GATE-0

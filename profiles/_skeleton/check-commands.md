@@ -1,3 +1,9 @@
+---
+consumed_by: ["orchestrator", "build"]
+canonical_for: "`_skeleton` check rows: command, threshold, n/a reasons"
+profile: _skeleton
+---
+
 # Profile — `{domain}` · check-commands
 
 The checks read this file directly for their commands, thresholds, and allowlists — the

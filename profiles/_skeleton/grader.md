@@ -1,3 +1,9 @@
+---
+consumed_by: ["grader:profile"]
+canonical_for: "the grader unit skeleton"
+profile: _skeleton
+---
+
 # {grader-name} — profile-authored grader unit
 
 A grader a **profile** ships (domain or personal), discovered and run alongside the agnostic graders.

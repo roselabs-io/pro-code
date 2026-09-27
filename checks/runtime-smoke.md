@@ -1,3 +1,9 @@
+---
+consumed_by: ["check:runtime-smoke"]
+canonical_for: "the runtime-smoke check"
+profile: agnostic
+---
+
 # Check — runtime-smoke (boots-at-all floor · non-deploying profiles)
 
 Starts the app the way its README says to, sends it one request or one invocation, asserts a

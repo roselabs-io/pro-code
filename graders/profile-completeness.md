@@ -1,3 +1,9 @@
+---
+consumed_by: ["grader:profile"]
+canonical_for: "the profile authoring rubric"
+profile: agnostic
+---
+
 # profile-completeness — GATE 0 (before Frame)
 
 The **first** gate: it checks a profile is **well-formed before the pipeline runs on it**. The pipeline

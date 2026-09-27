@@ -1,3 +1,9 @@
+---
+consumed_by: ["orchestrator"]
+canonical_for: "checks vs graders, and the deterministic tier in order"
+profile: agnostic
+---
+
 # checks — the deterministic tier
 
 This directory holds the **checks**: tools and scripts that run over a diff and return facts. The other

@@ -1,3 +1,9 @@
+---
+consumed_by: ["plan", "grader:plan", "build", "grader:drift"]
+canonical_for: "`edge-telemetry` design catalog and tiering signals"
+profile: edge-telemetry
+---
+
 # Profile — `edge-telemetry` · Plan
 
 Domain: industrial edge telemetry monitoring + alerting. Pairs with this profile's `frame-profile.md`. Consumed by the unchanged `skills/plan` + `graders/plan-completeness`.
