@@ -1,7 +1,7 @@
 """The offline secret scan of the tracked files, run by `just check`.
 
 ```sh
-uv run --no-project --with detect-secrets==1.5.0 python tools/secret_scan.py
+uv run --offline --no-project --with detect-secrets==1.5.0 python tools/secret_scan.py
 ```
 
 Run in a Git checkout, it scans every file of `git ls-files` with detect-secrets, using the plugins,
@@ -22,7 +22,8 @@ then review the changed entries in the diff. The baseline excludes the lines of 
 that hold only a `sha512` integrity hash, a high-entropy string; the other lines of those files are
 scanned. Limits: the detectors are detect-secrets' patterns and
 entropy rules, so a secret of an unknown format with low entropy is not found; untracked files and
-Git history are not scanned. Installing detect-secrets needs the network once; uv caches it.
+Git history are not scanned. `just prepare` downloads
+detect-secrets into uv's cache once, with the network; the scan itself runs offline.
 """
 
 from __future__ import annotations

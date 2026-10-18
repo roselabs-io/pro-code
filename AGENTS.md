@@ -31,15 +31,17 @@ repository is public.
 
 | Recipe | Runs |
 |---|---|
-| `just check` | `checks/doctrine_lint.py` over the tracked Python except the linter itself; byte-compilation of the tracked Python; `tools/check_links.py` over the tracked Markdown except `evals/*/prompt.md`; `tools/secret_scan.py` with detect-secrets 1.5.0 against `.secrets.baseline` |
+| `just check` | `checks/doctrine_lint.py` over the tracked Python except the linter itself; byte-compilation of the tracked Python; `tools/check_links.py` over the tracked Markdown except `evals/*/prompt.md`; `tools/secret_scan.py` with detect-secrets 1.5.0 against `.secrets.baseline`, through `uv run --offline` |
 | `just gate` | `just check`; the deterministic gate CI runs |
+| `just prepare` | downloads detect-secrets 1.5.0 into uv's cache; needs the network; not part of the gate |
 | `just fix` | `python3 evals/build.py`: regenerates `evals/*/prompt.md` from their templates and rubrics |
 | `just ff` | switches to `main` and fast-forwards it from `origin`; refuses local changes or a diverged `main` |
 
 `up`, `down`, `logs` and `test` are not applicable (`checks.recipes.not_applicable` of
 `pipeline.yaml`): the site has no local server and the root has no test suite. The examples' tests
 are run from each example's directory (its README) and are not part of the gate. `just`, `python3` and `uv` are
-required; the first secret scan downloads detect-secrets.
+required, and `just prepare` is run once before the gate: the gate installs nothing and its secret
+scan exits 1 with that command when detect-secrets 1.5.0 is not in uv's cache.
 
 No recipe calls a model. The evals call live models and are run by hand (`evals/README.md`).
 
