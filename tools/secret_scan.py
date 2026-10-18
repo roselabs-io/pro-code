@@ -18,8 +18,9 @@ baseline's line numbers:
 git ls-files -z | xargs -0 uv tool run --from detect-secrets==1.5.0 detect-secrets scan --no-verify --baseline .secrets.baseline
 ```
 
-then review the changed entries in the diff. The baseline excludes `pnpm-lock.yaml` files, whose
-integrity hashes are high-entropy strings. Limits: the detectors are detect-secrets' patterns and
+then review the changed entries in the diff. The baseline excludes the lines of a `pnpm-lock.yaml`
+that hold only a `sha512` integrity hash, a high-entropy string; the other lines of those files are
+scanned. Limits: the detectors are detect-secrets' patterns and
 entropy rules, so a secret of an unknown format with low entropy is not found; untracked files and
 Git history are not scanned. Installing detect-secrets needs the network once; uv caches it.
 """
