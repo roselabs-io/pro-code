@@ -20,7 +20,7 @@ describes the pipeline and has the full layout.
 | `pipeline.yaml` | the Governor dispatcher's config for this repository |
 | `.github/workflows/procode-ci.yml` | `validate` (PR metadata) and `gate` (`just gate`) |
 | `.github/workflows/procode-pm.yml` | the issue and board sync of Governor |
-| `tools/local_preflight.py` | the local check the dispatcher runs: `just check`, then `just gate` |
+| Governor's package preflight (`tools/local_preflight.py` of the Governor package, run by the dispatcher; this repository keeps no copy) | the local check the dispatcher runs: `just check`, then `just gate` |
 | `tools/check_links.py`, `tools/secret_scan.py`, `.secrets.baseline` | the link check and the secret scan of `just check` |
 
 GitHub Pages builds `main` from the root with its own `pages build and deployment` workflow, so a
