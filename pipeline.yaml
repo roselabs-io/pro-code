@@ -23,10 +23,6 @@ gate:
 # every merge to a person. Whether a merge deploys is decided by this repository's own CI/CD.
 autonomy: tiered
 
-preflight:
-  command: [python3, tools/local_preflight.py]
-  steps: [just check, just gate]
-
 checks:
   recipes:
     not_applicable: {"up": "the site has no local server", "down": "the site has no local server", "logs": "the site has no local server", "test": "no test suite at the root; the examples' tests need dependencies that are not locked and, for roselabs-blog, Postgres and a browser"}
