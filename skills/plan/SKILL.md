@@ -8,9 +8,9 @@ profile: agnostic
 
 # Plan (phase 2 — the work)
 
-Plan turns the **reviewed spec** Frame produced into **the work** Implement executes: a high-level system view, a spec per surface, and a backlog of tickets — sequenced into a build order and tiered for autonomy. It's the bridge between *what to build* and *building it*, and it **closes with a grader** — [`graders/plan-completeness.md`](../../graders/plan-completeness.md) — before anything hands off.
+Plan turns the **signed-off spec** Frame produced into **the work** Implement executes: a high-level system view, a spec per surface, and a backlog of tickets — sequenced into a build order and tiered for autonomy. It's the bridge between *what to build* and *building it*, and it ends with the driver's sign-off; the [plan-completeness grader](../../graders/plan-completeness.md) is available on demand before it.
 
-**Frame's opposite.** Frame was human dialogue — pattern-*less*, mostly *in* the loop. Plan is an agent **transform** (frame docs → tickets) — pattern-*rich*, mostly *on* the loop: the agent decomposes and sequences, you review and own the two judgment calls (architecture, tiering). De-black-boxed, Plan is exactly three things: **a chain, two routings, and an exit grader.**
+**Frame's opposite.** Frame was human dialogue — pattern-*less*, mostly *in* the loop. Plan is an agent **transform** (frame docs → tickets) — pattern-*rich*, mostly *on* the loop: the agent decomposes and sequences, you review and own the two judgment calls (architecture, tiering). De-black-boxed, Plan is three things: **a chain, two routings, and a sign-off.**
 
 Plan is **domain-neutral by design.** *What* design shapes exist to route against and *what* a "surface" even is come from a **profile** (`profiles/<domain>/`), not from this skill. This skill is the **mechanism**; the profile is the **content**. The active profile is resolved per run from `$PROFILE` or the project's `.pipeline-profile` ([`profiles/CONTRACT.md#active-profile-resolution`](../../profiles/CONTRACT.md#active-profile-resolution)); there is no default.
 
@@ -76,9 +76,9 @@ Mid-plan you'll surface things that aren't this phase's artifacts. **Grasp → c
 - a non-trivial decision + why → a decisions / ADR log.
 - a future feature beyond this build → the backlog, flagged out-of-scope-for-now.
 
-## Close — run the completeness grader
+## Close — the driver's sign-off
 
-Plan **doesn't trail off.** Before handoff, run the plan-completeness ceremony ([`graders/plan-completeness.md`](../../graders/plan-completeness.md)): a **coverage** map (every functionality → ≥1 ticket), a 🟢/🟡/🔴 well-formedness scorecard framed by *implement-time cost*, a tiering + sequencing sanity pass, and an explicit two-path sign-off. The ceremony is agnostic; the **profile supplies the bar** — what "covered," "verifiable," and "well-formed" mean in this domain. It's a **fresh grader** — author ≠ grader, so the plan gets adversarial eyes before Implement eats it.
+Plan **doesn't trail off.** It ends when the driver signs off the backlog for Implement. Before that, the driver may run the plan-completeness grader on demand ([`graders/plan-completeness.md`](../../graders/plan-completeness.md)): a **coverage** map (every functionality → ≥1 ticket), a 🟢/🟡/🔴 well-formedness scorecard framed by *implement-time cost*, a tiering + sequencing sanity pass, and an explicit two-path sign-off. The ceremony is agnostic; the **profile supplies the bar** — what "covered," "verifiable," and "well-formed" mean in this domain. When run, it is a **fresh session** — author ≠ grader.
 
 ## What you do NOT produce
 

@@ -7,11 +7,11 @@
 
 ## Universal (hold in every domain)
 
-- **Grade the context, not just the code.** Every handoff passes a grader before the next phase eats it.
-- **Author ≠ grader.** Nothing grades its own work; a fresh critic has fresh priors.
+- **Checks first, one review.** Every diff passes the deterministic checks, then one review by a session that did not write it.
+- **Author ≠ reviewer.** Nothing reviews its own work; a fresh reader has fresh priors.
 - **No done without fresh evidence.** "Should pass" is not "passed this session."
 - **Fail loudly.** A silent wrong answer is worse than a loud stop.
-- **Every correction given twice is a missing grader.** Encode the rubric; don't re-nag.
+- **Every correction given twice is a missing check.** Encode it as a check or a rubric line; don't re-nag.
 
 ## Domain values (from the profile)
 

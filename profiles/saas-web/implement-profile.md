@@ -1,5 +1,5 @@
 ---
-consumed_by: ["build", "grader:drift", "grader:feature"]
+consumed_by: ["build", "review"]
 canonical_for: "`saas-web` stack, conventions, forbids, false-green traps"
 profile: saas-web
 ---
@@ -11,8 +11,8 @@ Compose. Completes the trio with `frame-profile.md` and `plan-profile.md`.
 
 The hard-done requirement — **no draft or unpublished resource is readable by a public request** — is
 proven the way isolation was in `generic-saas`: by an integration test on the real query path **and** an
-e2e test on the rendered surface, then held under the adversarial N-vote. The grader, not confidence,
-certifies it.
+e2e test on the rendered surface, then read by the review. The checks and the review, not confidence,
+certify it.
 
 > **This profile mandates** (its opinionated subset — the union of the SaaS *and* UI opinions, plus deploy): a **codemod** (every protected router depends on `get_current_user`), the **logs check**, an **integration test per endpoint against a real Postgres**, the **browser check + an e2e test**, an **a11y check** (`axe`), **visual-regression snapshots**, and the **infra check** (`deploys: true`). The `no-print` / `no-bare-except` / `no-raw-color` / `no-create-all-in-app` special-lints.
 > **It skips**: nothing agnostic — it's the fullest profile. `schema-validation` is declared n/a (pydantic + TS types validate at the edges).
@@ -35,7 +35,7 @@ certifies it.
 
 Commands, thresholds, and allowlists live in this profile's [`check-commands.md`](check-commands.md) — the file the checks read directly (the active-profile handshake). This profile **runs**: lint (backend + frontend) · tests (integration on real Postgres + unit + e2e) · type-check (advisory: `mypy` + `tsc`) · doctrine-lint · special-lint · codemod-check · **security** · **coverage** · **deps** · logs · **browser** · **a11y** · **visual-regression** · **infra**. It declares **schema-validation** *n/a* (pydantic + TS types validate at the edges). See `check-commands.md`.
 
-## Rubrics (~4 focused graders — what each points at)
+## Rubrics (the review's lenses — what each points at)
 
 - **feature / spec** → the ticket's acceptance criterion. Does the diff satisfy the assertion end-to-end — including the **negative** (the withheld thing is absent for an anonymous session), not a 200 proxy?
 - **pattern / drift** → the design catalog (`plan-profile.md`) hooks + the conventions below, **including the styling discipline**. Was `owner-scoped-query-guard` applied to **every** verb, deny-by-default? Is styling theme-only, no raw hex? Plus the **undeclared-choice lens** (a library/pattern no input specified → `docs/assumptions.md`).
@@ -47,14 +47,14 @@ Commands, thresholds, and allowlists live in this profile's [`check-commands.md`
 - **LSP (guide):** `mypy app/` (backend) + `tsc --noEmit` (frontend) — types/refs while authoring. Advisory, not a gate step this slice.
 - **Environment + CLIs (guide):** **uv** (`uv sync`) + **pnpm** + a **`justfile`** (`just gate`) whose recipes call `uv run` / `pnpm`. Template: `doc-patterns/harness/justfile`.
 - **Codemods (auto-fix arm):** codemod-lite = `ruff check --fix . && ruff format .` + `eslint --fix && prettier -w` every gate; one **libcst** codemod enforcing that **every protected route depends on `get_current_user`** (the boundary convention, across `app/api/`). See the example's `codemods/`.
-- **Logs check:** structured events per `doc-patterns/harness/log-taxonomy.md` — `HANDLER_RAN`, `AUTH_DENIED{reason}`, `DRAFT_ACCESS_DENIED{post,requester}`. The grader replays an anonymous request for a draft and asserts `DRAFT_ACCESS_DENIED` fired (the *no-draft-leak* promise proven from the trace, not the 404 alone).
+- **Logs check:** structured events per `doc-patterns/harness/log-taxonomy.md` — `HANDLER_RAN`, `AUTH_DENIED{reason}`, `DRAFT_ACCESS_DENIED{post,requester}`. The logs check replays an anonymous request for a draft and asserts `DRAFT_ACCESS_DENIED` fired (the *no-draft-leak* promise proven from the trace, not the 404 alone).
 - **Browser check (LIVE here):** `has_ui: true`. Playwright drives the running app; **`visual_invariant`: a draft never appears in the DOM for an anonymous session, and an author-only control (edit/delete) never renders for a reader.** The only check that catches a client rendering withheld content while every API test stays green.
 - **Infra check (LIVE here):** `deploys: true`. `docker compose build` + bring the stack up + a smoke check (the API `/health` is 200, the web root serves, a migration ran) — "it builds and boots" is part of done. See [`../../checks/infra.md`](../../checks/infra.md).
 
 ## Doctrines this profile mandates
 
-- **Comment doctrine** (`doc-patterns/doctrines/comment-doctrine.md`) — shared/universal, enforced by `doctrine_lint.py` + the drift grader.
-- **README doctrine** (`doc-patterns/doctrines/readme-doctrine.md`) — the service README carries a "Run it" section: set up (`uv sync` · `pnpm install`), run `just gate`, launch (`just up`). Checked by the docs-currency grader.
+- **Comment doctrine** (`doc-patterns/doctrines/comment-doctrine.md`) — shared/universal, enforced by `doctrine_lint.py` + the review's drift lens.
+- **README doctrine** (`doc-patterns/doctrines/readme-doctrine.md`) — the service README carries a "Run it" section: set up (`uv sync` · `pnpm install`), run `just gate`, launch (`just up`). Checked by the review's docs-currency lens.
 - **Test posture** (`doc-patterns/doctrines/test-posture.md`) — this domain's opinion:
   - **An integration test per endpoint, against a real Postgres** — every route drives the *real* request through the app (async, testcontainers Postgres) and asserts the **effect** (a row changed, a field serialized, a draft *not* returned), not the status. Mocking the DB is a false green.
   - **An e2e test, because there is a frontend** — Playwright drives the running app and asserts the visual invariant *and its negative* (the draft/author-control is absent for the wrong viewer). A UI-bearing profile owes this layer.
@@ -69,7 +69,7 @@ Commands, thresholds, and allowlists live in this profile's [`check-commands.md`
 - **no `create_all(` in `app/`** — schema changes ship as Alembic migrations, not runtime table creation (dev-seed scripts are `doctrine: allow`).
 - **no DB *operations* (`session.execute/add/get/scalar/delete/flush/commit`) outside `app/repositories/`** — routers/services may *reference* the session type to thread it down, but must never query with it; a query above the repository is a layering breach.
 
-## Conventions (the drift grader's rubric)
+## Conventions (the rubric of the review's drift lens)
 
 - **Layered, strictly** — routers parse/authorize/serialize; services hold logic; repositories own the DB session. No DB in a router/service; no logic in a repository.
 - **Async all the way** — no sync DB driver or blocking call in the async request path; one `AsyncSession` per request, not leaked above the repository.
@@ -87,7 +87,7 @@ Commands, thresholds, and allowlists live in this profile's [`check-commands.md`
 ## verify_means + false-green traps
 
 - **verify_means:** an **integration test on the real query path (real Postgres)** asserts the API effect, **and** a **Playwright e2e** asserts the rendered behaviour *and its negative*, with fresh output this session — a test, not a person, confirms it. For the deploy dimension, the **infra check** proves the stack builds and boots.
-- **false-green traps** (the `check-passes-but-behaviour-is-broken` class the feature grader must probe past):
+- **false-green traps** (the `check-passes-but-behaviour-is-broken` class the review's feature lens must probe past):
   - **mock-green ≠ real-green** — a mocked DB that always says yes hides the integration bug; the visibility test must hit the **real** async query path (testcontainers Postgres).
   - **`200 ≠ the handler ran`** — assert the *effect* (a row changed, a draft *absent* from the payload), not the status.
   - **happy-path-only** — an endpoint with no auth-denied / validation / not-found / non-owner case is under-tested; the per-endpoint matrix is the floor.
@@ -96,7 +96,7 @@ Commands, thresholds, and allowlists live in this profile's [`check-commands.md`
   - **serialization drops a falsy field** — a `false`/`0`/`""` silently missing looks like "not returned"; assert presence.
   - **no red-green on a fix** — a regression test never seen to fail first proves nothing.
 
-## Living docs (the docs-currency grader's set)
+## Living docs (the set of the review's docs-currency lens)
 
 Kept current every ticket — the second artifact:
 - `docs/backlog.md` — forward-only (shipped rows deleted; new work added).

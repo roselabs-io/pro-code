@@ -7,7 +7,7 @@ profile: agnostic
 # Check — dependencies (supply-chain gate · tier-1)
 
 Checks **new or changed dependencies** in the diff: vetted, vuln-free, lockfile-consistent, license-clean.
-Deterministic, tier-1, short-circuits — a known-vulnerable dep must never reach a grader. Agnostic: the
+Deterministic, tier-1, short-circuits — a known-vulnerable dep must never reach the review. Agnostic: the
 *checks* live here; the *audit command, license allowlist, and manifest paths* come from the profile.
 
 ## What it checks (over the diff)

@@ -25,4 +25,4 @@ fields — so the **logs check** can replay a run and assert the right events fi
 
 - **Assert presence, not just return value** — a passing status with no `HANDLER_RAN` event is a false green.
 - **Assert the code, level, and key fields** — `ALERT_RAISED{severity:critical}` proves the *critical* path, not just *an* alert.
-- **Deterministic** — the logs check is a script over captured logs; it runs in the gate before the graders.
+- **Deterministic** — the logs check is a script over captured logs; it runs in the gate before the review.

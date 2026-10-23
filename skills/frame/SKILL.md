@@ -8,7 +8,7 @@ profile: agnostic
 
 # Frame (phase 1 — the spec)
 
-Frame turns whatever context exists into a **reviewed spec** the downstream phases build against. It runs first: a vague or wrong spec compounds through Plan and Implement, so Frame **closes with a grader** — [`graders/frame-completeness.md`](../../graders/frame-completeness.md) — before anything hands off.
+Frame turns whatever context exists into a **spec** the downstream phases build against. It runs first: a vague or wrong spec compounds through Plan and Implement. Frame ends with the driver's sign-off; the [frame-completeness grader](../../graders/frame-completeness.md) is available on demand before it.
 
 Frame is **domain-neutral by design.** *What* questions to ask, *what* sources to expect, and *what* sections a spec needs come from a **profile** (`profiles/<domain>/`), not from this skill. This skill is the **mechanism**; the profile is the **content**. The active profile is resolved per run from `$PROFILE` or the project's `.pipeline-profile` ([`profiles/CONTRACT.md#active-profile-resolution`](../../profiles/CONTRACT.md#active-profile-resolution)); there is no default. On a new project, Frame's first action is to write `.pipeline-profile` with the driver's choice.
 
@@ -52,9 +52,9 @@ Mid-frame you'll surface things that aren't the spec — an architecture idea, a
 - a whole future feature → the backlog
 - the brief is wrong → a surprises / decisions log
 
-## Close — run the completeness grader
+## Close — the driver's sign-off
 
-Frame **doesn't trail off.** Before handoff, run the frame-completeness ceremony ([`graders/frame-completeness.md`](../../graders/frame-completeness.md)): a completeness estimate, a 🟢/🟡/🔴 scorecard framed by *downstream cost*, targeted gap-pointing, and an explicit two-path sign-off (close the top gaps now / sign off under-bar and log every gap). The ceremony is agnostic; the **profile supplies the bar** — what "verifiable" and "complete" mean in this domain.
+Frame **doesn't trail off.** It ends when the driver signs off the spec for Plan. Before that, the driver may run the frame-completeness grader on demand ([`graders/frame-completeness.md`](../../graders/frame-completeness.md)), in a fresh session: a completeness estimate, a 🟢/🟡/🔴 scorecard framed by *downstream cost*, targeted gap-pointing, and an explicit two-path sign-off (close the top gaps now / sign off under-bar and log every gap). The ceremony is agnostic; the **profile supplies the bar** — what "verifiable" and "complete" mean in this domain.
 
 ## What you do NOT produce
 

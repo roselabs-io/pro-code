@@ -1,32 +1,33 @@
 ---
 consumed_by: ["orchestrator"]
-canonical_for: "checks vs graders, and the deterministic tier in order"
+canonical_for: "checks vs the review and graders, and the deterministic tier in order"
 profile: agnostic
 ---
 
 # checks — the deterministic tier
 
 This directory holds the **checks**: tools and scripts that run over a diff and return facts. The other
-kind of sensor, a **grader**, lives under [`graders/`](../graders/). The two words are not interchangeable,
+kind of sensor is LLM judgment: the **review** of each ticket and the on-demand **graders**, both under
+[`graders/`](../graders/). The two words are not interchangeable,
 and this file is where the distinction is defined; every other document links here rather than restating it.
 
 ## Checks vs graders
 
-| | **Check** | **Grader** |
-|---|---|---|
-| What runs | a command or script | an LLM sub-agent, fresh context |
-| Input | `diff` + a **config** row from the active profile's `check-commands.md` | `diff` + a **rubric** text the orchestrator injects |
-| Output | `{ pass, findings }` — facts | `{ pass, findings, fix? }` — judgment |
-| A pass means | proof | an opinion (which is why the core promise gets an N-vote) |
-| Cost | cheap, reproducible, cacheable | expensive; frontier model |
-| Order | first, in the order below, **short-circuit** | after every check is green, **in parallel** |
-| Author ≠ grader | meaningless — a linter has no author to be biased by | enforced |
-| How a profile adds one | a row in `check-commands.md` | a `.md` unit in `profiles/<x>/graders/` |
-| Budget | unlimited | ~4 shared, +1 per personal overlay |
-| Files | `checks/*.md`, `checks/doctrine_lint.py` | `graders/*.md`, `profiles/*/graders/*.md` |
-| Contract | `check(diff, config, context)` | `grade(diff, rubric, context)` |
+| | **Check** | **Review** | **Grader** |
+|---|---|---|---|
+| What runs | a command or script | one LLM session, fresh context | one LLM session, fresh context |
+| When | every ticket | every ticket, once | on demand: frame-completeness, plan-completeness, profile-completeness (GATE 0) |
+| Input | `diff` + a **config** row from the active profile's `check-commands.md` | `diff` + [`review.md`](../graders/review.md), the profile's `rubrics` and lens units, injected | the phase's artifacts + the grader's rubric, injected |
+| Output | `{ pass, findings }` — facts | `{ pass, findings }` — judgment | a scorecard and a sign-off — judgment |
+| A pass means | proof | an opinion | an opinion |
+| Cost | cheap, reproducible, cacheable | one session per ticket | one session per run |
+| Order | first, in the order below, **short-circuit** | after every check is green | when a person runs it |
+| Author ≠ reviewer | meaningless — a linter has no author to be biased by | enforced | enforced |
+| How a profile adds one | a row in `check-commands.md` | a lens unit in `profiles/<x>/graders/` | — |
+| Files | `checks/*.md`, `checks/doctrine_lint.py` | `graders/review.md`, `profiles/*/graders/*.md` | `graders/*-completeness.md` |
+| Contract | `check(diff, config, context)` | `review(diff, rubric, context)` | `grade(artifacts, rubric, context)` |
 
-The orchestrator that runs both is [`skills/review-gate`](../skills/review-gate/SKILL.md). The gate
+The orchestrator that runs the checks and the review is [`skills/review-gate`](../skills/review-gate/SKILL.md). The gate
 policy (what blocks) is stated there, once.
 
 ## The deterministic tier, in order

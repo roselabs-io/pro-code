@@ -1,5 +1,5 @@
 ---
-consumed_by: ["build", "grader:drift", "grader:feature", "grader:boundary", "grader:docs"]
+consumed_by: ["build", "review"]
 canonical_for: "`local-app` stack, conventions, forbids, false-green traps"
 profile: local-app
 ---
@@ -16,7 +16,7 @@ author's confidence.
 > **This profile mandates:** the **leak test** on every ticket that touches the boundary, **fixture
 > evals** per stage, the **trace** as the log, the **smoke** check as the boot floor, and the **browser
 > check** on any screen ticket. **It skips:** infra (`deploys: false`), codemods (drift is caught by
-> the drift grader), and the no-print lint (no request handlers).
+> the review's drift lens), and the no-print lint (no request handlers).
 
 ## Stack + layout
 
@@ -42,7 +42,7 @@ Commands live in [`check-commands.md`](check-commands.md). This profile **runs**
 type-check (advisory) · doctrine-lint · security · coverage · deps · logs (the trace) · smoke · browser.
 It declares schema-validation, codemod and infra *n/a* — see `check-commands.md`.
 
-## Rubrics *(must — ~4 focused graders)*
+## Rubrics *(must — the review's lenses)*
 - **feature / spec** → the ticket's fixture assertion: does the stage produce the asserted output on
   the named synthetic fixture, with fresh output this session?
 - **pattern / drift** → the design catalog hooks + the conventions below. Was `gate-before-egress`
@@ -50,7 +50,7 @@ It declares schema-validation, codemod and infra *n/a* — see `check-commands.m
 - **docs-currency** → the living-docs set below.
 - **simplicity** → the ticket's criterion + hooks + the Stack choice-points. Always in scope: the
   fixture and its assertion. A stage that grew a config surface the UI spec forbids is a finding.
-- **boundary** *(domain grader unit, `graders/boundary.md`)* → on any diff touching the gate, the
+- **boundary** *(domain lens unit, `graders/boundary.md`)* → on any diff touching the gate, the
   mapping store, the trace writer or the API call site: the leak test is present, ran, and reports
   zero; no new write of raw input; no new egress.
 
@@ -77,7 +77,7 @@ It declares schema-validation, codemod and infra *n/a* — see `check-commands.m
   - **a screen that passes the browser check and needs a tutorial** — the check asserts the DOM;
     "usable without instructions" needs a person, and the ticket says so (🟡).
 
-## Conventions / forbids *(may — the drift grader's rubric)*
+## Conventions / forbids *(may — the rubric of the review's drift lens)*
 - **One egress.** The remote model is called from one module; every call site outside it is a
   finding. Forbid: `Anthropic(` outside `chain/llm.py`.
 - **Raw input is a variable, never a file.** No write of the un-redacted text; the trace holds the
@@ -98,7 +98,7 @@ none — `ruff --fix` + `ruff format` as codemod-lite every gate.
   `just app`), **test posture** — this domain's opinion: every stage owes a fixture test with an
   answer key; every boundary change owes a leak test; every screen owes a browser test.
 
-## Living docs *(must — the docs-currency grader's set)*
+## Living docs *(must — the set of the review's docs-currency lens)*
 - `docs/planning/backlog.md` — forward-only.
 - `docs/planning/current-state.md` — what's built now.
 - `docs/planning/open-questions.md`.
