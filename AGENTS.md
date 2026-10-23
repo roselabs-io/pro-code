@@ -6,7 +6,7 @@ Instructions for agent sessions working in this repository. `pipeline.yaml` name
 ## Repository
 
 Markdown skills, graders, checks and profiles of a build pipeline for coding agents, the Python
-scripts that support them, example services built through it, and two HTML articles. `README.md`
+scripts that support them, example services built through it. `README.md`
 describes the pipeline and has the full layout.
 
 | Path | Content |
@@ -16,7 +16,7 @@ describes the pipeline and has the full layout.
 | `evals/` | mutation tests for the graders (`evals/README.md`); `build.py` writes each `evals/*/prompt.md`, `screen.py` calls `claude -p` |
 | `examples/` | services built through the pipeline, each with its own README, recipes and tests |
 | `bin/context.py` | emits the documents one pipeline role consumes |
-| `*.html`, `two-reading-journeys.md`, `.nojekyll` | the articles published by GitHub Pages |
+| `.nojekyll` | marker file for GitHub Pages; the repository holds no articles, and `README.md` links to their copies on `blog.roselabs.io` |
 | `pipeline.yaml` | the Governor dispatcher's config for this repository |
 | `.github/workflows/procode-ci.yml` | `validate` (PR metadata) and `gate` (`just gate`) |
 | `.github/workflows/procode-pm.yml` | the issue and board sync of Governor |
@@ -45,8 +45,8 @@ scan exits 1 with that command when detect-secrets 1.5.0 is not in uv's cache.
 
 No recipe calls a model. The evals call live models and are run by hand (`evals/README.md`).
 
-The gate does not check fragments against headings, does not read links in the HTML articles, does
-not lint the examples with their profiles' `--forbid` rules, and does not scan Git history.
+The gate does not check fragments against headings, does not lint the examples with their
+profiles' `--forbid` rules, and does not scan Git history.
 
 ## Changing content
 
