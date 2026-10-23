@@ -7,9 +7,9 @@ profile: agnostic
 # Check — security (SAST + secret scan · tier-1)
 
 The **secrets-and-sinks** gate: runs the profile's static-analysis + secret-scan commands over the diff
-and turns their output into findings. Deterministic, runs in the **first tier** of the code-verification
-loop — before any grader spends a token — and **short-circuits** (a leaked credential must never
-reach a grader). Agnostic: the *loop and the severities* live here; the *tools, ruleset, and allowlist*
+and turns their output into findings. Deterministic, runs in the **first tier** of review-gate — before
+the review spends a token — and **short-circuits** (a leaked credential must never reach the
+review). Agnostic: the *loop and the severities* live here; the *tools, ruleset, and allowlist*
 come from the profile.
 
 ## What it checks (over the diff)
@@ -42,7 +42,7 @@ check(diff, config=<security_commands + allow>, context)
 ```
 
 Deterministic — facts, not judgment; runs first, short-circuits. Logic-level flaws a scanner can't catch
-(authz ordering, an existence oracle) stay with the **drift / core-promise** graders — this check is the
+(authz ordering, an existence oracle) stay with the review's **drift** and **feature** lenses — this check is the
 mechanical floor. See [`README.md`](README.md) · [`skills/review-gate`](../skills/review-gate/SKILL.md) ·
 [`../profiles/CONTRACT.md`](../profiles/CONTRACT.md).
 

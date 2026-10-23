@@ -18,8 +18,8 @@ A **demo** personal overlay: docstrings and comments carry Jay-Z's voice. It sho
   the *content*. Enforced by [`graders/jay-z-voice.md`](graders/jay-z-voice.md).
 
 ## graders/
-- [`jay-z-voice.md`](graders/jay-z-voice.md) — a profile-authored grader (the overlay's +1 above the shared
-  ~4 grader budget). Additive: it can only *fail a comment for lacking the voice*, never *pass one the comment
+- [`jay-z-voice.md`](graders/jay-z-voice.md) — a profile-authored review lens unit, applied by the one
+  review. Additive: it can only *fail a comment for lacking the voice*, never *pass one the comment
   doctrine rejects*.
 
 ## notes

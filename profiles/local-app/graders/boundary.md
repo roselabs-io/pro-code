@@ -1,14 +1,14 @@
 ---
-consumed_by: ["grader:boundary"]
+consumed_by: ["review"]
 canonical_for: "the `local-app` boundary rubric"
 profile: local-app
 ---
 
-# boundary — profile-authored grader unit (`local-app`)
+# boundary — profile-authored review lens unit (`local-app`)
 
 The domain's core promise: nothing of the user's leaves the machine unredacted, and nothing raw is
 written to disk. A deterministic leak test exists (the `logs` row and the per-ticket leak test);
-this grader judges what a regex cannot — whether a diff *introduced* a path the tests do not cover.
+this lens judges what a regex cannot — whether a diff *introduced* a path the tests do not cover.
 
 ## rubric_source *(must)*
 Inline:
@@ -27,11 +27,11 @@ test that ran green.
 
 ## contract
 ```
-grade(diff, rubric=<above>, context) → { pass, findings: [{file, line, issue, fix}], fix? }
+findings for lens boundary: [{file, line, issue, fix}]
 ```
 - **pass** = no new egress outside the egress module · no raw-input write · boundary change ⇒ leak
   test present and green with fresh output.
 - a **missing leak test** on a boundary change is a finding, not a silent pass.
 
 ## authoring discipline
-One responsibility: the boundary. Format, drift and simplicity belong to the agnostic graders.
+One responsibility: the boundary. Format, drift and simplicity belong to the agnostic lenses.

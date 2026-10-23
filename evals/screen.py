@@ -21,10 +21,8 @@ import sys
 HERE = pathlib.Path(__file__).resolve().parent
 GRADERS = HERE.parent / "graders"
 
-# A redirect to skills/review-gate, not a rubric.
-SKIP = {"code-verification-loop"}
 
-QUESTION = """Below is a rubric given to a fresh sub-agent that grades an artifact in a build pipeline.
+QUESTION = """Below is a rubric given to a fresh sub-agent that grades or reviews an artifact in a build pipeline.
 
 Read it as that sub-agent. Then answer one question about yourself, honestly and without
 flattering the rubric: which of its rules would you NOT already have followed if nobody had
@@ -69,7 +67,7 @@ def main(argv: list[str]) -> int:
     wanted = set(argv[1:])
     rows = []
     for path in sorted(GRADERS.glob("*.md")):
-        if path.stem in SKIP or (wanted and path.stem not in wanted):
+        if wanted and path.stem not in wanted:
             continue
         result = ask(path.read_text())
         steers = result.get("steers") or []

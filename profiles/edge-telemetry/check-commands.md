@@ -36,7 +36,7 @@ Row names + order: [`../../checks/README.md`](../../checks/README.md#the-determi
 
 - **schema-validation** — a reading is validated at ingest (`parse_line` rejects a malformed line), so
   there's no separate schema command.
-- **codemod** — no bulk transform; this domain's drift is caught by the drift grader, not codemods.
+- **codemod** — no bulk transform; this domain's drift is caught by the review's drift lens, not codemods.
 - **infra** — `deploys: false`; a single-process dashboard, no image to build. The smoke row is the boot floor.
 
 ## Allowlists + paths

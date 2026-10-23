@@ -6,48 +6,78 @@ A runnable implementation of the ideas in [the article](https://roselabs-io.gith
 
 **Articles:** [Two reading journeys into agent engineering](https://roselabs-io.github.io/pro-code/two-reading-journeys.html) · [The Map Around Claude Code](https://roselabs-io.github.io/pro-code/the-map-around-claude-code.html) (part two).
 
-Work moves through **Frame → Plan → Implement**, run at scale by **Autopilot**. Each handoff has to pass a gate before the next phase starts.
+Work moves through **Frame → Plan → Implement**; **Autopilot** runs Implement over a backlog. Each phase separates a *guide* (feedforward: domain-specific, supplied by a profile) from its *feedback* (agnostic). The pipeline ships the feedback and neutral guide skeletons; a **profile** fills the guides for a domain.
 
-> **Each phase separates a _guide_ (feedforward — domain-specific, swappable) from its gate (feedback — agnostic).**
-> The pipeline ships the gates and neutral guide skeletons; a **profile** fills the guides for a domain.
+Two kinds of feedback ([`checks/README.md`](checks/README.md) defines them):
 
-Two kinds of gate, and the distinction is load-bearing ([`checks/README.md`](checks/README.md) defines it):
-
-- **Checks** are deterministic — tools and scripts. Lint, type, doctrine, security, tests, coverage, deps, logs, smoke, browser, infra. Cheap, reproducible, and they short-circuit. A check that passes is proof.
-- **Graders** are LLM judgment — completeness, drift, docs-currency, simplicity. Expensive, run as isolated sub-agents with fresh context, author ≠ grader enforced. A grader that passes is an opinion, which is why they vote.
+- **Checks** are deterministic: tools and scripts for lint, type, doctrine, security, tests, coverage, deps, logs, smoke, browser and infra. They run in a fixed order and stop at the first red.
+- **The review** is LLM judgment: one session that did not write the diff reads it once, against one rubric ([`graders/review.md`](graders/review.md)). The **graders** under `graders/` (frame-, plan- and profile-completeness) are LLM judgment a person runs on demand.
 
 ## The pipeline
 
-| Phase | Produces | Guide (swappable) | Gate (agnostic) |
+| Phase | Produces | Guide (from the profile) | Ends with |
 |---|---|---|---|
-| **Frame** | the spec — *what to build* | domain checklist + sources | **frame-completeness** |
-| **Plan** | the decomposition — *the work* | design catalog | **plan-completeness** |
-| **Implement** | the code | conventions · principles · CfRs | **review-gate** — the code-verification loop |
-| **Autopilot** | the run — *build the backlog* | tiers + waves (from Plan) | dispatches review-gate per ticket |
+| **Frame** | the spec — *what to build* | domain checklist + sources | the driver's sign-off |
+| **Plan** | the backlog — *the work* | design catalog | the driver's sign-off |
+| **Implement** | the code and the living docs | conventions · principles · CfRs | [review-gate](skills/review-gate/SKILL.md), then the human's acceptance |
+| **Autopilot** | the run over the backlog | tiers + waves (from Plan) | one handoff for every dispatched ticket |
 
-**review-gate** is the Implement gate: an auto-fix arm (codemods) → the checks, in a fixed order → ~4 isolated graders (feature · drift · docs · simplicity), fix once, re-grade, with an adversarial N-vote on the core promise. A **GATE 0** (profile-completeness) runs once before Frame and checks the profile itself.
+[review-gate](skills/review-gate/SKILL.md) runs on each ticket, in this order:
 
-Frame ships first because errors in the spec compound through every downstream phase, so the ask→Frame handoff is where a completeness gate pays most.
+1. **Auto-fix arm** — formatters and the profile's codemods ([`codemods/`](codemods/README.md)).
+2. **Checks** — the profile's `check-commands.md` rows in the order of [`checks/README.md`](checks/README.md#the-deterministic-tier-in-order), stopping at the first red. The author fixes a red check before the review starts.
+3. **One independent review** — a fresh session that did not write the diff applies the feature, drift, docs-currency and simplicity lenses of [`graders/review.md`](graders/review.md), then any lens unit the profile ships, and reports every finding in one pass.
+4. **At most one fix pass** — the author addresses the findings once and the checks rerun. The review is not run again.
+5. **Stop for the human** — the handoff lists the check results and each finding as fixed or open. The human accepts the ticket or reopens it.
+
+### What runs automatically and what runs on demand
+
+| What | When |
+|---|---|
+| auto-fix arm and checks | every ticket, before the review, and again after the fix pass |
+| the review ([`graders/review.md`](graders/review.md)) | every ticket, once, after the checks are green |
+| the author's fix pass | when the review has findings; at most once |
+| [frame-completeness](graders/frame-completeness.md) | on demand, before the driver signs off Frame |
+| [plan-completeness](graders/plan-completeness.md) | on demand, before the driver signs off Plan |
+| [profile-completeness](graders/profile-completeness.md) (GATE 0) | on demand, when a profile or overlay is written or changed |
+| the evals ([`evals/`](evals/README.md)) | by hand, when a rubric changes; they call live models |
+
+Nothing in the pipeline runs a grader between phases, runs graders in parallel on a ticket, reviews a ticket a second time, or loops until a grader passes.
+
+## Changes from the multi-grader model
+
+Until 2026-10 the pipeline ran a grader at each handoff: profile-completeness before Frame, frame-completeness at the end of Frame and plan-completeness at the end of Plan. Implement's gate ran about four graders in parallel (feature, drift, docs-currency, simplicity), each in its own session, then a fix pass and a re-grade for up to about three iterations, with an adversarial N-vote of several graders on the core promise.
+
+| Earlier | Now |
+|---|---|
+| frame-, plan- and profile-completeness gate each handoff | the same graders, run on demand; each phase ends with the driver's sign-off |
+| four graders in parallel, one session each | one review, one session, with the four as lenses of one rubric (`graders/review.md`; `graders/simplicity.md` became its simplicity lens) |
+| fix pass → re-grade, up to ~3 iterations | at most one fix pass; the checks rerun; no second review |
+| adversarial N-vote on the core promise | removed |
+| profile-authored graders, budget of ~4 shared graders + 1 per overlay | profile-authored lens units of the one review; no grader budget |
+| `graders/code-verification-loop.md`, a redirect to review-gate | deleted |
+
+The measurement behind the change (pro-code evals, 2026-09-25): cost is turns × context; the graders are bound by their fixed context and the builders by their turns; and the frame and plan graders were `inert` in the eval cases — deleting the rule each case tested left the verdict unchanged ([`evals/README.md`](evals/README.md)). Governor, the dispatcher that runs agent work on this repository, adopted the resulting model: thin feedforward, deterministic checks, one independent review by a session other than the author, a bounded fix pass, and the human's product acceptance. Its harness posture records the reasons ([`harness-posture.md`](https://github.com/roselabs-io/governor/blob/main/governor/docs/postures/harness-posture.md), in a private repository).
 
 ## Layout
 
 ```
 skills/frame|plan|implement/       the agnostic phase mechanisms (no domain content)
-skills/review-gate/SKILL.md        the code-verification loop — Implement's gate (orchestrates checks + graders)
-skills/autopilot/SKILL.md          orchestrator-workers — fan out a worker per ticket across waves
+skills/review-gate/SKILL.md        Implement's gate: checks, one independent review, at most one fix pass
+skills/autopilot/SKILL.md          orchestrator-workers — a worker per ticket across waves
 doc-patterns/                      neutral doc skeletons, grouped by role (see doc-patterns/README.md):
   specs/                             what the pipeline produces — functional-analysis · ui-sketch · system-overview · surface-spec
   living-docs/                       memory kept current across the build — current-state · backlog · decision-record · assumptions
   guides/                            standing feedforward — principles · cfrs
   doctrines/                         enforced posture — comment-doctrine · test-posture · readme-doctrine
   harness/                           check + CLI scaffolding — log-taxonomy · justfile
-codemods/README.md                 the deterministic auto-fix arm (stage 0 of the loop)
-checks/                            deterministic — README.md (the check/grader table + run order) ·
+codemods/README.md                 the deterministic auto-fix arm (stage 0 of review-gate)
+checks/                            deterministic — README.md (the check/review/grader table + run order) ·
                                      coverage · dependencies · security · runtime-smoke ·
                                      browser (Playwright) · infra (build + boot) ·
                                      doctrine_lint.py (comment doctrine · test posture · forbids)
-graders/                           LLM judgment — profile-completeness (GATE 0) · frame-completeness ·
-                                     plan-completeness · simplicity
+graders/                           LLM judgment — review (every ticket, once) · on demand:
+                                     profile-completeness (GATE 0) · frame-completeness · plan-completeness
 evals/                             mutation tests for the graders — README.md (the method) · build.py ·
                                      one case per rule shown to steer
 profiles/                          the guide/gate seam — domain overlays (CONTRACT.md is the hook list)
@@ -63,7 +93,7 @@ examples/                          one built service per profile (+ one per over
 
 ## Status
 
-Every directory under `examples/` is a service built end-to-end through the pipeline under one profile, gated green. Each example's `docs/current-state.md` says what is built, what is not, and which checks the profile declares that the example has not wired.
+Every directory under `examples/` is a service built end-to-end through the pipeline under one profile, gated green. The examples were built under the multi-grader model (*Changes from the multi-grader model* above); none has been rebuilt under the current review-gate. Each example's `docs/current-state.md` says what is built, what is not, and which checks the profile declares that the example has not wired.
 
 - **[multi-tenant-isolation](examples/multi-tenant-isolation/)** (`generic-saas`, API): hard-done = *no cross-tenant leak*. Isolation is certified by an integration test and **held under a fresh adversarial refuter** (author ≠ grader) that attacked every verb — including a member cross-tenant delete (an existence oracle via RBAC ordering).
 - **[edge-telemetry-alerting](examples/edge-telemetry-alerting/)** (`edge-telemetry`, UI): hard-done = *no missed critical alert*. Fixture-replay tests + real Playwright browser tests. Built via a **new profile with zero changes to any skill, check, or grader**. A sensor **dead from boot** (`decisions/0001`) raises CRITICAL.

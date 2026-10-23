@@ -9,7 +9,7 @@
 
 | ID | Title | Acceptance criterion (verifiable) | Design hooks | Depends on | Autonomy |
 |---|---|---|---|---|---|
-| T1 | {TODO} | {TODO: an assertion the profile's grader can check — not "handle X well"} | {TODO: `hook.md` or `novel — author fresh`} | — | 🟢 {why} |
+| T1 | {TODO} | {TODO: an assertion a test or check can verify — not "handle X well"} | {TODO: `hook.md` or `novel — author fresh`} | — | 🟢 {why} |
 | T2 | {TODO} | {TODO} | {TODO} | T1 | 🟡 {why} |
 | T3 | {TODO} | {TODO} | {TODO} | T1 | 🔴 {why} |
 

@@ -7,7 +7,7 @@ Every markdown the pipeline reads or writes starts from a template here. The tem
 | [`specs/`](specs/) | **What the pipeline produces** — the spec, written as it frames and plans. | `functional-analysis.md`, `ui-sketch.md` (Frame) · `system-overview.md`, `surface-spec.md` (Plan) |
 | [`living-docs/`](living-docs/) | **Memory kept current across the build** — what's built, what's left, why, and what it silently assumed. Graded for currency. | `current-state.md`, `backlog.md`, `decision-record.md`, `assumptions.md` |
 | [`guides/`](guides/) | **Standing feedforward** — the values and quality bar the code is written against. | `principles.md`, `cfrs.md` |
-| [`doctrines/`](doctrines/) | **Enforced posture** — opinionated rules the code is held to, checked by the doctrine linter + the drift grader. | `comment-doctrine.md`, `test-posture.md`, `readme-doctrine.md` |
+| [`doctrines/`](doctrines/) | **Enforced posture** — opinionated rules the code is held to, checked by the doctrine linter + the review's drift lens. | `comment-doctrine.md`, `test-posture.md`, `readme-doctrine.md` |
 | [`harness/`](harness/) | **Check + CLI scaffolding** — the structured events the logs check reads, and the command entry points. | `log-taxonomy.md`, `justfile` |
 
 ## specs — the doc-set the pipeline produces
@@ -16,9 +16,9 @@ The output of Frame and Plan: a functional analysis (what the system does), a UI
 
 ## living-docs — the second artifact
 
-A build produces two artifacts, not one: the **code**, and the **context**. The living docs are the context — the memory the next agent (or the next session) reads to orient. `current-state.md` says what's built now, `backlog.md` is the forward-only record of remaining work, each `decision-record.md` captures a non-obvious call and its reasoning, and `assumptions.md` — the **assumptions ledger** — records the choices the build made that no input specified (a default the agent reached for from habit or priors), each with a disposition. They're maintained *every ticket*, and the loop's **docs-currency grader** checks them alongside the code — stale memory is a gradable defect, not a cosmetic one. (A project's `open-questions.md` and its updated `surfaces/` specs are living docs too, by the same rule.)
+A build produces two artifacts, not one: the **code**, and the **context**. The living docs are the context — the memory the next agent (or the next session) reads to orient. `current-state.md` says what's built now, `backlog.md` is the forward-only record of remaining work, each `decision-record.md` captures a non-obvious call and its reasoning, and `assumptions.md` — the **assumptions ledger** — records the choices the build made that no input specified (a default the agent reached for from habit or priors), each with a disposition. They're maintained *every ticket*, and the review's **docs-currency lens** reads them alongside the code — stale memory is a gradable defect, not a cosmetic one. (A project's `open-questions.md` and its updated `surfaces/` specs are living docs too, by the same rule.)
 
-The assumptions ledger is the antidote to **silent bias**: a profile's *declared choice-points* (its Stack + layout + Conventions) fix the intended defaults up front, and the drift grader's undeclared-choice lens routes anything the build chose *outside* that set into the ledger — so a prior leaking in from the agent's context becomes visible and vetoable instead of invisible.
+The assumptions ledger is the antidote to **silent bias**: a profile's *declared choice-points* (its Stack + layout + Conventions) fix the intended defaults up front, and the undeclared-choice check of the review's drift lens routes anything the build chose *outside* that set into the ledger — so a prior leaking in from the agent's context becomes visible and vetoable instead of invisible.
 
 ## guides — standing feedforward
 
@@ -26,7 +26,7 @@ The assumptions ledger is the antidote to **silent bias**: a profile's *declared
 
 ## doctrines — enforced posture
 
-The opinionated rules a profile mandates: `comment-doctrine.md` (comments state what the code is, not its history or a ticket number), `test-posture.md` (every test asserts; the layers a domain owes), and `readme-doctrine.md` (every service ships a README with launch instructions). The regex-able floor is enforced deterministically by [`checks/doctrine_lint.py`](../checks/doctrine_lint.py); the judgment cases are the drift grader's.
+The opinionated rules a profile mandates: `comment-doctrine.md` (comments state what the code is, not its history or a ticket number), `test-posture.md` (every test asserts; the layers a domain owes), and `readme-doctrine.md` (every service ships a README with launch instructions). The regex-able floor is enforced deterministically by [`checks/doctrine_lint.py`](../checks/doctrine_lint.py); the judgment cases are read by the review's drift lens.
 
 ## harness — check + CLI scaffolding
 

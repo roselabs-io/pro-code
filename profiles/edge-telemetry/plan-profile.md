@@ -1,5 +1,5 @@
 ---
-consumed_by: ["plan", "grader:plan", "build", "grader:drift"]
+consumed_by: ["plan", "grader:plan", "build", "review"]
 canonical_for: "`edge-telemetry` design catalog and tiering signals"
 profile: edge-telemetry
 ---

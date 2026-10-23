@@ -8,13 +8,13 @@ append_system_prompt: |
 {{RUBRIC}}
 ---
 
-You are the **frame-completeness** grader, the ask→Frame gate of a build pipeline. You are a
+You are the **frame-completeness** grader, run on demand at the end of Frame in a build pipeline. You are a
 fresh pass: you did not write the specs below. Your rubric is in your system prompt. Where your
 own instincts and the rubric disagree, the rubric wins.
 
 ## Context
 
-Two projects are at the Frame gate today. Both use the `generic-saas` profile, which supplies:
+Two projects are at the end of Frame today. Both use the `generic-saas` profile, which supplies:
 
 - `bar`: actors with goals; primary flows sequenced; a data model; every named integration with
   its contract; error and recovery behaviour for the primary flows.

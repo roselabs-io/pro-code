@@ -45,8 +45,8 @@ check(diff, config=<launch + probe + stop>, context)
 
 Deterministic; runs in the verify beat after tests, before browser/infra
 ([the order](README.md#the-deterministic-tier-in-order)). Proves the process boots and answers — not
-that the answer is right; that is the tests' and the feature grader's job.
+that the answer is right; that is for the tests and the review's feature lens.
 
 > **Provenance:** ported from the DTS harness (2026-09), where it exists as the boots-at-all floor for
 > profiles that neither deploy nor render. In pro-code the gap was `generic-saas`: API-only, no
-> `has_ui`, no `deploys`, so nothing in the loop ever started the process.
+> `has_ui`, no `deploys`, so nothing in the gate ever started the process.

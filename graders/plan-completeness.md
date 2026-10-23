@@ -6,7 +6,7 @@ profile: agnostic
 
 # Grader — plan-completeness
 
-The **second** grader in the pipeline — the Plan→Implement gate. It grades the **plan artifacts** (system overview, surface specs, backlog) *before Implement consumes them*, so it's still **"grade the context, not just the code"**: the plan is the guides Implement builds against, and a plan with a hole becomes code with a hole.
+An on-demand grader of the **plan artifacts** (system overview, surface specs, backlog) at the end of Plan. The driver runs it before signing the backlog off for Implement; no phase runs it automatically. The plan is what Implement builds against, and a plan with a hole becomes code with a hole.
 
 **Author ≠ grader.** Run this as a *fresh* pass, not a self-review — the eyes that decomposed the spec are blind to what they dropped. Fresh context, rubric in hand.
 

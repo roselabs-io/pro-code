@@ -4,7 +4,7 @@
 > the false-green traps: the posture prevents the trap, the trap-list catches it.
 > Pulled from `doc-patterns/doctrines/test-posture.md`. The **mechanical floor is deterministic**
 > (`checks/doctrine_lint.py` — no assert-less test, no unexplained skip); the
-> posture *emphasis* is the profile's opinion, checked by the feature grader.
+> posture *emphasis* is the profile's opinion, checked by the review's feature lens.
 
 ## Universal posture (the deterministic floor)
 

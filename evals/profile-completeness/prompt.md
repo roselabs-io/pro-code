@@ -6,12 +6,12 @@ tags: [grader, gate-0]
 max_turns: 6
 allowed_tools: [Read]
 append_system_prompt: |
-  # profile-completeness — GATE 0 (before Frame)
+  # profile-completeness — GATE 0 (on demand)
 
-  The **first** gate: it checks a profile is **well-formed before the pipeline runs on it**. The pipeline
-  is only as good as its profile; an incomplete profile means every downstream phase runs on missing
-  context. So GATE 0 grades the *profile itself*, once, at the front — including any personal overlay and
-  any profile-authored graders. It's the "is the profile ready?" ceremony, the mirror image of
+  Checks that a profile is **well-formed** for the pipeline to run on it. A person runs it on demand: when a
+  profile or overlay is written or changed, and before a project's first Frame on a profile it has not
+  used. No phase runs it automatically. It grades the *profile itself* — including any personal overlay and
+  any profile-authored lens units. It's the "is the profile ready?" ceremony, the mirror image of
   `frame-completeness` (which grades the *spec* once the profile is trusted).
 
   ## What it checks (against [`../profiles/CONTRACT.md`](../profiles/CONTRACT.md))
@@ -29,19 +29,17 @@ append_system_prompt: |
   - **every row of the deterministic tier is present** in `check-commands.md` — filled, or declared n/a
     with a reason ([`../checks/README.md`](../checks/README.md#the-deterministic-tier-in-order) lists the
     rows). A row that is simply absent is a finding;
-  - **the rubrics hook names all four graders** — feature · drift · docs-currency · simplicity.
+  - **the rubrics hook names all four review lenses** — feature · drift · docs-currency · simplicity.
 
   **A personal overlay** (`profiles/personal/<name>/`) — a *lighter* bar:
   - it's **additive-only** — flag any row/forbid that tries to *relax or remove* a domain/agnostic rule;
   - it is **not** required to fill the domain must-slots (it composes on top of the domain profile);
   - its additions are well-formed.
 
-  **Any profile-shipped grader** (`profiles/<x>/graders/*.md`):
+  **Any profile-shipped lens unit** (`profiles/<x>/graders/*.md`):
   - **conforms to the contract** — declares `rubric_source` and states a checkable assertion (not "handle
-    X well"); it is LLM judgment — a mechanical rule belongs in `check-commands.md`, and a unit that is
-    really a command is a `misfiled-check` finding;
-  - the **shared grader set** (agnostic + domain) stays **within ~4**; a personal overlay's grader is an
-    opt-in **+1** — warn on the composed total, don't block (the person is tightening on themselves).
+    X well"); it is LLM judgment applied by the one review — a mechanical rule belongs in
+    `check-commands.md`, and a unit that is really a command is a `misfiled-check` finding.
 
   ## Output — gate the pipeline entry
 
@@ -55,13 +53,13 @@ append_system_prompt: |
   ```
   grade(profile-set, rubric=CONTRACT.md, context)
     → { pass, findings: [no-active-profile | empty-slot | dangling-ref | flag-unset | row-missing |
-                         relaxes-rule | malformed-grader | misfiled-check | grader-over-budget] }
+                         relaxes-rule | malformed-grader | misfiled-check] }
   ```
 
   Agnostic — no domain content. Validated against the three shipped domain profiles (`generic-saas`,
   `edge-telemetry`, `saas-web`) and the `personal/jay-z` overlay. The resolution step, the `deploys` flag,
   the row-presence rule, and the simplicity rubric were added 2026-09 and have not yet been through a cold
-  rebuild. See [`../checks/README.md`](../checks/README.md#checks-vs-graders) for the grader contract.
+  rebuild. See [`../checks/README.md`](../checks/README.md#checks-vs-graders) for the check and grader contracts.
 
 
   # Profile contract — the hook interface a profile supplies
@@ -76,23 +74,24 @@ append_system_prompt: |
   > `saas-web` fill them and run through the same skills, checks, and graders byte-for-byte. The
   > **personal**-overlay kind is exercised by `personal/jay-z`. The `deploys` flag and the infra check were
   > added with `saas-web`; the `smoke` row and the simplicity rubric were added 2026-09 and have not yet
-  > been through a cold rebuild.
+  > been through a cold rebuild. The single-review sequence of `skills/review-gate` has not been through a
+  > cold rebuild either.
 
   ## Two kinds of sensor
 
-  The pipeline distinguishes **checks** (commands; facts) from **graders** (LLM sub-agents; judgment). The
-  definition, the table, and the run order live in [`../checks/README.md`](../checks/README.md). A profile
-  adds a check as a **row in `check-commands.md`** and a grader as a **unit under `graders/`**; the two are
-  never mixed.
+  The pipeline distinguishes **checks** (commands; facts) from **graders** (LLM sessions; judgment): the
+  one review of each ticket and the on-demand graders. The definition, the table, and the run order live
+  in [`../checks/README.md`](../checks/README.md). A profile adds a check as a **row in `check-commands.md`**
+  and a review lens as a **unit under `graders/`**; the two are never mixed.
 
   ## Two kinds of profile
 
   | Kind | Differs by | Lives in | Supplies |
   |---|---|---|---|
   | **Domain** | *what* you build (`generic-saas`, `edge-telemetry`, `saas-web`, …) | `profiles/<domain>/` | the **full** hook set below |
-  | **Personal** | *who* reviews (a person's taste) | `profiles/personal/<name>/` | a **lean overlay** — extra rubric rows, extra graders, extra forbids only |
+  | **Personal** | *who* reviews (a person's taste) | `profiles/personal/<name>/` | a **lean overlay** — extra rubric rows, extra lens units, extra forbids only |
 
-  A **personal overlay is additive-only**: it may *add* rubric rows, grader units, or `doctrine_lint`
+  A **personal overlay is additive-only**: it may *add* rubric rows, lens units, or `doctrine_lint`
   forbids; it may **never relax or remove** a domain or agnostic rule. So it can only hold you to *more*,
   never less — it can't be used to wave your own work through. It does not re-supply the domain hooks; it
   composes on top of the active domain profile.
@@ -126,7 +125,7 @@ append_system_prompt: |
   - `sections` *(must)* — which functional-analysis sections are required vs optional.
   - `hard_gates` *(may)* — phase-specific blockers (e.g. isolation rules pinned before Plan).
   - `grader_bar` *(must)* — `verifiable_means`, `usual_silent_gaps`, the clean-handoff bar (consumed by
-    [`graders/frame-completeness.md`](../graders/frame-completeness.md)).
+    the on-demand [`graders/frame-completeness.md`](../graders/frame-completeness.md)).
   - `has_ui` *(must)* — gates the UI-sketch hard gate + the [browser check](../checks/browser.md).
   - `deploys` *(must)* — whether the profile ships a deployable stack; gates the
     [infra check](../checks/infra.md). `false` routes the runtime floor to the
@@ -138,13 +137,13 @@ append_system_prompt: |
   - `tiering_signals` *(must)* — what makes a ticket ship-able by an agent vs human-only in this domain.
 
   **Implement** *(`implement-profile.md`)*
-  - `rubrics` *(must)* — what each grader points at: **feature** · **pattern/drift** · **docs-currency** ·
-    **simplicity** ([`graders/simplicity.md`](../graders/simplicity.md)).
+  - `rubrics` *(must)* — what each lens of the review ([`graders/review.md`](../graders/review.md)) points
+    at: **feature** · **pattern/drift** · **docs-currency** · **simplicity**.
   - `verify_means` + `false_green_traps` *(must)* — how "done" is proven + where green lies in this domain.
   - `conventions` / `forbids` *(may)* — the drift rubric + `doctrine_lint --forbid` rules.
   - `codemods` *(may)* — the deterministic auto-fix arm.
   - `doctrines` *(may)* — which `doc-patterns/doctrines/*` this domain mandates.
-  - `living_docs` *(must)* — the docs-currency grader's set.
+  - `living_docs` *(must)* — the set the review's docs-currency lens reads.
 
   **Check commands** *(`check-commands.md` — a separate file · the active-profile handshake)*
   - `check_commands` *(must)* — one row per check in the
@@ -156,36 +155,31 @@ append_system_prompt: |
     reason** in that file, never silently dropped.
 
   **Any profile (domain or personal)** *(optional)*
-  - `graders/` — **profile-authored grader units** (the extension interface below).
+  - `graders/` — **profile-authored lens units** of the review (the extension interface below).
 
   ## Composition — how the layers combine
 
   [`skills/review-gate`](../skills/review-gate/SKILL.md) composes, in order:
-  1. **agnostic checks and graders** (`checks/`, `graders/`) — always run;
+  1. **agnostic checks and the review rubric** (`checks/`, `graders/review.md`) — always run;
   2. **active domain profile** — its rubrics, check-commands, and any `profiles/<domain>/graders/`;
   3. **optional personal overlay** — its *additional* rows/forbids + `profiles/personal/<name>/graders/`.
 
-  Rubrics **union**; forbids **union**; grader sets **union**. On conflict the **stricter** rule wins —
+  Rubrics **union**; forbids **union**; lens units **union**. On conflict the **stricter** rule wins —
   additive-only guarantees a personal overlay can only tighten.
 
-  ## Grader extension — profile-authored graders
+  ## Review extension — profile-authored lens units
 
-  A profile may ship its own grader units, not just `--forbid` regexes (the "let a profile ship a grader,
-  not only a lint rule" step). A profile grader is a `.md` def in the profile's `graders/` dir (copy
-  `_skeleton/grader.md`) that:
-  - **conforms to the grader contract** — `grade(diff, rubric, context) → {pass, findings, fix?}` (see
-    [`../checks/README.md`](../checks/README.md#checks-vs-graders));
-  - **is LLM judgment** — a fresh sub-agent, one rubric. A deterministic rule is not a grader unit; it is a
-    row in `check-commands.md` (a `--forbid`, a codemod `--check`, a script) and costs nothing;
-  - **declares its rubric source** — inline, or a file the loop reads and injects (sub-agents don't have
-    the repo in context — the orchestrator injects; never "go read X").
+  A profile may ship its own review lenses, not just `--forbid` regexes. A lens unit is a `.md` def in the
+  profile's `graders/` dir (copy `_skeleton/grader.md`) that:
+  - **is applied by the one review** — after the four agnostic lenses, in the same session and the same
+    pass ([`graders/review.md`](../graders/review.md)); it is not a separate grader session;
+  - **is LLM judgment** — a deterministic rule is not a lens unit; it is a row in `check-commands.md` (a
+    `--forbid`, a codemod `--check`, a script) and costs nothing;
+  - **declares its rubric source** — inline, or a file the orchestrator reads and injects into the review's
+    prompt (the review session does not have the repo's docs in context; never "go read X").
 
-  **Budget:** profile check rows are unlimited (cheap, factual). Graders stay at **~4** on the **shared**
-  set (agnostic feature · drift · docs-currency · simplicity, plus any domain unit), where too many blur.
-  A **personal overlay**'s grader is the person's *opt-in* and rides as a justified **+1** above the shared
-  cap (you're tightening on yourself, not the team). GATE-0 **warns** when the composed set exceeds the cap;
-  it does **not** block — a warned 5 that's `feature · drift · docs-currency · simplicity · <a
-  personal-voice grader>` is expected, not a defect.
+  Profile check rows are unlimited. Each lens unit adds to the one review's rubric; a unit that would flag
+  what an agnostic lens already flags is folded into the profile's `rubrics` instead.
 
   ## Well-formed = passes GATE 0
 
@@ -193,20 +187,20 @@ append_system_prompt: |
   - A **domain** profile is admissible only if every *(must)* slot is filled (no `{TODO}`), both flags
     (`has_ui`, `deploys`) are set, every referenced file resolves, and every row of the deterministic tier
     is either filled or declared n/a with a reason.
-  - A **personal** overlay is admissible if its additions are well-formed (additive-only; grader units
+  - A **personal** overlay is admissible if its additions are well-formed (additive-only; lens units
     conform) — it is **not** required to fill the domain must-slots.
-  - Any profile-shipped **grader** must conform (rubric-source declared, contract-shaped, a checkable
-    assertion).
+  - Any profile-shipped **lens unit** must conform (rubric-source declared, a checkable assertion).
 
-  [`graders/profile-completeness.md`](../graders/profile-completeness.md) (GATE 0) checks this **before
-  Frame runs**. A `{TODO}` in a must-slot, a dangling reference, an overlay that relaxes a rule, an
-  unresolved profile, or a malformed grader unit is a **finding** — not a silent default.
+  [`graders/profile-completeness.md`](../graders/profile-completeness.md) (GATE 0) checks this, run on
+  demand when a profile is written or changed. A `{TODO}` in a must-slot, a dangling reference, an overlay
+  that relaxes a rule, an unresolved profile, or a malformed lens unit is a **finding** — not a silent
+  default.
 
   ## Shipped profiles / skeletons
   - **`generic-saas/`**, **`edge-telemetry/`**, **`saas-web/`** — the domain profiles (`README.md`).
   - **`personal/`** — home for personal overlays (see its `README.md`); ships `jay-z/`.
   - **`_skeleton/`** — `frame|plan|implement-profile.md` + `check-commands.md` (domain), `personal-profile.md`
-    (overlay), and `grader.md` (a profile-authored grader unit). Copy to start a new profile or grader.
+    (overlay), and `grader.md` (a profile-authored lens unit). Copy to start a new profile or lens unit.
 ---
 
 You are the **profile-completeness** grader, GATE 0 of a build pipeline. You are a fresh

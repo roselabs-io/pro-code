@@ -15,17 +15,20 @@ behave differently without.
 | profile-completeness | `$PROFILE` / `.pipeline-profile` are the only selection inputs; no default | 1.00 · 1.00 | 0.45 · 0.64 | the mechanism steers; the no-default sentence restates | coverage |
 | plan-completeness | a coverage 🔴 blocks; under-bar sign-off never covers it | 1.00 · 0.67 (1.00 · 1.00 after one assertion was loosened) | 0.67 · 0.67 | restates | `inert` |
 | frame-completeness | only profile-declared hard gates block; every other 🔴 is logged | 1.00 · 1.00 | 1.00 · 1.00 | restates; the `hard_gates` hook in the profile carries it | `inert` |
-| simplicity | — | — | — | mutation-tested inert in the sibling pipeline; not repeated | untested |
-| review-gate (the loop) | — | — | — | an orchestrator, not a rubric; `code-verification-loop.md` is a redirect | untested |
+| review (simplicity lens) | — | — | — | the simplicity rubric was mutation-tested inert in the sibling pipeline; not repeated | untested |
+| review (other lenses) | — | — | — | not yet a case | untested |
 
 Scores are the weighted assertion score per run; 1.00 means every assertion passed. Details per
-case below. All runs: 2026-09-25, Claude Code 2.1.282, judge `claude-sonnet-5`.
+case below. All runs: 2026-09-25, Claude Code 2.1.282, judge `claude-sonnet-5`. The runs predate the
+change of the three graders to on-demand tools: the frame and plan cases then named their grader "the
+ask→Frame gate" and "the Plan→Implement gate", and the injected profile-completeness rubric and
+contract still described a grader budget. The cases have not been rerun on the current text.
 
 What the measurements so far support, here and in the sibling pipeline:
 
 - **Separation is the mechanism with evidence.** A fresh reader that did not write the code
   catches what the author missed, including under long context where a rule sitting in the
-  author's own prompt did not hold. That is the review gate's *author ≠ grader* rule, and it does
+  author's own prompt did not hold. That is review-gate's *author ≠ reviewer* rule, and it does
   most of the work.
 - **A rubric narrows that reader's lens.** The lines that change its verdict are the ones that
   name something it could not know: a file, a variable, a finding code, a house convention. Most
@@ -61,8 +64,8 @@ it.
 So the work is not a suite per grader. It is to find the rules that steer, test those, and treat
 the rest as prose for humans. Expect roughly one steering rule in four tested.
 
-`simplicity` is not on the list here: the same rubric was mutation-tested in the sibling pipeline
-and the verdict did not move with its whole counterweight section deleted.
+The simplicity lens of `review.md` is not on the list here: the same rubric was mutation-tested in the
+sibling pipeline and the verdict did not move with its whole counterweight section deleted.
 
 ## Layout
 

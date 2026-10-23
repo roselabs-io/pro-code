@@ -6,7 +6,7 @@ profile: agnostic
 
 # Grader — frame-completeness
 
-The **first** grader in the pipeline, and the highest-leverage: errors in the spec compound through Plan and Implement, so the ask→Frame handoff is where a completeness gate pays the most. **"Grade the context, not just the code"** starts here.
+An on-demand grader of the spec at the end of Frame. The driver runs it in a fresh session before signing the spec off for Plan; no phase runs it automatically. Errors in the spec compound through Plan and Implement.
 
 Agnostic by design. The **ceremony** below is domain-neutral; the **bar** (what "complete" and "verifiable" mean) is supplied by the active profile.
 
