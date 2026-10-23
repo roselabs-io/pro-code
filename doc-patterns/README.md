@@ -34,4 +34,4 @@ The opinionated rules a profile mandates: `comment-doctrine.md` (comments state 
 
 ---
 
-The split maps to the feedforward/feedback frame the pipeline is built on: **specs**, **living-docs**, **guides**, and **doctrines** are feedforward (they shape the work up front); **harness** carries the pieces feedback reads. See [../two-reading-journeys.md](../two-reading-journeys.md) for that frame.
+The split maps to the feedforward/feedback frame the pipeline is built on: **specs**, **living-docs**, **guides**, and **doctrines** are feedforward (they shape the work up front); **harness** carries the pieces feedback reads. See [the article](https://blog.roselabs.io/posts/two-reading-journeys) for that frame.
