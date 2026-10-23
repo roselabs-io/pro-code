@@ -27,6 +27,11 @@ checks:
   recipes:
     not_applicable: {"up": "the site has no local server", "down": "the site has no local server", "logs": "the site has no local server", "test": "no test suite at the root; the examples' tests need dependencies that are not locked and, for roselabs-blog, Postgres and a browser"}
 
+  # `secrets`: the offline scan of `tools/secret_scan.py` against `.secrets.baseline`, run by the posture check runner.
+  # It needs detect-secrets 1.5.0 in uv's cache (`just prepare`).
+  commands:
+    secrets: [uv, run, --offline, --no-project, --with, "detect-secrets==1.5.0", python, tools/secret_scan.py]
+
 # The three documents below name AGENTS.md; `docs.operating_model` must hold a "Finding triage" section.
 docs:
   agents: AGENTS.md
