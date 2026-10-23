@@ -9,9 +9,9 @@ run-name: "${{ inputs.pr_number && format('pro-code CI PR #{0} {1}', inputs.pr_n
 # `ci.run_title` of pipeline.yaml.
 #
 # Both jobs run on GitHub-hosted `ubuntu-latest`: the repository is public, and the organization's
-# self-hosted runner group does not serve public repositories. `gate` installs `just` and uv before
-# `just gate`; it uses the runner's `python3`, and uv installs the pinned detect-secrets of the secret
-# scan. A PR from a fork receives no `GOVERNOR_PM_TOKEN`, so its `Check out the Governor package` step
+# self-hosted runner group does not serve public repositories. `gate` installs `just` and uv and runs
+# `just prepare`, which downloads the pinned detect-secrets of the secret scan into uv's cache, before
+# `just gate`, which runs offline; it uses the runner's `python3`. A PR from a fork receives no `GOVERNOR_PM_TOKEN`, so its `Check out the Governor package` step
 # fails. GitHub Pages publishes `main` on its own (`pages build and deployment`); this workflow does
 # not deploy.
 
@@ -133,6 +133,9 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v10.2.0
+
+      - name: Prepare the secret scanner
+        run: just prepare
 
       - name: Gate
         run: just gate
