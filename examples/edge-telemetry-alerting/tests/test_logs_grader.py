@@ -7,6 +7,9 @@ must leave none.
 from __future__ import annotations
 
 from engine import log
+from engine.config import load_station
+from engine.models import Reading
+from engine.monitor import Monitor
 from tests.conftest import replay_fixture
 
 
@@ -22,10 +25,6 @@ def test_breach_emits_critical_event() -> None:
 
 
 def test_clear_emits_cleared_event() -> None:
-    from engine.config import load_station
-    from engine.models import Reading
-    from engine.monitor import Monitor
-
     m = Monitor(load_station())
     m.process(Reading(signal="discharge_pressure", value=11.0, ts=1000.0))
     m.process(Reading(signal="discharge_pressure", value=7.0, ts=1001.0))
