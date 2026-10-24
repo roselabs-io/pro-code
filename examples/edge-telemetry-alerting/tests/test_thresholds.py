@@ -6,6 +6,7 @@ from engine.config import load_station
 from engine.models import Reading
 from engine.monitor import Monitor
 from engine.severity import Severity
+from tests.conftest import raised, replay_fixture
 
 
 def _feed(values: list[float]) -> Monitor:
@@ -36,8 +37,6 @@ def test_at_critical_is_critical() -> None:
 
 def test_low_direction_rule_fires_a_warning() -> None:
     """The low-flow fixture drives the low-direction level rule to WARNING (fire case)."""
-    from tests.conftest import raised, replay_fixture
-
     m = replay_fixture("low_flow")
     warnings = raised("warning")
     assert [e["signal"] for e in warnings] == ["flow_rate"]

@@ -33,6 +33,7 @@ def client() -> TestClient:
 
 
 def app_():
+    # Deferred: the app reads its settings at import, after the autouse fixtures set the environment.
     from app.main import app
 
     return app

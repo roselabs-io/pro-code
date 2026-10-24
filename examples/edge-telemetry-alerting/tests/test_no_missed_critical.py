@@ -7,6 +7,9 @@ not just the active-alert list; the nominal fixture proves the rule stays quiet.
 from __future__ import annotations
 
 from engine import log
+from engine.config import load_station
+from engine.models import Reading
+from engine.monitor import Monitor
 from engine.severity import Severity
 from tests.conftest import raised, replay_fixture
 
@@ -35,10 +38,6 @@ def test_dead_from_boot_raises_critical_on_read() -> None:
 
 def test_oscillating_breach_still_raises_critical() -> None:
     """A value oscillating in breach must not be debounced away into silence."""
-    from engine.config import load_station
-    from engine.models import Reading
-    from engine.monitor import Monitor
-
     m = Monitor(load_station())
     # bearing_temp flips crit(96)/warn(90) — never nominal, repeatedly over crit 95.
     for i, v in enumerate([96.0, 90.0, 96.0, 90.0, 96.0]):
