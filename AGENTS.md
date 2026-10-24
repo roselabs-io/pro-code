@@ -11,7 +11,7 @@ describes the pipeline and has the full layout.
 
 | Path | Content |
 |---|---|
-| `skills/`, `graders/`, `checks/`, `codemods/`, `doc-patterns/` | the agnostic pipeline: phase skills, LLM graders, deterministic checks (`checks/doctrine_lint.py`), doc skeletons |
+| `skills/`, `graders/`, `checks/`, `codemods/`, `doc-patterns/` | the agnostic pipeline: phase skills, the review rubric and the on-demand graders, deterministic checks (`checks/doctrine_lint.py`), doc skeletons |
 | `profiles/` | the domain overlays; `profiles/CONTRACT.md` is the hook list |
 | `evals/` | mutation tests for the graders (`evals/README.md`); `build.py` writes each `evals/*/prompt.md`, `screen.py` calls `claude -p` |
 | `examples/` | services built through the pipeline, each with its own README, recipes and tests |
@@ -27,6 +27,20 @@ describes the pipeline and has the full layout.
 GitHub Pages builds `main` from the root with its own `pages build and deployment` workflow, so a
 merge to `main` publishes every tracked file at `https://roselabs-io.github.io/pro-code/`. The
 repository is public.
+
+## Pipeline
+
+A ticket goes through [review-gate](skills/review-gate/SKILL.md): the auto-fix arm, the active profile's
+checks in order, one review by a fresh session that did not write the diff
+([`graders/review.md`](graders/review.md)), at most one fix pass with the checks rerun, then the
+human. No review runs a second time. The frame-, plan- and profile-completeness graders run only when a
+person asks for them.
+
+`README.md` describes the steps, what runs automatically and what runs on demand, and, under *Changes
+from the multi-grader model*, what was removed: the graders between phases, the parallel graders, the
+re-grade loop and the N-vote. The model is the one Governor's
+[harness posture](https://github.com/roselabs-io/governor/blob/main/governor/docs/postures/harness-posture.md)
+records (a private repository).
 
 ## Commands
 

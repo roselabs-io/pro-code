@@ -1,7 +1,7 @@
 # {{project_name}} — CLI harness
 #
 # CLIs / scripts (feedforward, ⚙️): the command tools the agent runs.
-# One entry point for every deterministic action, so the loop's checks and the human
+# One entry point for every deterministic action, so the gate's checks and the human
 # invoke the SAME commands. Pulled from `doc-patterns/harness/justfile`; fill per project.
 # (Use `just`, or transcribe to a Makefile / npm scripts — the contract is one named
 # target per action, not the runner.)

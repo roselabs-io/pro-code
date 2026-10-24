@@ -1,6 +1,6 @@
 ---
 name: "autopilot"
-description: "Phase 3 runner — the orchestrator-workers pattern. Decompose Plan's backlog into independent chains, fan out a worker sub-agent per ticket across the dependency waves, run each through the verification loop with isolated graders, and aggregate one residual handoff."
+description: "Phase 3 runner — the orchestrator-workers pattern. Decompose Plan's backlog into dependency waves, dispatch a worker per ticket, run each through review-gate (checks, one independent review, at most one fix pass), and aggregate one handoff for the human."
 consumed_by: ["orchestrator"]
 canonical_for: "running the phases unattended"
 profile: agnostic
@@ -8,71 +8,86 @@ profile: agnostic
 
 # Autopilot (the orchestrator-workers runner)
 
-Autopilot is how **Implement scales past one ticket at a time.** Where `implement` builds a single ticket with the driver in the loop, autopilot is the **lead** that reads Plan's backlog, **fans out a worker per ticket** across the parallelizable waves, and **aggregates** the results into one honest handoff. It's the **orchestrator-workers** pattern, made concrete over a real backlog.
+Autopilot runs Implement over more than one ticket. Where `implement` builds a single ticket with the
+driver in the loop, autopilot reads Plan's backlog, dispatches a worker per ticket across the
+dependency waves, and aggregates the results into one handoff.
 
-Autopilot **writes no code itself.** It decomposes, dispatches, routes by tier, collects, and reports. The workers write code; the graders judge it; autopilot is the conductor.
+Autopilot writes no code. It decomposes, dispatches, routes by tier, collects and reports. Workers
+write code; a separate review session reads each diff.
 
-Domain-neutral by design. *What* the tickets are, *what* the graders check, *what* a tier means come from Plan's output + the active profile. This skill is the **orchestration mechanism**.
+*What* the tickets are, *what* the review checks and *what* a tier means come from Plan's output and
+the active profile. This skill is the orchestration mechanism.
 
 ## What it consumes
 
-- `docs/backlog.md` — the tickets, their `depends-on`, and the **autonomy tiers** (🟢/🟡/🔴) + the **build order** (waves + critical path). Plan already computed all of it; autopilot executes it.
-- The active profile (resolved per [`profiles/CONTRACT.md#active-profile-resolution`](../../profiles/CONTRACT.md#active-profile-resolution)) — the check commands and grader rubrics each worker's output is gated against, run by [`skills/review-gate`](../review-gate/SKILL.md).
+- `docs/backlog.md` — the tickets, their `depends-on`, the **autonomy tiers** (🟢/🟡/🔴) and the
+  **build order** (waves and critical path) Plan computed.
+- The active profile (resolved per [`profiles/CONTRACT.md#active-profile-resolution`](../../profiles/CONTRACT.md#active-profile-resolution)) — the check commands and review rubrics
+  [`skills/review-gate`](../review-gate/SKILL.md) applies to each worker's diff.
 
-## The loop
+## The run
 
 ```
 read backlog → compute the attemptable set (tier ∩ graph-unblocked ∩ un-gated)
-   → for each wave, IN PARALLEL:
-        dispatch a worker sub-agent per ticket  ──┐
-        each worker: author → verification loop   │  (fresh context per worker)
-        graders run as ISOLATED sub-agents        │  (author ≠ grader)
-   → collect per-ticket results ←──────────────────┘
+   → for each wave, in parallel:
+        a worker per ticket (fresh context)       ──┐
+        each worker: author → review-gate           │  checks → one review → ≤ 1 fix pass
+        the review runs in its own session          │  (author ≠ reviewer)
+   → collect per-ticket results ←────────────────────┘
    → advance to the next wave (deps now landed)
-   → aggregate → ONE residual handoff
+   → aggregate → one handoff
 ```
 
-## Routing by tier (the orchestrator's dispatch rule)
+## Routing by tier
 
 Plan predicted a tier per ticket; autopilot routes on it:
 
-- **🟢 agent-ship** — dispatch a worker for the full build; it runs to green through the verification loop.
-- **🟡 agent-draft** — dispatch a worker to *scaffold*; hand the half-done work to the human to finish + verify. Marked draft in the handoff.
-- **🔴 human-only** — **do not dispatch.** Skip to the handoff as human-owned work. The core-promise / boundary tickets stay with a person by design.
+- **🟢 agent-ship** — dispatch a worker for the full build through review-gate.
+- **🟡 agent-draft** — dispatch a worker to scaffold; the human finishes and verifies. Marked draft in
+  the handoff.
+- **🔴 human-only** — not dispatched. Listed in the handoff as human-owned work.
 
-**Attemptability is live, not the tier.** A ticket is dispatched only when it's tier-eligible **and** graph-unblocked **and** un-gated by an open question — recomputed each wave, not read once.
+A ticket is dispatched only when it is tier-eligible, graph-unblocked and not gated by an open
+question — recomputed each wave.
 
-## Two rules that keep it honest
+## Rules
 
-- **Pickup re-check (the runtime tier confirmation).** Before a worker commits to a 🟢/🟡 ticket, it reads the real context and **bails to the handoff if reality contradicts the tier** — a ticket that looked shippable but touches a boundary the spec missed is escalated, not forced. Plan predicts; the worker confirms; the verify gate arbitrates.
-- **Isolated graders (author ≠ grader, enforced).** A worker never grades its own output. Autopilot runs the graders as **separate sub-agents with fresh context** — the generative/adversarial split made structural.
+- **Pickup re-check.** Before a worker commits to a 🟢/🟡 ticket, it reads the real context and returns
+  the ticket to the handoff if the context contradicts the tier (a ticket that touches a boundary the
+  spec missed is escalated, not forced).
+- **Author ≠ reviewer.** A worker never reviews its own diff. Autopilot starts the review as a separate
+  session with fresh context.
+- **One review, one fix pass per ticket.** Autopilot does not rerun the review after the fix pass.
 
-## Parallelization — waves, not a free-for-all
+## Parallelization — waves
 
-Autopilot fans out **within a wave** (tickets whose deps have all landed) and barriers **between waves** (a wave can't start until its dependencies merged). This is **parallelization (sectioning)**: independent tickets build concurrently; dependent ones wait. The critical path Plan flagged is the wall-clock floor.
+Autopilot dispatches within a wave (tickets whose dependencies have all landed) and waits between waves.
+The critical path Plan flagged is the wall-clock floor.
 
-Optionally, on the **core-promise finding**, run an **adversarial N-vote verify** — several isolated graders each try to *refute* that the promise holds; it survives only on a majority. Reserve it for the one invariant that must not be wrong (isolation; no-missed-alert).
+## The handoff
 
-## The handoff is the residual, not the whole
+Autopilot ends with one aggregated report:
 
-Autopilot ends with **one aggregated report**, not N piles of diff:
-
-- 🟢 **shipped** — ticket green through the loop; nothing for the human but a glance.
+- 🟢 **shipped** — checks green; the review's findings each fixed or listed open.
 - 🟡 **drafted** — scaffolded; the human finishes the flagged part.
-- 🔴 **human-only** — never attempted; owned by a person.
-- ⚠️ **escalated** — a worker bailed at pickup, or the loop stalled (same finding recurred). A stall is signal — the hard thing worth attention.
+- 🔴 **human-only** — not attempted.
+- ⚠️ **escalated** — the worker bailed at pickup, a check is still red after the attempt before the
+  review (no review ran), or a check is still red after the fix pass.
 
-The human reviews the 🟡 + 🔴 + ⚠️ residual, not the 🟢 the graders already cleared. **That** is what removes the human as the bottleneck.
+Every ticket goes to the human for acceptance. The report puts open findings, red checks, 🟡, 🔴 and ⚠️
+first.
 
 ## Stopping conditions
 
-- All attemptable tickets resolved (shipped / drafted / escalated) → handoff.
-- A worker's loop hits max-iterations or stalls → escalate that ticket, keep the others going.
-- A wave produces a dependency surprise (a ticket reveals a new blocker) → re-plan that sub-tree; don't force a garbage order.
+- Every attemptable ticket resolved (shipped, drafted or escalated) → handoff.
+- A check still red after a worker's attempt before the review → that ticket is escalated without a
+  review; the others continue.
+- A check still red after a worker's fix pass → that ticket is escalated; the others continue.
+- A wave reveals a new dependency → re-plan that sub-tree; the wave order is not forced.
 
 ## What autopilot does NOT do
 
 - **Write code** — the workers do.
-- **Grade** — the isolated grader sub-agents do.
-- **Re-tier** — that's a Plan re-run on a planning change; autopilot only recomputes *attemptability*.
-- **Ship 🔴** — ever. Boundary / core-promise work is human-owned.
+- **Review** — a separate review session does.
+- **Re-tier** — that is a Plan re-run; autopilot only recomputes attemptability.
+- **Dispatch 🔴** — boundary and core-promise work is human-owned.

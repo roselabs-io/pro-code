@@ -1,5 +1,5 @@
 ---
-consumed_by: ["build", "grader:drift", "grader:feature"]
+consumed_by: ["build", "review"]
 canonical_for: "`generic-saas` stack, conventions, forbids, false-green traps"
 profile: generic-saas
 ---
@@ -8,7 +8,7 @@ profile: generic-saas
 
 Domain: a CRUD SaaS backend — **Python + FastAPI, API-only**. Completes the trio with `frame-profile.md` and `plan-profile.md`.
 
-This is the domain where **both** guides *and* checks are deterministic — schema-as-code → CRUD → validate — so it's the cleanest possible showcase for the code-verification loop.
+This is the domain where **both** guides *and* checks are deterministic — schema-as-code → CRUD → validate — so it's the cleanest possible showcase for review-gate.
 
 > **This profile mandates** (its opinionated subset of the menu): a **codemod** (boundary-dependency enforcement across handlers), the **logs check**, an **integration test per endpoint**, and the `no-print` / `no-bare-except` special-lint.
 > **It skips**: the **browser check** + **e2e** (API-only, `has_ui` false → declared n/a), and the `config-driven-thresholds` / `severity-constant` lints (that's the telemetry profile's opinion, not this one).
@@ -35,7 +35,7 @@ type-check (advisory) · doctrine-lint · special-lint · codemod-check · **sec
 **deps** · logs · **smoke** (`deploys: false` — the boot floor). It declares **schema-validation**,
 **browser/e2e**, and **infra** *n/a* (pydantic validates at runtime; API-only; nothing to build and boot). See `check-commands.md` for the commands + the n/a rationale.
 
-## Rubrics (~4 focused graders — what each points at)
+## Rubrics (the review's lenses — what each points at)
 
 - **feature / spec** → the ticket's acceptance criterion. Does the diff satisfy the assertion, not a proxy?
 - **pattern / drift** → the design catalog (`plan-profile.md`) hooks on the ticket + the conventions below. Was every hook applied where the shape says (e.g. `tenant-scoped-query-guard` on **every** verb, deny-by-default)?
@@ -47,13 +47,13 @@ type-check (advisory) · doctrine-lint · special-lint · codemod-check · **sec
 - **LSP (guide):** `mypy` / `pyright` (Python) — consult types/refs while authoring. Advisory (`mypy app/`), not a gate step in this slice.
 - **Environment + CLIs (guide):** **poetry** for deps/venv (`poetry install`). No task-runner in this profile — the checks run directly via `poetry run` (the example README lists them). *(The env tool and whether to ship a `justfile` are a profile choice: this profile picks poetry + no justfile; `edge-telemetry` picks uv + a justfile.)*
 - **Codemods (auto-fix arm):** codemod-lite = `ruff check --fix . && ruff format .` every gate; one genuine **libcst** codemod per build enforcing a boundary convention across handlers (e.g. every route depends on `get_caller`). See the example's `codemods/`.
-- **Logs check:** structured events per `doc-patterns/harness/log-taxonomy.md` — `HANDLER_RAN`, `CROSS_TENANT_DENIED{workspace,target}`. The grader asserts `CROSS_TENANT_DENIED` fired on a cross-tenant attempt (isolation proven from the *trace*, not the 404 alone).
+- **Logs check:** structured events per `doc-patterns/harness/log-taxonomy.md` — `HANDLER_RAN`, `CROSS_TENANT_DENIED{workspace,target}`. The logs check asserts `CROSS_TENANT_DENIED` fired on a cross-tenant attempt (isolation proven from the *trace*, not the 404 alone).
 - **Browser check:** n/a — this profile is API-only (`has_ui: false`), no rendered surface.
 
 ## Doctrines this profile mandates
 
-- **Comment doctrine** (`doc-patterns/doctrines/comment-doctrine.md`) — shared/universal. Enforced by `doctrine_lint.py` (regex-able subset) + the drift grader (judgment cases). `doctrine: allow` exempts the rare legit line (the LOG module's own `print`).
-- **README doctrine** (`doc-patterns/doctrines/readme-doctrine.md`) — shared/universal. The service README carries a "Run it" section: set up the env (`poetry install`), run the checks, launch. Checked by the docs-currency grader.
+- **Comment doctrine** (`doc-patterns/doctrines/comment-doctrine.md`) — shared/universal. Enforced by `doctrine_lint.py` (regex-able subset) + the review's drift lens (judgment cases). `doctrine: allow` exempts the rare legit line (the LOG module's own `print`).
+- **README doctrine** (`doc-patterns/doctrines/readme-doctrine.md`) — shared/universal. The service README carries a "Run it" section: set up the env (`poetry install`), run the checks, launch. Checked by the review's docs-currency lens.
 - **Test posture** (`doc-patterns/doctrines/test-posture.md`) — this domain's opinion:
   - **An integration test per endpoint** — every route gets a test that drives the *real* request through the app (`TestClient`) and asserts the **effect** (a row changed, a field serialized), not the status.
   - **No e2e** — API-only slice, no frontend, so no browser/e2e layer is owed. Declared, not skipped.
@@ -64,7 +64,7 @@ type-check (advisory) · doctrine-lint · special-lint · codemod-check · **sec
 - **no `print(` in app code** — use the structured `LOG` event log (the logs check reads it). The log module itself is `doctrine: allow`.
 - **no bare `except:`** — catch a specific type.
 
-## Conventions (the drift grader's rubric)
+## Conventions (the rubric of the review's drift lens)
 
 - **Enforce at the boundary, not the UI** — authz/isolation checks live server-side; the client is convenience only.
 - **Auth fails closed** — a missing or invalid signing key **denies**; never a fallback to an unsigned / dev-open path (no dev-key fallback in the gated path). *(Promoted from the cold-run adversarial refutation.)*
@@ -76,13 +76,13 @@ type-check (advisory) · doctrine-lint · special-lint · codemod-check · **sec
 ## verify_means + false-green traps
 
 - **verify_means:** an automated test asserts the criterion against the dev stack or a mock, with fresh output this session — a test, not a person, confirms it.
-- **false-green traps** (the `check-passes-but-behaviour-is-broken` class — the feature grader must probe past the status code):
+- **false-green traps** (the `check-passes-but-behaviour-is-broken` class — the review's feature lens must probe past the status code):
   - **`200 ≠ the handler ran`** — a wrapper can return 200 while the inner logic 422'd or was skipped. Assert the *effect* (a row changed, a field serialized), not just the status.
   - **serialization omits a falsy field** — a `false`/`0`/`""` silently dropped from the response looks like "not returned." Assert the field's presence, not just truthiness.
   - **mock-green ≠ real-green** — a mocked dependency that always says yes hides the integration bug. The isolation test must hit the real query path.
   - **no red-green on a fix** — a regression test that was never seen to *fail first* proves nothing. Confirm it goes red without the fix.
 
-## Living docs (the docs-currency grader's set)
+## Living docs (the set of the review's docs-currency lens)
 
 Kept current every ticket — the second artifact:
 - `docs/backlog.md` — forward-only (shipped rows deleted; new work added).

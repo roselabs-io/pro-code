@@ -36,6 +36,6 @@ The checks read this file directly — the active-profile handshake. Row names a
 
 ## Declared n/a *(not skipped — why)*
 
-- **codemod** — drift is caught by the drift grader and the one-egress forbid; no bulk transform.
+- **codemod** — drift is caught by the review's drift lens and the one-egress forbid; no bulk transform.
 - **schema-validation** — constrained at the call; there is no separate contract document.
 - **infra** — a single local process; nothing to build or boot beyond the smoke row.

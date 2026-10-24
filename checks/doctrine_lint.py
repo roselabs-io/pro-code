@@ -3,8 +3,8 @@
 
 Enforces the regex-able subset of the comment doctrine + the test-posture floor, plus any
 domain forbidden-patterns a profile declares via --forbid. The judgment cases (docstring
-narration, subtle over-comment, posture emphasis) stay with the graders — this is the
-mechanical floor that runs FIRST in the verification loop and short-circuits.
+narration, subtle over-comment, posture emphasis) stay with the review — this is the
+mechanical floor that runs with the checks, before the review, and short-circuits.
 
 Agnostic: the domain rules arrive as --forbid args from the profile's justfile; the code
 here is domain-neutral. A line or comment containing `doctrine: allow` is exempt.

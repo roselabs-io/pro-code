@@ -1,5 +1,5 @@
 ---
-consumed_by: ["build", "grader:drift", "grader:feature"]
+consumed_by: ["build", "review"]
 canonical_for: "`_skeleton` stack, conventions, forbids, false-green traps"
 profile: _skeleton
 ---
@@ -19,7 +19,7 @@ checks the domain runs; fill the commands in `check-commands.md`. The row names 
 [`../../checks/README.md`](../../checks/README.md#the-deterministic-tier-in-order).
 {TODO: the checks this domain mandates, or just point to check-commands.md.}
 
-## Rubrics *(must — ~4 focused graders)*
+## Rubrics *(must — the review's lenses)*
 - **feature / spec** → {TODO: the acceptance criterion}
 - **pattern / drift** → {TODO: the design catalog hooks + the conventions below}
 - **docs-currency** → {TODO: the living-docs set below}
@@ -29,7 +29,7 @@ checks the domain runs; fill the commands in `check-commands.md`. The row names 
 - **verify_means:** {TODO: how "done" is proven in this domain}
 - **false_green_traps:** {TODO: where "green" lies here — the check-passes-but-broken class}
 
-## Conventions / forbids *(may — the drift grader's rubric)*
+## Conventions / forbids *(may — the rubric of the review's drift lens)*
 {TODO: the domain's conventions + any `doctrine_lint --forbid` rules, or "none"}
 
 ## Codemods *(may)*
@@ -38,5 +38,5 @@ checks the domain runs; fill the commands in `check-commands.md`. The row names 
 ## Doctrines *(may)*
 {TODO: which `doc-patterns/doctrines/*` this domain mandates, or "shared only"}
 
-## Living docs *(must — the docs-currency grader's set)*
+## Living docs *(must — the set of the review's docs-currency lens)*
 {TODO: the living-doc files kept current every ticket}

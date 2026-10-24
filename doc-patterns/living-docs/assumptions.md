@@ -3,7 +3,7 @@
 > The choices this build made that its inputs never specified — defaults the agent reached
 > for from habit or priors, not from the profile, spec, or ticket. Surfaced so a human can
 > see and veto them, not left silent. Pulled from `doc-patterns/living-docs/assumptions.md`.
-> Graded by the docs-currency grader + the drift grader's undeclared-choice lens.
+> Read by the review's docs-currency lens and the undeclared-choice check of its drift lens.
 
 Every non-trivial choice either traces to a **declared source** (profile choice-points / spec / ticket / decision-record) or it lands here with a **disposition**:
 
