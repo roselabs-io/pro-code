@@ -25,7 +25,7 @@ Two kinds of feedback ([`checks/README.md`](checks/README.md) defines them):
 [review-gate](skills/review-gate/SKILL.md) runs on each ticket, in this order:
 
 1. **Auto-fix arm** — formatters and the profile's codemods ([`codemods/`](codemods/README.md)).
-2. **Checks** — the profile's `check-commands.md` rows in the order of [`checks/README.md`](checks/README.md#the-deterministic-tier-in-order), stopping at the first red. The author fixes a red check before the review starts.
+2. **Checks** — the profile's `check-commands.md` rows in the order of [`checks/README.md`](checks/README.md#the-deterministic-tier-in-order), stopping at the first red. The author makes one fix attempt on a red check; a check still red after it stops the run with no review.
 3. **One independent review** — a fresh session that did not write the diff applies the feature, drift, docs-currency and simplicity lenses of [`graders/review.md`](graders/review.md), then any lens unit the profile ships, and reports every finding in one pass.
 4. **At most one fix pass** — the author addresses the findings once and the checks rerun. The review is not run again.
 5. **Stop for the human** — the handoff lists the check results and each finding as fixed or open. The human accepts the ticket or reopens it.
@@ -35,7 +35,7 @@ Two kinds of feedback ([`checks/README.md`](checks/README.md) defines them):
 | What | When |
 |---|---|
 | auto-fix arm and checks | every ticket, before the review, and again after the fix pass |
-| the review ([`graders/review.md`](graders/review.md)) | every ticket, once, after the checks are green |
+| the review ([`graders/review.md`](graders/review.md)) | every ticket whose checks are green, once |
 | the author's fix pass | when the review has findings; at most once |
 | [frame-completeness](graders/frame-completeness.md) | on demand, before the driver signs off Frame |
 | [plan-completeness](graders/plan-completeness.md) | on demand, before the driver signs off Plan |

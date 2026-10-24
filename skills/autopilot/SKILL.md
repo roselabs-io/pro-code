@@ -71,7 +71,8 @@ Autopilot ends with one aggregated report:
 - 🟢 **shipped** — checks green; the review's findings each fixed or listed open.
 - 🟡 **drafted** — scaffolded; the human finishes the flagged part.
 - 🔴 **human-only** — not attempted.
-- ⚠️ **escalated** — the worker bailed at pickup, or a check is still red after the fix pass.
+- ⚠️ **escalated** — the worker bailed at pickup, a check is still red after the attempt before the
+  review (no review ran), or a check is still red after the fix pass.
 
 Every ticket goes to the human for acceptance. The report puts open findings, red checks, 🟡, 🔴 and ⚠️
 first.
@@ -79,6 +80,8 @@ first.
 ## Stopping conditions
 
 - Every attemptable ticket resolved (shipped, drafted or escalated) → handoff.
+- A check still red after a worker's attempt before the review → that ticket is escalated without a
+  review; the others continue.
 - A check still red after a worker's fix pass → that ticket is escalated; the others continue.
 - A wave reveals a new dependency → re-plan that sub-tree; the wave order is not forced.
 

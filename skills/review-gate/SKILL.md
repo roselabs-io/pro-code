@@ -27,8 +27,9 @@ implement → [ auto-fix arm ] → [ checks, in order, short-circuit ]
    before any check reports it.
 2. **Checks.** Every check of the active profile's `check-commands.md`, in the order
    [`checks/README.md`](../../checks/README.md#the-deterministic-tier-in-order) fixes, stopping at the
-   first red. A check the domain does not run is declared n/a there. The author fixes a red check and
-   reruns the checks; the review does not start until every check is green.
+   first red. A check the domain does not run is declared n/a there. The author makes one fix attempt on
+   a red check and reruns the checks. The review starts only when every check is green; a check still
+   red after that attempt stops the run without a review.
 3. **One independent review.** A session that did not write the diff, with fresh context and read-only
    access, applies [`graders/review.md`](../../graders/review.md): the feature, drift, docs-currency and
    simplicity lenses, then any lens unit the profile or overlay ships. It reports every finding in one
@@ -49,7 +50,8 @@ implement → [ auto-fix arm ] → [ checks, in order, short-circuit ]
 ## Gate policy — what blocks
 
 - A red check blocks: the ticket is not handed off as done while a check is red. A check the author
-  cannot make green after its fix is reported red in the handoff.
+  cannot make green, after the attempt before the review or after the fix pass, is reported red in the
+  handoff.
 - A review finding does not block the handoff. The author fixes what it can in its one pass; the human
   decides on each open finding.
 - The human's acceptance is the last step. Green checks and a review with no open finding are evidence
@@ -69,6 +71,8 @@ tighten.
 
 ## Stopping conditions
 
+- A check still red after the author's attempt before the review → handoff with the check reported
+  red and no review.
 - Every check green and the review has no finding → handoff.
 - Every check green after the fix pass → handoff, with each finding fixed or open.
 - A check still red after the fix pass → handoff with the check reported red.
