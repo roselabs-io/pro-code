@@ -9,9 +9,11 @@ to drive a build. `examples/` is pruned before running so there's nothing to cop
 > (same prompt, one target at a time). Build #4 needs Docker (testcontainers + the Compose stack) and
 > takes the longest.
 
-**Run history.** #1, #2, #3-jay-z: run 2026-07/08 (findings promoted into the profiles). #4
+**Run history.** #1, #2, #3-jay-z: run 2026-07/08 (findings promoted into the profiles), under the
+earlier review-gate: four graders in parallel, a re-grade loop and an adversarial N-vote. #4
 roselabs-blog: **not yet run cold** — it was built in the same session as its profile, so `saas-web`
-has not been proven from the profile alone.
+has not been proven from the profile alone. No build has been run under the current review-gate (checks,
+one independent review, at most one fix pass).
 
 ---
 
@@ -47,15 +49,18 @@ resolves the active profile — there is no default):
    pending/hidden comment ever serializes publicly.
 
 ## For EACH build, run the pipeline honestly
-1. GATE 0 — profile-completeness: the active profile resolves from `.pipeline-profile`; every must-slot
-   filled; both flags (has_ui, deploys) set; every check row present or declared n/a. Empty slot,
-   dangling ref, unresolved profile, or malformed grader → STOP and report; don't work around it.
+1. GATE 0 — run profile-completeness (graders/profile-completeness.md) once, as part of this protocol:
+   the active profile resolves from `.pipeline-profile`; every must-slot filled; both flags (has_ui,
+   deploys) set; every check row present or declared n/a. Empty slot, dangling ref, unresolved profile,
+   or malformed lens unit → STOP and report; don't work around it.
 2. Frame → Plan → Implement per skills/. Produce BOTH the code AND the living docs (doc-patterns/living-docs
-   — current-state, backlog, assumptions, decisions).
-3. review-gate (skills/review-gate/SKILL.md): the auto-fix arm, then the checks in the order
-   checks/README.md fixes (commands from the profile's check-commands.md), short-circuit; then the ~4
-   graders in parallel (feature · drift · docs-currency · simplicity; + jay-z-voice for #3), fix once,
-   re-grade. On the core promise, run the adversarial N-vote.
+   — current-state, backlog, assumptions, decisions). The frame- and plan-completeness graders are not
+   part of the run.
+3. review-gate (skills/review-gate/SKILL.md) per ticket: the auto-fix arm, then the checks in the order
+   checks/README.md fixes (commands from the profile's check-commands.md), short-circuit; then ONE
+   review in a separate fresh sub-agent that did not write the code, applying graders/review.md (feature ·
+   drift · docs-currency · simplicity; + the jay-z-voice lens for #3); then at most one fix pass and the
+   checks rerun. Do not run the review again after the fix pass.
    Runtime floor per build: smoke for #1/#3 (deploys: false, has_ui: false); browser for #2; infra +
    browser for #4 (deploys: true, has_ui: true — build the images, up on a fresh volume, migrate from
    empty, smoke through the proxy, then Playwright on the live stack).
@@ -63,7 +68,7 @@ resolves the active profile — there is no default):
 ## Report at the end (per build)
 - GATE-0 result + any profile gaps hit (the real output — profile bugs to promote).
 - Where the profile was ambiguous (logged to assumptions.md, not invented).
-- Checks' and graders' final state (green / residual handed off).
+- The checks' final state, and each review finding marked fixed or open.
 
 Start by reading the machinery. Build the four into their four dirs. Do not reconstruct the pruned examples/.
 ```

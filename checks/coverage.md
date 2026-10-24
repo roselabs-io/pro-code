@@ -39,7 +39,7 @@ check(diff, config=<coverage_command + floor>, context)
 ```
 
 Deterministic. **Coverage proves a line *ran* under test — not that the test *asserts* the right thing.**
-That's the feature grader + the test-posture floor. Pair them: coverage = reach, posture = quality; a
+That's the review's feature lens + the test-posture floor. Pair them: coverage = reach, posture = quality; a
 line can be 100% covered by an assert-less smoke test and still be untested in the way that matters. See
 [`README.md`](README.md) · [`skills/review-gate`](../skills/review-gate/SKILL.md) ·
 [`../doc-patterns/doctrines/test-posture.md`](../doc-patterns/doctrines/test-posture.md).

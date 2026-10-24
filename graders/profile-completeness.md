@@ -4,12 +4,12 @@ canonical_for: "the profile authoring rubric"
 profile: agnostic
 ---
 
-# profile-completeness — GATE 0 (before Frame)
+# profile-completeness — GATE 0 (on demand)
 
-The **first** gate: it checks a profile is **well-formed before the pipeline runs on it**. The pipeline
-is only as good as its profile; an incomplete profile means every downstream phase runs on missing
-context. So GATE 0 grades the *profile itself*, once, at the front — including any personal overlay and
-any profile-authored graders. It's the "is the profile ready?" ceremony, the mirror image of
+Checks that a profile is **well-formed** for the pipeline to run on it. A person runs it on demand: when a
+profile or overlay is written or changed, and before a project's first Frame on a profile it has not
+used. No phase runs it automatically. It grades the *profile itself* — including any personal overlay and
+any profile-authored lens units. It's the "is the profile ready?" ceremony, the mirror image of
 `frame-completeness` (which grades the *spec* once the profile is trusted).
 
 ## What it checks (against [`../profiles/CONTRACT.md`](../profiles/CONTRACT.md))
@@ -27,19 +27,17 @@ any profile-authored graders. It's the "is the profile ready?" ceremony, the mir
 - **every row of the deterministic tier is present** in `check-commands.md` — filled, or declared n/a
   with a reason ([`../checks/README.md`](../checks/README.md#the-deterministic-tier-in-order) lists the
   rows). A row that is simply absent is a finding;
-- **the rubrics hook names all four graders** — feature · drift · docs-currency · simplicity.
+- **the rubrics hook names all four review lenses** — feature · drift · docs-currency · simplicity.
 
 **A personal overlay** (`profiles/personal/<name>/`) — a *lighter* bar:
 - it's **additive-only** — flag any row/forbid that tries to *relax or remove* a domain/agnostic rule;
 - it is **not** required to fill the domain must-slots (it composes on top of the domain profile);
 - its additions are well-formed.
 
-**Any profile-shipped grader** (`profiles/<x>/graders/*.md`):
+**Any profile-shipped lens unit** (`profiles/<x>/graders/*.md`):
 - **conforms to the contract** — declares `rubric_source` and states a checkable assertion (not "handle
-  X well"); it is LLM judgment — a mechanical rule belongs in `check-commands.md`, and a unit that is
-  really a command is a `misfiled-check` finding;
-- the **shared grader set** (agnostic + domain) stays **within ~4**; a personal overlay's grader is an
-  opt-in **+1** — warn on the composed total, don't block (the person is tightening on themselves).
+  X well"); it is LLM judgment applied by the one review — a mechanical rule belongs in
+  `check-commands.md`, and a unit that is really a command is a `misfiled-check` finding.
 
 ## Output — gate the pipeline entry
 
@@ -53,10 +51,10 @@ Pass → the (composed) profile is admissible, Frame may run. Fail → list the 
 ```
 grade(profile-set, rubric=CONTRACT.md, context)
   → { pass, findings: [no-active-profile | empty-slot | dangling-ref | flag-unset | row-missing |
-                       relaxes-rule | malformed-grader | misfiled-check | grader-over-budget] }
+                       relaxes-rule | malformed-grader | misfiled-check] }
 ```
 
 Agnostic — no domain content. Validated against the three shipped domain profiles (`generic-saas`,
 `edge-telemetry`, `saas-web`) and the `personal/jay-z` overlay. The resolution step, the `deploys` flag,
 the row-presence rule, and the simplicity rubric were added 2026-09 and have not yet been through a cold
-rebuild. See [`../checks/README.md`](../checks/README.md#checks-vs-graders) for the grader contract.
+rebuild. See [`../checks/README.md`](../checks/README.md#checks-vs-graders) for the check and grader contracts.

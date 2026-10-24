@@ -2,7 +2,7 @@
 
 > Where things actually are **now**. The first doc a fresh agent (or teammate) reads to orient.
 > Memory, not documentation — kept current every ticket. **Stale here poisons the next run.**
-> Pulled from `doc-patterns/living-docs/current-state.md`. Graded by the docs-currency grader.
+> Pulled from `doc-patterns/living-docs/current-state.md`. Read by the review's docs-currency lens.
 
 ## What's built
 

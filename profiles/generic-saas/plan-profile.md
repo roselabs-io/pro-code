@@ -1,5 +1,5 @@
 ---
-consumed_by: ["plan", "grader:plan", "build", "grader:drift"]
+consumed_by: ["plan", "grader:plan", "build", "review"]
 canonical_for: "`generic-saas` design catalog and tiering signals"
 profile: generic-saas
 ---
