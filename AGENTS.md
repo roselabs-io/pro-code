@@ -16,6 +16,7 @@ describes the pipeline and has the full layout.
 | `evals/` | mutation tests for the graders (`evals/README.md`); `build.py` writes each `evals/*/prompt.md`, `screen.py` calls `claude -p` |
 | `examples/` | services built through the pipeline, each with its own README, recipes and tests |
 | `bin/context.py` | emits the documents one pipeline role consumes |
+| `CLAUDE.md`, `.gemini/settings.json` | `CLAUDE.md` holds the line `@AGENTS.md`, which Claude Code expands; `.gemini/settings.json` sets `context.fileName` to `AGENTS.md` for Gemini CLI (0.63.0); Codex and OpenCode read `AGENTS.md`; there is no `GEMINI.md` |
 | `.nojekyll` | marker file for GitHub Pages; the repository holds no articles, and `README.md` links to their copies on `blog.roselabs.io` |
 | `pipeline.yaml` | the Governor dispatcher's config for this repository |
 | `.github/workflows/procode-ci.yml` | `validate` (PR metadata) and `gate` (`just gate`) |
