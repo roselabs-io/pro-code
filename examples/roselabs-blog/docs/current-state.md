@@ -71,7 +71,7 @@ Product gaps:
   `dev-insecure-change-me…` when the variable is unset. The profile's *auth fails closed* convention says
   a missing key should deny; see `assumptions.md`.
 - **Cold rebuild** — this example was built in the same session as its profile and has **not** been
-  through `COLD-REBUILD.md`; `saas-web` is unproven from the profile alone.
+  through `docs/cold-rebuild.md`; `saas-web` is unproven from the profile alone.
 - **`docs/surfaces/`** — the profile's living-docs set lists per-surface specs; this build wrote
   `ui-sketches.md` + `system-overview.md` and no `surfaces/` directory.
 

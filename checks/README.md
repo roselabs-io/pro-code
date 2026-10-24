@@ -58,7 +58,7 @@ the two profile flags, never by omission — `deploys: true` runs infra (which s
 `deploys: false` runs runtime-smoke; `has_ui: true` adds browser on top of either.
 
 This table is the only place the order is written. [`skills/review-gate`](../skills/review-gate/SKILL.md),
-[`../COLD-REBUILD.md`](../COLD-REBUILD.md), the profile skeleton, and the harness `justfile` all point here.
+[`../docs/cold-rebuild.md`](../docs/cold-rebuild.md), the profile skeleton, and the harness `justfile` all point here.
 
 ## Active-profile resolution
 
