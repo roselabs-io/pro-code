@@ -28,6 +28,22 @@ open http://localhost:8080
 
 The demo admin is `demo@roselabs.io` / `demo-password-please-change`. Stop with `just down`.
 
+## Configuration
+
+The api reads its settings from environment variables only (`api/app/core/config.py`); it reads no
+`.env` file. Names are case-insensitive.
+
+| Variable | Default |
+|---|---|
+| `DATABASE_URL` | `postgresql+asyncpg://blog:blog@localhost:5432/blog` |
+| `JWT_SECRET` | `dev-insecure-change-me-min-32-bytes-long` |
+| `JWT_ALG` | `HS256` |
+| `ACCESS_TOKEN_TTL_SECONDS` | `3600` |
+| `SITE_URL` | `http://localhost:8080` |
+
+`infra/docker-compose.yml` sets `DATABASE_URL` for the `api` service and passes `JWT_SECRET` from the
+shell, with the default above when it is unset.
+
 ## Gate it
 
 ```sh
