@@ -80,6 +80,8 @@ Mid-plan you'll surface things that aren't this phase's artifacts. **Grasp → c
 
 Plan **doesn't trail off.** It ends when the driver signs off the backlog for Implement. Before that, the driver may run the plan-completeness grader on demand ([`graders/plan-completeness.md`](../../graders/plan-completeness.md)): a **coverage** map (every functionality → ≥1 ticket), a 🟢/🟡/🔴 well-formedness scorecard framed by *implement-time cost*, a tiering + sequencing sanity pass, and an explicit two-path sign-off. The ceremony is agnostic; the **profile supplies the bar** — what "covered," "verifiable," and "well-formed" mean in this domain. When run, it is a **fresh session** — author ≠ grader.
 
+The sign-off requires full coverage — every functionality of the functional analysis maps to ≥ 1 ticket — whether or not the grader runs. A functionality with no ticket is not signed off under the bar.
+
 ## What you do NOT produce
 
 - **Code** — that's Implement.

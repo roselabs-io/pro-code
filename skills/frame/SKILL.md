@@ -56,6 +56,8 @@ Mid-frame you'll surface things that aren't the spec — an architecture idea, a
 
 Frame **doesn't trail off.** It ends when the driver signs off the spec for Plan. Before that, the driver may run the frame-completeness grader on demand ([`graders/frame-completeness.md`](../../graders/frame-completeness.md)), in a fresh session: a completeness estimate, a 🟢/🟡/🔴 scorecard framed by *downstream cost*, targeted gap-pointing, and an explicit two-path sign-off (close the top gaps now / sign off under-bar and log every gap). The ceremony is agnostic; the **profile supplies the bar** — what "verifiable" and "complete" mean in this domain.
 
+The sign-off requires every hard gate of the active profile (its `Hard gates` section) to be met, whether or not the grader runs. A gap the driver signs off under the bar is logged in `open-questions.md`; a hard gate is not signed off under the bar.
+
 ## What you do NOT produce
 
 - No decomposition, backlog, or tickets — **Plan.**
