@@ -20,6 +20,7 @@ import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
 GRADERS = HERE.parent / "graders"
+OUT = HERE.parent / ".data" / "evals" / "screen-results.json"
 
 
 QUESTION = """Below is a rubric given to a fresh sub-agent that grades or reviews an artifact in a build pipeline.
@@ -79,10 +80,11 @@ def main(argv: list[str]) -> int:
         first = (steers[0][:44] + "…") if steers else (result.get("error", "—")[:45])
         print(f"  {stem:<28}  {n:>5}  {str(restates):>8}  {first}")
 
-    (HERE / "screen-results.json").write_text(
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text(
         json.dumps({stem: res for stem, _, _, _, res in rows}, indent=2) + "\n"
     )
-    print(f"\n  wrote {HERE.name}/screen-results.json")
+    print(f"\n  wrote {OUT.relative_to(HERE.parent)}")
     return 0
 
 

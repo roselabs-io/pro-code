@@ -98,7 +98,7 @@ An assertion is a file under `graders/` with a frontmatter `type` of `regex` (`p
 ```sh
 ./evals/build.py
 claude plugin eval . --case profile-completeness --ablation none --runs 1 \
-  --judge-model claude-sonnet-5 --no-publish --trust-plugin
+  --judge-model claude-sonnet-5 --no-publish --trust-plugin --output-dir .data/evals/results
 ```
 
 - `--trust-plugin` is required in any non-interactive run.
@@ -107,6 +107,7 @@ claude plugin eval . --case profile-completeness --ablation none --runs 1 \
   for containing X). Sonnet reads it correctly.
 - `--case` takes one case; it is not repeatable.
 - About 12 cents per run.
+- `--output-dir .data/evals/results` sets the directory for `aggregate-result.json`; the default is `evals/results/<timestamp>/`.
 - `--json <path>` keeps the agent's response. The sandbox trace is deleted after the run and the
   results directory holds only scores and judge evidence.
 - `claude plugin eval` is not in Claude Code 2.1.4. The runs recorded in the sibling pipeline were
@@ -260,7 +261,7 @@ defect and invents three more is worse than one that finds nothing.
 ## Screening
 
 `./evals/screen.py` asks each rubric, in one `claude -p` call, which of its own rules it would not
-have followed by default, and writes `screen-results.json`. It over-reports: in the sibling
+have followed by default, and writes `.data/evals/screen-results.json` at the repository root. It over-reports: in the sibling
 pipeline, both claims it made that were then mutation-tested turned out not to steer. Use it as a
 shortlist, never as evidence.
 
