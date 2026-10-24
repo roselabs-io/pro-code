@@ -6,7 +6,7 @@ Instructions for agent sessions working in this repository. `pipeline.yaml` name
 ## Repository
 
 Markdown skills, graders, checks and profiles of a build pipeline for coding agents, the Python
-scripts that support them, example services built through it, and two HTML articles. `README.md`
+scripts that support them, example services built through it. `README.md`
 describes the pipeline and has the full layout.
 
 | Path | Content |
@@ -16,7 +16,7 @@ describes the pipeline and has the full layout.
 | `evals/` | mutation tests for the graders (`evals/README.md`); `build.py` writes each `evals/*/prompt.md`, `screen.py` calls `claude -p` |
 | `examples/` | services built through the pipeline, each with its own README, recipes and tests |
 | `bin/context.py` | emits the documents one pipeline role consumes |
-| `*.html`, `two-reading-journeys.md`, `.nojekyll` | the articles published by GitHub Pages |
+| `.nojekyll` | marker file for GitHub Pages; the repository holds no articles, and `README.md` links to their copies on `blog.roselabs.io` |
 | `pipeline.yaml` | the Governor dispatcher's config for this repository |
 | `.github/workflows/procode-ci.yml` | `validate` (PR metadata) and `gate` (`just gate`) |
 | `.github/workflows/procode-pm.yml` | the issue and board sync of Governor |
@@ -45,20 +45,22 @@ records (a private repository).
 
 | Recipe | Runs |
 |---|---|
-| `just check` | `checks/doctrine_lint.py` over the tracked Python except the linter itself; byte-compilation of the tracked Python; `tools/check_links.py` over the tracked Markdown except `evals/*/prompt.md`; `tools/secret_scan.py` with detect-secrets 1.5.0 against `.secrets.baseline` |
+| `just check` | `checks/doctrine_lint.py` over the tracked Python except the linter itself; byte-compilation of the tracked Python; `tools/check_links.py` over the tracked Markdown except `evals/*/prompt.md`; `tools/secret_scan.py` with detect-secrets 1.5.0 against `.secrets.baseline`, through `uv run --offline` |
 | `just gate` | `just check`; the deterministic gate CI runs |
+| `just prepare` | downloads detect-secrets 1.5.0 into uv's cache; needs the network; not part of the gate |
 | `just fix` | `python3 evals/build.py`: regenerates `evals/*/prompt.md` from their templates and rubrics |
 | `just ff` | switches to `main` and fast-forwards it from `origin`; refuses local changes or a diverged `main` |
 
 `up`, `down`, `logs` and `test` are not applicable (`checks.recipes.not_applicable` of
 `pipeline.yaml`): the site has no local server and the root has no test suite. The examples' tests
 are run from each example's directory (its README) and are not part of the gate. `just`, `python3` and `uv` are
-required; the first secret scan downloads detect-secrets.
+required, and `just prepare` is run once before the gate: the gate installs nothing and its secret
+scan exits 1 with that command when detect-secrets 1.5.0 is not in uv's cache.
 
 No recipe calls a model. The evals call live models and are run by hand (`evals/README.md`).
 
-The gate does not check fragments against headings, does not read links in the HTML articles, does
-not lint the examples with their profiles' `--forbid` rules, and does not scan Git history.
+The gate does not check fragments against headings, does not lint the examples with their
+profiles' `--forbid` rules, and does not scan Git history.
 
 ## Changing content
 

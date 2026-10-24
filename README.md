@@ -2,9 +2,9 @@
 
 A pipeline for building software with coding agents. The name is the position: pro-code, not no-code — the pipeline assumes someone who understands the software stays in the loop, and gives agents a structure to work inside rather than replacing that person.
 
-A runnable implementation of the ideas in [the article](https://roselabs-io.github.io/pro-code/two-reading-journeys.html).
+A runnable implementation of the ideas in [the article](https://blog.roselabs.io/posts/two-reading-journeys).
 
-**Articles:** [Two reading journeys into agent engineering](https://roselabs-io.github.io/pro-code/two-reading-journeys.html) · [The Map Around Claude Code](https://roselabs-io.github.io/pro-code/the-map-around-claude-code.html) (part two).
+**Articles:** [Two reading journeys into agent engineering](https://blog.roselabs.io/posts/two-reading-journeys) · [The Map Around Claude Code](https://blog.roselabs.io/posts/the-map-around-claude-code) (part two).
 
 Work moves through **Frame → Plan → Implement**; **Autopilot** runs Implement over a backlog. Each phase separates a *guide* (feedforward: domain-specific, supplied by a profile) from its *feedback* (agnostic). The pipeline ships the feedback and neutral guide skeletons; a **profile** fills the guides for a domain.
 
@@ -104,4 +104,4 @@ Structurally different domains — a CRUD API, a stream/rule engine, a full-stac
 
 [`COLD-REBUILD.md`](COLD-REBUILD.md) is the clean-room protocol: rebuild every example from the profile alone, in a fresh session, and promote any profile gap it surfaces. Examples #1, #2, and #4 have been through it; #3 (roselabs-blog) is in the protocol and has not yet been run.
 
-Each mechanism the [article](https://roselabs-io.github.io/pro-code/two-reading-journeys.html) describes shows up in at least one of the examples: codemods (a libcst transform), a logs check, a browser check (Playwright), an infra check (Compose from an empty volume), isolated review agents (author ≠ grader), orchestrator-workers, and an adversarial refutation that independently re-checked the core promise.
+Each mechanism the [article](https://blog.roselabs.io/posts/two-reading-journeys) describes shows up in at least one of the examples: codemods (a libcst transform), a logs check, a browser check (Playwright), an infra check (Compose from an empty volume), isolated review agents (author ≠ grader), orchestrator-workers, and an adversarial refutation that independently re-checked the core promise.

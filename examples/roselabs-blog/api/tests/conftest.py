@@ -92,8 +92,9 @@ async def client(engine):
                 await s.rollback()
                 raise
 
+    # Deferred: importing the app reads its settings, which the test environment sets first.
     from app.core.db import get_session
-    from app.main import app
+    from app.main import app  # deferred: see above
 
     app.dependency_overrides[get_session] = _override
     transport = ASGITransport(app=app)
