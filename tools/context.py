@@ -6,7 +6,7 @@ a file to one domain profile (or `agnostic`), `scope` on the project side marks 
 file as `mvp1`, `direction` or `reference`. A role reads this command's output
 instead of opening files; that is one tool call rather than one per document.
 
-  context.py --role build --profile local-app --project ../praxis [--tickets T31,T32]
+  tools/context.py --role build --profile local-app --project ../praxis [--tickets T31,T32]
 """
 
 from __future__ import annotations
