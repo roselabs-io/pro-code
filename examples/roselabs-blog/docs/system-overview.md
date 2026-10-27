@@ -56,4 +56,4 @@ React + TS + Vite + MUI; data via React Query + axios; all styling through the *
 
 ## Deploy topology (single VPS)
 
-Docker Compose: `api` (multi-stage Python) · `web` (multi-stage node build → static, served by Caddy or a tiny server) · `postgres` (named volume) · `caddy` (auto-TLS). Secrets via `.env` (git-ignored; `.env.example` committed; `RESEND_API_KEY` wired at M7). Migrations run on release, never `create_all`.
+Docker Compose: `api` (multi-stage Python) · `web` (multi-stage node build → static, served by Caddy or a tiny server) · `postgres` (named volume) · `caddy` (auto-TLS). Settings and secrets from environment variables, named in the README's variable table; no `.env` file; secrets held in Bitwarden Secrets Manager (`RESEND_API_KEY` wired at M7). Migrations run on release, never `create_all`.
