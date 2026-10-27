@@ -23,6 +23,10 @@ describes the pipeline and has the full layout.
 | Governor's package preflight (`tools/local_preflight.py` of the Governor package, run by the dispatcher; this repository keeps no copy) | the local check the dispatcher runs: `just check`, then `just gate` |
 | `tools/check_links.py`, `tools/secret_scan.py`, `.secrets.baseline` | the link check and the secret scan of `just check` |
 
+`examples/` is evidence that the profiles work: profile output, exempt from the layout posture.
+`examples/roselabs-blog` is an example of building a blog with the saas-web profile, not the
+roselabs blog repository.
+
 The repository is public and publishes nothing on a merge; the repository holds no articles, and
 `README.md` links to their copies on `blog.roselabs.io`.
 
