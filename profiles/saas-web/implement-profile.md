@@ -27,7 +27,7 @@ certify it.
 - **Python:** ≥ 3.12. **Node:** ≥ 20.
 - **Lint / format:** `ruff` (backend — `line-length = 90`, rules `E, F, I, B`; `extend-immutable-calls` for FastAPI DI so `B008` doesn't fire on route-default `Depends()`); `eslint` + `prettier` (frontend).
 - **Tests:** `pytest` with a **real Postgres** via **testcontainers** (a container per session — the integration tests hit the real async query path, not a mock) and a `browser` marker for the Playwright e2e (`-m "not browser"` unit/integration, `-m browser` e2e). Playwright needs a one-time `playwright install chromium`.
-- **Infra:** Docker (multi-stage images for `api` and `web`) + **docker-compose** (`api · web · postgres · caddy`); **Caddy** for reverse-proxy + auto-TLS. Secrets/config via `.env` (git-ignored; `.env.example` committed).
+- **Infra:** Docker (multi-stage images for `api` and `web`) + **docker-compose** (`api · web · postgres · caddy`); **Caddy** for reverse-proxy + auto-TLS. Settings and secrets come from environment variables only, with no `.env` or `.env.example` file; the README's variable table names them, and secrets are held in Bitwarden Secrets Manager.
 
 > These are the profile's **declared choice-points** — fixed here so they're not silent. Any build choice *not* covered here (or by the Conventions below) goes in `docs/assumptions.md` with a disposition.
 

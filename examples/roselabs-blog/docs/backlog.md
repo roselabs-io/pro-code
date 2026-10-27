@@ -12,7 +12,7 @@
 
 | ID | Title | Acceptance criterion (verifiable) | Design hooks | Depends on | Autonomy |
 |---|---|---|---|---|---|
-| T18 | Remove the `JWT_SECRET` default | `config.py` has no default for `jwt_secret`; the api process exits non-zero at startup when the variable is unset (asserted by a test that constructs `Settings` with the env cleared); `docker-compose.yml` has no `:-` fallback; `.env.example` still documents it | `jwt-auth-dependency` | — | 🟡 auth boundary |
+| T18 | Remove the `JWT_SECRET` default | `config.py` has no default for `jwt_secret`; the api process exits non-zero at startup when the variable is unset (asserted by a test that constructs `Settings` with the env cleared); `docker-compose.yml` has no `:-` fallback; the README's variable table still names it | `jwt-auth-dependency` | — | 🟡 auth boundary |
 | T19 | Auth-dependency codemod | `codemods/require_auth_dep.py --check api/app/api` exits 0 on the tree and non-zero when a protected router is stripped of `get_current_user` (red-green asserted); wired as `just codemod-check` | `novel — codemod` (profile mandate) | — | 🟢 |
 | T20 | a11y check in the e2e beat | `axe-core` runs against list · detail · login · dashboard · editor · moderation in `web/e2e`; zero serious/critical violations; state not colour-only asserted on the draft/published badge | `mui-themed-component` | — | 🟡 may require markup fixes |
 | T21 | Visual-regression baselines | Playwright screenshots for the six views committed under `web/e2e/__snapshots__/`; a deliberate theme change fails the check until baselines are updated (asserted once) | `mui-themed-component` | T20 | 🟢 |

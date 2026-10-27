@@ -19,7 +19,7 @@ declare it n/a in `check-commands.md`, and run [`runtime-smoke.md`](runtime-smok
 The verify gate's arbiter for *deliverability*: does the app build and boot as it will in production, from empty?
 
 - **Images build** — the multi-stage Dockerfiles for each service build with no error, off the committed lockfiles.
-- **The stack comes up** — `docker compose … up` brings every service (`api · web · db · proxy`) to healthy on a **fresh volume**, wired by the compose file + `.env.example`.
+- **The stack comes up** — `docker compose … up` brings every service (`api · web · db · proxy`) to healthy on a **fresh volume**, wired by the compose file and the environment variables named in the README's variable table.
 - **Migrations apply from empty** — the schema is created by the migration chain against an empty database (proves the `no create_all in the shipped path` convention — a build that only works because the app creates its own tables at runtime fails here).
 - **Smoke passes** — against the *composed* stack, not the test harness: the API health endpoint is 200, the web root serves HTML, and one real round-trip works (e.g. an authenticated request returns the expected shape).
 
@@ -34,7 +34,7 @@ infra check = build + up + smoke script → { pass, findings }
 ```
 
 - **pass** = images build · stack reaches healthy · migrations apply from empty · smoke is green.
-- a **missing precondition** (no Dockerfile, no compose file, no migration, no `.env.example`) is a *finding*, not a silent pass.
+- a **missing precondition** (no Dockerfile, no compose file, no migration, no variable table in the README) is a *finding*, not a silent pass.
 
 ## Why it's not redundant with the tests
 
