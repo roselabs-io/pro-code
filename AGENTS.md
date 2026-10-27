@@ -17,16 +17,14 @@ describes the pipeline and has the full layout.
 | `examples/` | services built through the pipeline, each with its own README, recipes and tests |
 | `tools/context.py` | emits the documents one pipeline role consumes |
 | `CLAUDE.md`, `.gemini/settings.json` | `CLAUDE.md` holds the line `@AGENTS.md`, which Claude Code expands; `.gemini/settings.json` sets `context.fileName` to `AGENTS.md` for Gemini CLI (0.63.0); Codex and OpenCode read `AGENTS.md`; there is no `GEMINI.md` |
-| `.nojekyll` | marker file for GitHub Pages; the repository holds no articles, and `README.md` links to their copies on `blog.roselabs.io` |
 | `pipeline.yaml` | the Governor dispatcher's config for this repository |
 | `.github/workflows/procode-ci.yml` | `validate` (PR metadata) and `gate` (`just gate`) |
 | `.github/workflows/procode-pm.yml` | the issue and board sync of Governor |
 | Governor's package preflight (`tools/local_preflight.py` of the Governor package, run by the dispatcher; this repository keeps no copy) | the local check the dispatcher runs: `just check`, then `just gate` |
 | `tools/check_links.py`, `tools/secret_scan.py`, `.secrets.baseline` | the link check and the secret scan of `just check` |
 
-GitHub Pages builds `main` from the root with its own `pages build and deployment` workflow, so a
-merge to `main` publishes every tracked file at `https://roselabs-io.github.io/pro-code/`. The
-repository is public.
+The repository is public and publishes nothing on a merge; the repository holds no articles, and
+`README.md` links to their copies on `blog.roselabs.io`.
 
 ## Pipeline
 
@@ -79,7 +77,7 @@ profiles' `--forbid` rules, and does not scan Git history.
 A PR from a branch `agent/<N>-…` carries exactly one `Procode-Issue: #N` line; a dispatched run also
 requires a `Procode-Agent` line naming a configured lane. `validate` of `procode-ci.yml` checks both.
 `procode-pm.yml` moves issue N on the board from that line. `autonomy: tiered`: the merge of a
-complex or exceptional ticket's PR is left to a person, and every merge publishes the site.
+complex or exceptional ticket's PR is left to a person.
 
 ## Finding triage
 

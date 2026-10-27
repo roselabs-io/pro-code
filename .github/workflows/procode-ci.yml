@@ -15,7 +15,7 @@ run-name: "${{ inputs.pr_number && format('pro-code CI PR #{0} {1}', inputs.pr_n
 # its `Check out the Governor package` step, from the Bitwarden project `roselabs-ci` (organization variable
 # `BWS_SHARED_PROJECT_ID`) with `bws run`, authenticated by the organization secret `BWS_ACCESS_TOKEN`. A PR from a
 # fork receives no `BWS_ACCESS_TOKEN`, so its `Read GOVERNOR_PM_TOKEN from Bitwarden Secrets Manager` step fails.
-# GitHub Pages publishes `main` on its own (`pages build and deployment`); this workflow does not deploy.
+# This workflow does not deploy.
 
 on:
   pull_request:
